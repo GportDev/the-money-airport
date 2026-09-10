@@ -1,9 +1,10 @@
-# API Specification — CashPilot
+# API Specification — Money Airport
 
 **Base URL:** `/api`
-**Auth:** All routes (except `/api/auth/*` and `/api/plaid/webhook`) require a valid session cookie.
-**Amounts:** All monetary values in **cents** (integer). Frontend converts.
+**Auth:** All routes (except `/api/auth/*`, `/api/plaid/webhook`, and `/api/billing/webhook`) require a valid session cookie.
+**Amounts:** Request/response KPI totals are **Base** cents (integer). Transaction rows include native `amount` + `isoCurrencyCode`. Frontend converts for display.
 **Dates:** ISO 8601. Date-only fields use `YYYY-MM-DD`.
+**Transfers:** Totals on dashboard spending, budgets, cash-flow, and reports income/expense **exclude** `transfer` / `savings_transfer` tags. Pending **counts**.
 
 Endpoints return **widget-ready aggregates and grouped lists**. The client does not rebuild charts from a spreadsheet of cells.
 
@@ -46,7 +47,7 @@ BetterAuth handles these routes automatically. Key endpoints:
 | POST | `/plaid/exchange-token` | `{ publicToken, metadata }` | `{ item, accounts[] }` | Exchange public token, store access token, fetch accounts |
 | POST | `/plaid/sync/:itemId` | — | `{ added, modified, removed }` | Manual transaction sync + balance snapshot |
 | POST | `/plaid/sync-all` | — | `{ items: number }` | "Refresh all" |
-| DELETE | `/plaid/items/:itemId` | — | `{ success }` | Disconnect institution |
+| DELETE | `/plaid/items/:itemId` | — | `{ success }` | Disconnect: keep history, status `disconnected` |
 | POST | `/plaid/webhook` | Plaid webhook payload | 200 | No auth — verify webhook |
 
 ---
@@ -81,8 +82,6 @@ interface DashboardPayload {
     remainingDue: number;
     upcoming: RecurringListItem[]; // next ~5
   };
-  advice: AdviceCard | null;
-  weeklyRecap: { summary: string } | null;
 }
 ```
 
@@ -96,7 +95,7 @@ interface DashboardPayload {
 | GET | `/accounts/net-worth` | `?range=1m\|3m\|1y\|ytd` | `{ data: NetWorthResponse }` |
 | GET | `/accounts/:id` | — | `{ data: AccountDetail }` |
 | POST | `/accounts` | `{ name, type, displayGroup, currentBalance, creditLimit? }` | `{ data: Account }` | Manual account |
-| PATCH | `/accounts/:id` | `{ name?, currentBalance?, creditLimit?, isHidden?, isGoalAccount? }` | `{ data: Account }` |
+| PATCH | `/accounts/:id` | `{ name?, currentBalance?, creditLimit?, isHidden? }` | `{ data: Account }` |
 | DELETE | `/accounts/:id` | — | `{ success }` | Manual accounts only |
 
 ```typescript
@@ -115,7 +114,9 @@ interface Account {
   institutionLogo: string | null;
   lastSyncedAt: string | null;
   source: "plaid" | "manual";
-  sparkline: { date: string; value: number }[]; // last ~30 days
+  isoCurrencyCode: string;
+  isHidden: boolean;
+  sparkline: { date: string; value: number }[]; // last ~30 days, native
 }
 
 interface NetWorthResponse {
@@ -139,7 +140,7 @@ interface NetWorthResponse {
 | GET | `/transactions` | `?cursor&limit&dateFrom&dateTo&accountId&categoryId&search&pending&sortBy&sortDir` | `{ data: TransactionListItem[], meta }` |
 | GET | `/transactions/:id` | — | `{ data: TransactionDetail }` |
 | POST | `/transactions` | `{ name, amount, date, categoryId?, bankAccountId?, notes? }` | `{ data: Transaction }` |
-| PATCH | `/transactions/:id` | `{ categoryId?, notes? }` | `{ data: Transaction }` |
+| PATCH | `/transactions/:id` | `{ categoryId?, notes?, tags? }` | `{ data: Transaction }` |
 | PATCH | `/transactions/bulk-categorize` | `{ transactionIds: string[], categoryId: string }` | `{ data: { updated: number } }` |
 
 `limit` default 50. `nextCursor` is an opaque `(date, id)` key. `accountId` and `categoryId` accept repeated params (multi-select).
@@ -151,7 +152,8 @@ interface TransactionListItem {
   name: string;
   merchantName: string | null;
   merchantLogoUrl: string | null;
-  amount: number;
+  amount: number; // native cents
+  isoCurrencyCode: string;
   pending: boolean;
   tags: string[];
   category: { id: string; name: string; icon: string; color: string } | null;
@@ -206,7 +208,7 @@ Transaction rows under the chart reuse `GET /transactions` with the same `accoun
 | PATCH | `/categories/:id` | `{ name?, color?, icon?, kind?, budgetGroup? }` | `{ data: Category }` |
 | DELETE | `/categories/:id` | — | `{ success }` |
 
-Deleting a category sets all its transactions to `categoryId = null` (Uncategorized).
+Deleting a category reassigns its transactions to Uncategorized. Uncategorized cannot be deleted.
 
 ---
 
@@ -258,7 +260,7 @@ Income `remaining` = actual − planned. Expense `remaining` = planned − actua
 | POST | `/recurring` | `{ merchantName, amount, cadence, nextDate, bankAccountId?, categoryId? }` | `{ data: RecurringItem }` |
 | PATCH | `/recurring/:id` | `{ amount?, cadence?, nextDate?, isActive? }` | `{ data: RecurringItem }` |
 | POST | `/recurring/:id/skip` | — | `{ data: RecurringItem }` |
-| POST | `/recurring/:id/mark-paid` | `{ date? }` | `{ data: RecurringItem }` |
+| POST | `/recurring/:id/mark-paid` | `{ date? }` | `{ data: RecurringItem }` | Advances schedule only; no Transaction |
 | POST | `/recurring/detect` | — | `{ data: RecurringListItem[] }` | Suggest from history |
 | DELETE | `/recurring/:id` | — | `{ success }` |
 
@@ -281,10 +283,10 @@ interface RecurringListItem {
 
 | Method | Path | Query/Body | Response |
 |--------|------|-----------|----------|
-| GET | `/goals` | `?type=save_up\|pay_down` | `{ data: { totalCurrent: number; availableForGoals: number; goalAccounts: Account[]; goals: Goal[] } }` |
-| POST | `/goals` | `{ name, type, targetAmount, targetDate?, thumbnailUrl?, linkedAccountId? }` | `{ data: Goal }` |
-| PATCH | `/goals/:id` | `{ name?, targetAmount?, targetDate?, thumbnailUrl?, linkedAccountId?, sortOrder? }` | `{ data: Goal }` |
-| POST | `/goals/allocate` | `{ goalId, fromAccountId, amount }` | `{ data: Goal }` |
+| GET | `/goals` | `?type=save_up\|pay_down` | `{ data: { totalCurrent: number; goals: Goal[] } }` |
+| POST | `/goals` | `{ name, type, targetAmount, targetDate?, thumbnailUrl? }` | `{ data: Goal }` |
+| PATCH | `/goals/:id` | `{ name?, targetAmount?, targetDate?, thumbnailUrl?, sortOrder? }` | `{ data: Goal }` |
+| PUT | `/goals/:id/accounts` | `{ bankAccountIds: string[] }` | `{ data: Goal }` | Save-up: many assets. Pay-down: 0–1 liability. Move if exclusive conflict. |
 | DELETE | `/goals/:id` | — | `{ success }` |
 
 ```typescript
@@ -294,10 +296,11 @@ interface Goal {
   type: "save_up" | "pay_down";
   thumbnailUrl: string | null;
   targetAmount: number;
-  currentAmount: number;
+  currentAmount: number; // computed
   targetDate: string | null;
   status: "on_track" | "at_risk";
   percentComplete: number;
+  accounts: Account[];
 }
 ```
 
@@ -312,28 +315,6 @@ Thin read over accounts in `displayGroup = investment`.
 | GET | `/investments` | `?range=1m\|3m\|1y` | `{ data: { total: number; change: number; allocation: { accountId, name, value }[]; accounts: Account[] } }` |
 
 No trade endpoints.
-
----
-
-## Advice — `/api/advice`
-
-Deterministic rules. No persistence.
-
-| Method | Path | Response |
-|--------|------|----------|
-| GET | `/advice` | `{ data: AdviceCard[] }` |
-
-```typescript
-interface AdviceCard {
-  id: string;
-  title: string;
-  why: string;
-  href: string;          // /goals, /budget, /accounts
-  progress?: { current: number; target: number };
-}
-```
-
-V1 rules: emergency fund below a threshold, credit utilization > 30%, any budget group over 100%.
 
 ---
 
@@ -366,8 +347,10 @@ Click-through uses `GET /transactions` with category + date filters in a drawer 
 
 | Method | Path | Body | Response |
 |--------|------|------|----------|
-| POST | `/forecast/rows` | `{ sectionId, name, dayOfMonth?, defaultAmount? }` | `{ data: ForecastRow }` |
-| PATCH | `/forecast/rows/:id` | `{ name?, dayOfMonth?, sortOrder? }` | `{ data: ForecastRow }` |
+| POST | `/forecast/rows` | `{ sectionId, name, dayOfMonth?, defaultAmount?, categoryId?, recurringItemId? }` | `{ data: ForecastRow }` |
+| PATCH | `/forecast/rows/:id` | `{ name?, dayOfMonth?, sortOrder?, categoryId?, recurringItemId? }` | `{ data: ForecastRow }` |
+| POST | `/forecast/rows/from-categories` | `{ year }` | `{ data: ForecastRow[] }` | One-shot seed; skip Uncategorized and existing category links |
+| POST | `/forecast/rows/from-recurring` | `{ year }` | `{ data: ForecastRow[] }` | Skip RecurringItems already linked |
 | PUT | `/forecast/rows/:id/amounts` | `{ year, amounts: Record<number, number>, copyToAll?: boolean }` | `{ data: ForecastRow }` |
 | DELETE | `/forecast/rows/:id` | — | `{ success }` |
 
@@ -384,9 +367,11 @@ interface ForecastSectionFull {
     id: string;
     name: string;
     dayOfMonth: number | null;
+    categoryId: string | null;
+    recurringItemId: string | null;
     typicalMonthly: number;
-    sparkline: number[]; // 12 values
-    cells: Record<number, { amount: number; isActual: boolean }>;
+    sparkline: number[]; // 12 plan values
+    cells: Record<number, { plan: number; actual: number | null }>;
   }[];
   totals: Record<number, number>;
 }
@@ -418,6 +403,17 @@ interface ForecastSummary {
 |--------|------|------|----------|
 | GET | `/settings` | — | `{ data: UserSettings }` |
 | PATCH | `/settings` | `{ currency?, dashboardWidgets?, budgetCopyForward? }` | `{ data: UserSettings }` |
+
+---
+
+## Billing — `/api/billing`
+
+| Method | Path | Body | Response | Notes |
+|--------|------|------|----------|-------|
+| GET | `/billing` | — | `{ data: { status, priceId, stripeCustomerId } }` | Null IDs until Stripe retry succeeds |
+| POST | `/billing/webhook` | Stripe payload | 200 | No auth — verify signature |
+
+V1: Free $0 Subscription. No Checkout. Customer Portal and paid Prices are later.
 
 ---
 

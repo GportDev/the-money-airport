@@ -1,10 +1,10 @@
-# Product Requirements Document — CashPilot
+# Product Requirements Document — Money Airport
 
 ## 1. Overview
 
-CashPilot is a personal finance management app that connects to bank accounts via Plaid and gives a clear, visual picture of monthly cash flow, transactions, budgets, accounts, goals, recurring bills, reports, and forecasting.
+Money Airport is a personal finance management app that connects to bank accounts via Plaid and gives a clear, visual picture of monthly cash flow, transactions, budgets, accounts, goals, recurring bills, reports, and forecasting — in the User’s Base currency.
 
-**Core philosophy:** CashPilot is a widget-based SaaS dashboard, not a spreadsheet. Every screen is a card/list/chart layout with generous whitespace, merchant and category icons, and progress visualization. Primary actions use a right-side drawer. The main navigation lives in a persistent left sidebar.
+**Core philosophy:** Money Airport is a widget-based SaaS dashboard, not a spreadsheet. Every screen is a card/list/chart layout with generous whitespace, merchant and category icons, and progress visualization. Primary actions use a right-side drawer. The main navigation lives in a persistent left sidebar. Domain language is in `CONTEXT.md`.
 
 **Visual language:** Light theme, white cards with soft gray borders and rounded corners. Orange is the primary accent (CTAs, active tabs, progress). Green = on track / income / positive change. Red = over budget / overage. Charts, sparklines, and progress bars communicate status before raw numbers.
 
@@ -29,7 +29,7 @@ Single-user app with authentication (future multi-user household support possibl
 │            │           (cards / lists / charts)          │  panel       │
 │            │                                             │  (contextual)│
 │  ────────  │                                             │              │
-│  Trial     │                                             │              │
+│  Free      │                                             │              │
 │  AI Assist │                                             │              │
 │  Help      │                                             │              │
 │  Profile   │                                             │              │
@@ -54,7 +54,7 @@ Single-user app with authentication (future multi-user household support possibl
 9. **Investments**
 10. **Forecasting**
 
-**Sidebar footer:** user profile.
+**Sidebar footer:** user profile and a **Free** chip (not Trial).
 
 ---
 
@@ -68,6 +68,7 @@ Single-user app with authentication (future multi-user household support possibl
 | F1.2 | OAuth with Google |
 | F1.3 | Session persistence with secure HTTP-only cookies |
 | F1.4 | Password reset flow |
+| F1.5 | After signup, create a Stripe Customer and a $0 Subscription without blocking login. Sidebar shows Free. |
 
 ### F2 — Bank Account Connection (Plaid)
 
@@ -78,8 +79,10 @@ Single-user app with authentication (future multi-user household support possibl
 | F2.3 | Automatic daily transaction sync via Plaid webhook |
 | F2.4 | Manual "Refresh all" / "Sync Now" |
 | F2.5 | Handle Plaid Link token refresh when connection expires |
-| F2.6 | Disconnect / reconnect accounts |
+| F2.6 | Disconnect / reconnect. Disconnect keeps history (item status `disconnected`; BankAccounts and Transactions remain). Reconnect resumes sync. |
 | F2.7 | Show last-updated timestamp per account (e.g. "9 hours ago") |
+| F2.8 | `is_hidden` excludes a BankAccount from net worth, Budget account-scope, and Goals. |
+| F2.9 | Amounts stay in the BankAccount’s ISO currency. Totals convert to Base currency (default USD). P&L uses the Transaction-date rate; balances use the latest rate. Fiat ISO only; unofficial/crypto omitted from totals with a banner. |
 
 ### F3 — Dashboard (Home)
 
@@ -92,11 +95,10 @@ Customizable widget grid. Personalized greeting (`Good morning/afternoon/evening
 | F3.3 | **Spending widget** — month-to-date total; comparison line chart (this month vs last month) across days of the month. |
 | F3.4 | **Transactions widget** — most recent transactions: merchant logo, name, category icon + label, amount. Link to full Transactions. |
 | F3.5 | **Recurring widget** — remaining due this month; upcoming bills with logo, cadence ("Every month"), countdown ("in 15 days"), amount. |
-| F3.6 | **Advice widget** — top recommended action (e.g. emergency fund) with a mini progress bar. Links to Advice / Goals. |
-| F3.7 | **Weekly Recap widget** — short narrative summary of recent activity with a "See recap" link. |
-| F3.8 | **Credit Score widget** (if a bureau partner is connected) — score, rating label, 300–850 scale, 12-month trend. Hidden until connected. |
-| F3.9 | Each widget header may include a filter/dropdown and a deep-link to the full screen. |
-| F3.10 | Widget grid is two columns on desktop, single column on tablet/mobile. |
+| F3.6 | **Credit Score widget** (if a bureau partner is connected) — score, rating label, 300–850 scale, 12-month trend. Hidden until connected. |
+| F3.7 | Each widget header may include a filter/dropdown and a deep-link to the full screen. |
+| F3.8 | Widget grid is two columns on desktop, single column on tablet/mobile. |
+| F3.9 | Default visible widgets: Budget, Net Worth, Spending, Transactions, Recurring. No Advice or Weekly Recap in V1. |
 
 ### F4 — Accounts
 
@@ -107,7 +109,7 @@ Net-worth overview plus hierarchical account list. Not a settings dump.
 | F4.1 | **Net Worth hero** — large KPI, period change ($ / %), line chart. View toggle (Performance) and timeframe dropdown. |
 | F4.2 | Accounts grouped into collapsible sections by type: Cash, Credit Cards, Investments, Loans, Vehicles, Other. |
 | F4.3 | Section header shows category total and period change. |
-| F4.4 | **Account row:** institution logo, name + last 4, type (Checking / Savings / Credit), optional Shared tag, sparkline, current balance, last updated. |
+| F4.4 | **Account row:** institution logo, name + last 4, type (Checking / Savings / Credit), sparkline, current balance (native), last updated. |
 | F4.5 | Credit card rows also show a **utilization bar**. |
 | F4.6 | Click row → account detail (balance history, recent transactions) in a right drawer or dedicated page. |
 | F4.7 | Header actions: Filters, Refresh all, **+ Add account** (Plaid Link or manual). |
@@ -127,11 +129,14 @@ Date-grouped feed, not a spreadsheet ledger.
 | F5.5 | **Row:** merchant logo + name; category icon + label; account logo + name (last 4); amount; chevron. Pending indicator where applicable. |
 | F5.6 | Spending amounts in default text; credits/income in green with `+`. |
 | F5.7 | Infinite scroll (or virtual list). No page-number pagination as the primary pattern. |
-| F5.8 | Click row → **right drawer**: merchant, date, category (editable select), account, amount, notes, similar transactions. |
+| F5.8 | Click row → **right drawer**: merchant, date, category (editable select), account, native amount, notes, similar transactions, **This is a transfer** toggle (sets/clears `transfer` / `savings_transfer`). |
 | F5.9 | Search filters by merchant/name. Filters: account (multi), category (multi), amount, pending. |
 | F5.10 | **Edit multiple:** select rows → bulk assign category. |
-| F5.11 | **Category management** from settings or a gear in filters: list with color/icon; create (name + color + icon); edit; delete (reassign to Uncategorized). |
+| F5.11 | **Category management** from settings or a gear in filters: list with color/icon; create (name + color + icon); edit; delete (reassign to Uncategorized). Uncategorized is a seeded Category and cannot be deleted. |
 | F5.12 | **+ Add** opens a right drawer: date, amount, merchant/description, category, account. |
+| F5.13 | On Plaid ingest, if Category is Uncategorized, best-effort map Plaid’s primary category onto a seeded Category **name**. Never overwrite a User-set Category on later syncs. |
+| F5.14 | After each sync, auto-tag **Transfers**: two Transactions, same User, different BankAccounts, opposite signs, equal absolute native amount, same currency, dates within 3 days, Plaid PFC primary `TRANSFER` or `LOAN_PAYMENTS`. Tag both. No auto-pair across currencies. Unpaired Plaid transfers stay spend. User can override via F5.8. |
+| F5.15 | Transactions tagged `transfer` or `savings_transfer` are excluded from Budget actuals, Spending, Reports income/expense, and Cash Flow totals. They remain in the feed with highlight treatment. Pending Transactions **count** in those totals. |
 
 ### F6 — Budget
 
@@ -145,7 +150,7 @@ Collapsible category groups with progress bars and a live summary panel. Month i
 | F6.4 | Progress bar under/near Planned: green under budget, red over. Remaining in red when negative. |
 | F6.5 | Group header rows show rolled-up Planned / Actual / Remaining. |
 | F6.6 | Click a category → right drawer to set planned amount for that category+month. |
-| F6.7 | "Copy from previous month" in settings. "Show unbudgeted" reveals categories with spend but no plan. |
+| F6.7 | "Copy from previous month" (manual) plus a copy-forward preference that copies planned amounts when the month changes. No remaining/overage rollover in V1. "Show unbudgeted" reveals categories with spend but no plan. |
 | F6.8 | **Right summary panel:** large "Left to budget" (or over) callout; tabs Summary / Income / Expenses; Fixed / Flexible / Non-Monthly progress bars matching the Dashboard widget. |
 | F6.9 | Income remaining is surplus (Actual − Planned when income); expense remaining is Planned − Actual. |
 
@@ -156,7 +161,7 @@ Visual month cash-flow, not a running-balance spreadsheet.
 | ID | Requirement |
 |----|-------------|
 | F7.1 | Account scope (all or one account) and month navigator. |
-| F7.2 | Summary cards: total income, total expenses, net cash flow. |
+| F7.2 | Summary cards: total income, total expenses, net cash flow. Totals exclude Transfers (F5.15). Amounts in Base currency. |
 | F7.3 | Chart: daily or weekly income vs expenses for the month; optional running balance as an area overlay (not a table column). |
 | F7.4 | Below the chart: the same date-grouped transaction list as F5, scoped to the selected month/account. |
 | F7.5 | Highlight tagged activity (e.g. savings transfers) with a subtle row treatment. |
@@ -175,6 +180,7 @@ Visual overview of financial health. Charts first; tables only as supporting ran
 | F8.6 | **Account balances over time** — multi-series line chart. |
 | F8.7 | Click a chart segment → filtered transaction list in a right drawer. |
 | F8.8 | Consistent palette with the rest of the app (orange accent, semantic green/red). |
+| F8.9 | Income/expense reports exclude Transfers. Totals in Base currency. |
 
 ### F9 — Recurring
 
@@ -185,22 +191,24 @@ Upcoming bills and subscriptions as a timeline list, not a grid.
 | F9.1 | Detect and list recurring merchants from transaction history (cadence: weekly / monthly / yearly). |
 | F9.2 | Each item: logo, name, cadence, next date + countdown, amount, account. |
 | F9.3 | Summary: remaining due this month vs already paid. |
-| F9.4 | Mark paid / skip / edit amount in a right drawer. Manual add supported. |
+| F9.4 | Mark paid / skip / edit amount in a right drawer. Manual add supported. Mark paid and skip **do not** insert a Transaction; they set `last_paid_on` (paid) and advance `next_date`. If a matching Transaction already exists this period (same merchant rule as F12), Mark paid is a no-op besides advancing the schedule if needed. |
 | F9.5 | Dashboard Recurring widget is a truncated view of this list. |
 
 ### F10 — Goals
 
-Card list of save-up and pay-down goals, with allocation from designated accounts.
+Card list of save-up and pay-down Goals. Progress is associated BankAccount balances, not an in-app envelope.
 
 | ID | Requirement |
 |----|-------------|
 | F10.1 | Sub-tabs: **Save up** (default) and **Pay down**. |
-| F10.2 | Header actions: Manage, Allocate funds, **+ Add goal**. |
-| F10.3 | Group total (sum of current amounts) at the top of the list. |
+| F10.2 | Header actions: Manage, **Edit accounts**, **+ Add goal**. No Allocate funds. |
+| F10.3 | Group total (sum of current amounts, Base currency) at the top of the list. |
 | F10.4 | **Goal card:** thumbnail, name, status badge (On track / At risk), target date, current amount, thin progress bar, `% of $target`. |
-| F10.5 | **Right panel:** available for goals; list of goal accounts with balances; **Allocate funds** primary CTA; Edit goal accounts. |
-| F10.6 | Add/edit goal in a right drawer: name, thumbnail, target amount, target date, type (save up / pay down), linked account. |
-| F10.7 | Allocate funds moves money between available cash and goal allocations (in-app allocation, not a bank transfer). |
+| F10.5 | **Right panel:** associated BankAccounts and balances; **Edit accounts** primary CTA. |
+| F10.6 | Add/edit Goal in a right drawer: name, thumbnail, target amount, target date, type. Create is allowed with zero BankAccounts (progress $0). |
+| F10.7 | Progress is computed at read time from associated BankAccount balances (latest FX into Base). No `goal_allocation` ledger. |
+| F10.8 | Save-up: many asset BankAccounts (`is_asset = true`). Pay-down: zero or one liability (`is_asset = false`). A BankAccount belongs to at most one Goal; associating one already on another Goal **moves** it (toast). Associating a second liability on a pay-down Goal **refuses**. |
+| F10.9 | Pay-down: current display = remaining owed. Bar = `(target − remaining) / target`. Default `target_amount` to the liability balance when the first (only) liability is associated; User can edit. Do not auto-change target after that. |
 
 ### F11 — Investments
 
@@ -225,27 +233,11 @@ Forward-looking plan visualized as charts and monthly cards — not a 12-column 
 | F12.4 | Sections as collapsible card groups: Revenue, Savings, Fixed expenses, Variable expenses. Each item shows name, typical monthly amount, and a 12-month sparkline or month chips — not an editable cell matrix. |
 | F12.5 | Click an item → right drawer to set monthly amounts (copy across months supported). |
 | F12.6 | Add / delete line items per section. |
-| F12.7 | Past months show **actuals** from transactions when available, visually distinct from projections (e.g. filled vs dashed). |
+| F12.7 | Past months show **Actuals** from Transactions when available, visually distinct from the Plan (e.g. filled vs dashed). Plan amounts stay stored; Actuals are computed at read time. |
 | F12.8 | Current month highlighted in the chart and month chips. |
-
-### F13 — Advice
-
-Prioritized recommendations, not a report dump.
-
-| ID | Requirement |
-|----|-------------|
-| F13.1 | Ranked cards (e.g. build emergency fund, pay down high-APR card, cut overspent category). |
-| F13.2 | Each card: title, short why, optional progress, CTA into Budget / Goals / Accounts. |
-| F13.3 | Dashboard Advice widget shows the top card only. |
-| F13.4 | V1 rules are deterministic (thresholds on emergency fund, utilization, budget overages). LLM copy is optional later via AI Assistant. |
-
-### F14 — AI Assistant
-
-| ID | Requirement |
-|----|-------------|
-| F14.1 | Sidebar entry opens a chat drawer. |
-| F14.2 | V1: answer questions about the user's own data (spend this month, what's left in groceries, upcoming bills). |
-| F14.3 | Never executes transfers or deletes data without an explicit in-app confirmation. |
+| F12.9 | ForecastRow may have `category_id` and/or `recurring_item_id`. RecurringItem wins for Actuals if set (merchant_name match, and `bank_account_id` when the RecurringItem has one); otherwise Category. Neither → projection only. |
+| F12.10 | One-shot **Add from categories** (skip Uncategorized and rows that already have that Category). Map: income → revenue; fixed → fixed_expense; flexible and non_monthly → variable_expense; “Savings Transfer” → savings. Separate **Add from recurring** skipping RecurringItems already linked. Twelve-month amounts edit in the drawer only. |
+| F12.11 | Projected cash balance starts from today’s Cash group (`display_group=cash`). Each future month: `prior + revenue − fixed − variable − savings`. Past months use snapshots. Card totals are a separate series, not mixed into that cash line. |
 
 ---
 
@@ -258,10 +250,11 @@ Opened from the top-chrome gear (not a primary nav item).
 | S1 | Profile: name, email, change password, avatar |
 | S2 | Connected accounts shortcut (full management lives on Accounts) |
 | S3 | Categories (same as F5.11) |
-| S4 | Dashboard customize (widget visibility / order) |
-| S5 | Budget preferences (copy-forward, rollover) |
+| S4 | Dashboard customize (widget visibility / order). Defaults: Budget, Net Worth, Spending, Transactions, Recurring. |
+| S5 | Budget preferences: copy-forward only (no rollover). |
 | S6 | Data export (CSV) |
 | S7 | Notifications preferences (in-app; push is out of scope for V1) |
+| S8 | Base currency (ISO). Changing it rebuilds cached base amounts. |
 
 ---
 
@@ -299,6 +292,10 @@ Opened from the top-chrome gear (not a primary nav item).
 - Receipt OCR / retail-sync ingestion (tabs may exist as empty states)
 - Credit bureau partnership if no provider is wired — hide the Credit Score widget
 - Push / SMS / email bill reminders (Recurring is on-screen only)
-- Household multi-user editing (Shared tags may display if present; no invite-to-edit)
+- Household multi-user editing and Shared tags
 - Brokerage trading, tax lots, or full portfolio analytics beyond F11
-- Referral rewards / paid trial billing (plan chip may be static)
+- Paid Stripe Prices, Checkout, payment methods, and Stripe Connect (Free $0 Subscription only)
+- Advice, AI Assistant, Weekly Recap
+- Budget remaining/overage rollover
+- Auto-pairing Transfers across currencies
+- Crypto / unofficial currency codes in totals

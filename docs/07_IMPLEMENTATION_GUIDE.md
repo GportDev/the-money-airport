@@ -1,4 +1,4 @@
-# Implementation Guide — CashPilot
+# Implementation Guide — Money Airport
 
 ## Build Order
 
@@ -13,7 +13,7 @@ Execute phases sequentially. Each phase results in a working, testable slice. Th
 2. Scaffold client: Vite + React + TS + TailwindCSS + shadcn/ui (Card, Sheet, Progress)
 3. Scaffold server: NestJS CLI + Drizzle + PostgreSQL connection
 4. Configure BiomeJS at root (single biome.json, both packages inherit)
-5. Set up TanStack Router with placeholder pages for every nav item
+5. Set up React Router with placeholder pages for every nav item
 6. Build layout shell: sidebar (PRD order), header chrome, page-layout with optional right panel
 7. Verify: both apps start, database connects, linter runs, nav switches pages
 ```
@@ -22,15 +22,16 @@ Execute phases sequentially. Each phase results in a working, testable slice. Th
 
 ---
 
-### Phase 1 — Auth (Days 2-3)
+### Phase 1 — Auth + Billing stub (Days 2-3)
 
 ```
 1. Set up BetterAuth in NestJS (server/src/auth/)
 2. Create auth tables via BetterAuth auto-migration
 3. Build login + signup pages (client)
 4. Implement AuthGuard (server) + protected route wrapper (client)
-5. Profile menu in sidebar footer (logout) + settings gear in header
-6. Verify: sign up → login → see dashboard → logout
+5. Profile menu in sidebar footer (logout, Free chip) + settings gear in header
+6. BillingModule: create Stripe Customer + $0 Subscription after signup; retry on next session if Stripe failed; `/billing/webhook`
+7. Verify: sign up → login → see dashboard → logout. Stripe IDs may be null; login still works.
 ```
 
 **Key code:**
@@ -66,19 +67,20 @@ export class AuthGuard implements CanActivate {
 ### Phase 2 — Plaid + Accounts page (Days 4-7)
 
 ```
-1. Create plaid_item, bank_account, account_balance_snapshot tables
+1. Create plaid_item, bank_account, account_balance_snapshot, fx_rate tables
 2. Build PlaidModule (create-link-token, exchange-token, sync, sync-all, webhook)
 3. Integrate Plaid Link (react-plaid-link) from Accounts [+ Add account]
-4. Manual account create (vehicles, cash, property)
+4. Manual account create (vehicles, cash, property) with currency
 5. Accounts page: net-worth hero + chart, grouped rows with sparklines, last updated
-6. Right panel: assets vs liabilities stacked bars
-7. Snapshot upsert on every sync
-8. Verify: connect sandbox → grouped accounts → chart moves after sync
+6. Right panel: assets vs liabilities stacked bars (Base currency; latest FX)
+7. Snapshot upsert on every sync (native cents). Disconnect keeps history.
+8. FxModule: cache Frankfurter rates; omit unofficial currencies from totals
+9. Verify: connect sandbox → grouped accounts → chart moves after sync
 ```
 
 **Plaid sandbox credentials:** Use `user_good` / `pass_good` for testing.
 
-Net worth = sum(assets) − sum(liabilities) from `bank_account.current_balance` and `is_asset`. Series comes from summing snapshots per day.
+Net worth = sum(visible assets) − sum(visible liabilities), each converted to Base at the latest rate, from `bank_account.current_balance` and `is_asset`. Series comes from summing snapshots per day then converting at that day's rate.
 
 ---
 
@@ -88,12 +90,12 @@ Net worth = sum(assets) − sum(liabilities) from `bank_account.current_balance`
 1. Create category + transaction tables (kind, budget_group, merchant_logo_url)
 2. Seed default categories on user creation
 3. Build TransactionsModule (cursor list, CRUD, bulk categorize)
-4. Normalize Plaid amounts on ingest (flip sign)
+4. Normalize Plaid amounts on ingest (flip sign); assign Uncategorized then map PFC primary; pair Transfers
 5. Transactions page: date-grouped feed, infinite scroll, filters in URL
-6. Transaction drawer (detail + edit category/notes + add)
-7. Category manager drawer
+6. Transaction drawer (detail + edit category/notes/transfer toggle + add)
+7. Category manager drawer (Uncategorized cannot be deleted)
 8. Bulk categorize
-9. Verify: feed groups by date → filter → change category in drawer → bulk assign
+9. Verify: feed groups by date → filter → change category in drawer → bulk assign; internal pair tagged transfer
 ```
 
 **Amount normalization (critical):**
@@ -106,6 +108,8 @@ function normalizePlaidTransaction(plaidTx: PlaidTransaction) {
     // Plaid: positive = debit (expense), negative = credit (income)
     // Our convention: positive = income, negative = expense
     amount: Math.round(plaidTx.amount * -100), // flip sign + convert to cents
+    isoCurrencyCode: plaidTx.iso_currency_code ?? "USD",
+    plaidPfcPrimary: plaidTx.personal_finance_category?.primary ?? null,
     date: plaidTx.date,
     merchantName: plaidTx.merchant_name,
     merchantLogoUrl: plaidTx.logo_url ?? null,
@@ -122,14 +126,14 @@ Do **not** ship a sortable data-grid as the Transactions UI.
 
 ```
 1. Build DashboardModule composing accounts, budgets (stub zeros until Phase 6),
-   transactions, recurring (empty until Phase 7), advice
+   transactions, recurring (empty until Phase 7)
 2. GET /dashboard payload
 3. Widget grid + Customize (persist dashboard_widgets on user_settings)
-4. Net worth, spending comparison, recent transactions, weekly recap widgets
+4. Net worth, spending comparison, recent transactions, recurring widgets
 5. Verify: home shows cards; customize hides a widget; deep-links work
 ```
 
-Budget / Recurring / Advice widgets can render empty or placeholder until their phases land.
+Budget / Recurring widgets can render empty or placeholder until their phases land.
 
 ---
 
@@ -151,6 +155,7 @@ FROM transaction t
 WHERE t.user_id = :userId
   AND t.date >= :monthStart AND t.date <= :monthEnd
   AND (:accountId::uuid IS NULL OR t.bank_account_id = :accountId)
+  AND NOT (t.tags && ARRAY['transfer','savings_transfer']::text[])
 GROUP BY 1
 ORDER BY 1;
 ```
@@ -179,6 +184,7 @@ LEFT JOIN budget b ON b.category_id = c.id AND b.user_id = c.user_id AND b.month
 LEFT JOIN transaction t ON t.category_id = c.id
   AND t.user_id = c.user_id
   AND t.date >= :monthStart AND t.date <= :monthEnd
+  AND NOT (t.tags && ARRAY['transfer','savings_transfer']::text[])
 WHERE c.user_id = :userId
 GROUP BY b.id, c.id;
 ```
@@ -188,11 +194,11 @@ GROUP BY b.id, c.id;
 ### Phase 7 — Recurring + Goals (Days 19-21)
 
 ```
-1. recurring_item + goal + goal_allocation tables
-2. Recurring list, detect-from-history, mark paid / skip, drawer
-3. Goals: save-up / pay-down cards, allocate-funds drawer, right panel
-4. Wire Dashboard recurring + advice widgets (advice uses goals + utilization + budget)
-5. Verify: upcoming bill countdown; allocate increases current_amount without a bank transfer
+1. recurring_item + goal + goal_account tables
+2. Recurring list, detect-from-history, mark paid / skip (no Transaction insert), drawer
+3. Goals: save-up / pay-down cards, Edit accounts drawer, right panel of associated BankAccounts
+4. Wire Dashboard recurring widget
+5. Verify: upcoming bill countdown; associating a BankAccount updates Goal progress (real balances, FX to Base)
 ```
 
 ---
@@ -214,9 +220,10 @@ GROUP BY b.id, c.id;
 1. forecast_section, forecast_row, forecast_cell tables
 2. ForecastModule: CRUD + summary series
 3. Page: summary cards, projected-balance chart, collapsible item cards with sparklines
-4. Forecast item drawer (monthly amounts + copy-to-all) — not a 12-column grid
-5. Actuals overlay for past months
-6. Verify: edit in drawer → chart updates; past months marked actual
+4. Forecast item drawer (monthly Plan amounts + copy-to-all) — not a 12-column grid
+5. One-shot Add from categories / Add from recurring
+6. Actuals overlay for past months (computed at read; RecurringItem merchant match else Category)
+7. Verify: edit Plan in drawer → chart updates; past months show Plan and Actual separately
 ```
 
 **Actuals merge logic:**
@@ -233,9 +240,10 @@ async getFullYear(userId: string, year: number) {
       for (let month = 1; month <= 12; month++) {
         if (year < currentYear || (year === currentYear && month < currentMonth)) {
           const actual = await this.getActualForRow(userId, row, year, month);
-          if (actual !== null) {
-            row.cells[month] = { amount: actual, isActual: true };
-          }
+          row.cells[month] = {
+            plan: row.cells[month]?.amount ?? 0,
+            actual,
+          };
         }
       }
     }
@@ -255,10 +263,10 @@ async getFullYear(userId: string, year: number) {
 4. Responsive: stack right panel under main at 1024px; icon-rail at 375px
 5. Export CSV (transactions + accounts)
 6. Dark mode tokens (palette in SCREEN_SPECS)
-7. Settings page (profile, categories, dashboard widgets, budget copy-forward)
+7. Settings page (profile, categories, dashboard widgets, budget copy-forward, base currency)
 ```
 
-AI Assistant (PRD F14) is deferred unless explicitly pulled into a later slice.
+AI Assistant, Advice, and Weekly Recap are out of V1.
 
 ---
 
@@ -365,21 +373,21 @@ export class TransactionsController {
 
 ```typescript
 // client/src/lib/format.ts
-export function formatCents(cents: number): string {
+export function formatCents(cents: number, currency = "USD"): string {
   const dollars = cents / 100;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
   }).format(dollars);
 }
 
-export function formatCentsWithSign(cents: number): string {
-  const formatted = formatCents(Math.abs(cents));
+export function formatCentsWithSign(cents: number, currency = "USD"): string {
+  const formatted = formatCents(Math.abs(cents), currency);
   return cents < 0 ? `-${formatted}` : formatted;
 }
 
-export function formatIncome(cents: number): string {
-  const formatted = formatCents(Math.abs(cents));
+export function formatIncome(cents: number, currency = "USD"): string {
+  const formatted = formatCents(Math.abs(cents), currency);
   return cents > 0 ? `+${formatted}` : formatted;
 }
 ```

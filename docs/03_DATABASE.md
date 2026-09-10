@@ -1,8 +1,8 @@
-# Database Schema — CashPilot
+# Database Schema — Money Airport
 
-All monetary values stored as **integers in cents**. Display conversion happens in the frontend.
+All monetary values stored as **integers in cents** in the BankAccount’s ISO currency. Totals convert to the User’s Base currency at read (or via cached base cents). Display conversion happens in the frontend.
 
-The schema supports a widget dashboard (snapshots, rollups, goals, recurring) — not a spreadsheet of cells.
+The schema supports a widget dashboard (snapshots, rollups, goals, recurring) — not a spreadsheet of cells. Language: `CONTEXT.md`.
 
 ---
 
@@ -10,21 +10,26 @@ The schema supports a widget dashboard (snapshots, rollups, goals, recurring) �
 
 ```
 User (BetterAuth)
+ ├── 1:1 → Billing (Stripe Customer + Subscription)
  ├── 1:N → PlaidItem (bank connections)
  │         └── 1:N → BankAccount
  ├── 1:N → BankAccount (Plaid or manual)
  │         ├── 1:N → Transaction
  │         │         └── N:1 → Category
- │         └── 1:N → AccountBalanceSnapshot
- ├── 1:N → Category (kind + budget_group)
+ │         ├── 1:N → AccountBalanceSnapshot
+ │         └── 0:1 → GoalAccount (exclusive)
+ ├── 1:N → Category (kind + budget_group; includes Uncategorized)
  ├── 1:N → Budget (per category per month)
  ├── 1:N → RecurringItem
  ├── 1:N → Goal
- │         └── 1:N → GoalAllocation
+ │         └── 1:N → GoalAccount
  ├── 1:N → ForecastSection
  │         └── 1:N → ForecastRow
- │                    └── 1:N → ForecastCell
- └── 1:1 → UserSettings (dashboard layout JSON)
+ │                    ├── 0:1 → Category
+ │                    ├── 0:1 → RecurringItem
+ │                    └── 1:N → ForecastCell  (plan amounts only)
+ ├── 1:1 → UserSettings (dashboard layout JSON, base currency)
+ └── FxRate (shared daily quotes; not per-user)
 ```
 
 ---
@@ -87,15 +92,14 @@ Individual accounts — Plaid-linked or manual (vehicles, property, cash on hand
 | `credit_limit` | `integer` | In cents, nullable — used for utilization bars |
 | `iso_currency_code` | `text` | default `USD` |
 | `is_asset` | `boolean` | default `true` (false for credit cards and loans) |
-| `is_hidden` | `boolean` | default `false` |
-| `is_goal_account` | `boolean` | default `false` — eligible for goal allocations |
+| `is_hidden` | `boolean` | default `false` — omit from net worth, Budget scope, Goals |
 | `last_synced_at` | `timestamptz` | |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
 
 **Indexes:** `(user_id)`, `(plaid_item_id)`, `(user_id, display_group)`
 
-**Net worth:** sum of asset balances − sum of liability balances. Manual accounts are included.
+**Net worth:** sum of visible asset balances − sum of visible liability balances, each converted to Base at the **latest** Exchange rate. Hidden BankAccounts are omitted. Manual BankAccounts are included. Unofficial/crypto currencies are omitted from the total.
 
 ---
 
@@ -134,9 +138,12 @@ User-defined transaction categories.
 | `kind` | `text` | `income` \| `expense`, NOT NULL, default `expense` |
 | `budget_group` | `text` | `fixed` \| `flexible` \| `non_monthly` \| null (income categories are null) |
 | `is_default` | `boolean` | default `false` (seeded categories) |
+| `is_uncategorized` | `boolean` | default `false` — exactly one per User; cannot be deleted |
 | `created_at` | `timestamptz` | default `now()` |
 
 **Unique:** `(user_id, name)`
+
+Partial unique: one `is_uncategorized = true` per `user_id`.
 
 **Seed defaults (expense, with budget_group):**
 
@@ -144,7 +151,8 @@ User-defined transaction categories.
 |------|----------------|
 | Housing, Utilities, Insurance, Debt Payment | `fixed` |
 | Groceries, Transport, Dining, Entertainment, Shopping, Healthcare, Subscriptions, Giving | `flexible` |
-| Education, Uncategorized | `non_monthly` |
+| Education | `non_monthly` |
+| Uncategorized (`is_uncategorized=true`) | `non_monthly` |
 
 **Seed defaults (income):** Salary (`kind=income`). Savings Transfer is `expense` / `non_monthly`.
 
@@ -159,17 +167,19 @@ All transactions from all accounts + manual entries.
 | `id` | `uuid` | PK, default `gen_random_uuid()` |
 | `user_id` | `text` | FK → user.id, NOT NULL |
 | `bank_account_id` | `uuid` | FK → bank_account.id, nullable (null = manual, unassigned) |
-| `category_id` | `uuid` | FK → category.id, nullable |
+| `category_id` | `uuid` | FK → category.id, NOT NULL |
 | `plaid_transaction_id` | `text` | UNIQUE, nullable (null = manual) |
 | `name` | `text` | NOT NULL |
 | `merchant_name` | `text` | |
 | `merchant_logo_url` | `text` | From Plaid when available |
-| `amount` | `integer` | In cents. Positive = income, Negative = expense |
+| `amount` | `integer` | In cents, **native** currency. Positive = income, Negative = expense |
+| `iso_currency_code` | `text` | NOT NULL, copied from BankAccount at ingest |
 | `date` | `date` | NOT NULL |
 | `pending` | `boolean` | default `false` |
-| `plaid_category` | `text[]` | Plaid's category array (for auto-categorization) |
+| `plaid_category` | `text[]` | Plaid legacy category array |
+| `plaid_pfc_primary` | `text` | Plaid personal_finance_category.primary |
 | `notes` | `text` | |
-| `tags` | `text[]` | e.g. `savings_transfer` for highlight treatment |
+| `tags` | `text[]` | `transfer` \| `savings_transfer` for internal pairs |
 | `is_manual` | `boolean` | default `false` |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
@@ -183,6 +193,12 @@ All transactions from all accounts + manual entries.
 
 **Amount convention:** Plaid returns positive = debit (money leaving), negative = credit (money coming in). **Normalize on ingest:** flip the sign so that positive = income, negative = expense.
 
+**Category on ingest:** assign Uncategorized, then if still Uncategorized, best-effort map `plaid_pfc_primary` (or Plaid primary name) onto a seeded Category name. Never overwrite a User-set Category on later syncs.
+
+**Transfer pairing:** after sync, pair two Transactions (same User, different `bank_account_id`, opposite signs, equal `|amount|`, same `iso_currency_code`, dates within 3 days, `plaid_pfc_primary` in `TRANSFER` / `LOAN_PAYMENTS`). Tag both `transfer` (or `savings_transfer` if Category is Savings Transfer). No cross-currency pairs. Totals that exclude Transfers also exclude `savings_transfer`.
+
+**Disconnect:** do not cascade-delete Transactions or BankAccounts. Set `plaid_item.status = disconnected`.
+
 ---
 
 ### `budget`
@@ -195,7 +211,7 @@ Monthly budget per category.
 | `user_id` | `text` | FK → user.id, NOT NULL |
 | `category_id` | `uuid` | FK → category.id, NOT NULL |
 | `month` | `date` | First day of month (e.g., 2026-08-01) |
-| `amount` | `integer` | Planned amount in cents |
+| `amount` | `integer` | Planned amount in **Base** cents |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
 
@@ -226,13 +242,13 @@ Detected or manually added bills and subscriptions.
 
 **Indexes:** `(user_id, next_date)`, `(user_id, is_active)`
 
-V1 detection: group transactions by merchant over ≥2 months with similar amounts; user can confirm, skip, or edit.
+V1 detection: group transactions by merchant over ≥2 months with similar amounts; user can confirm, skip, or edit. Mark paid / skip do **not** insert a Transaction.
 
 ---
 
 ### `goal`
 
-Save-up and pay-down goals.
+Save-up and pay-down Goals. Progress is **not** stored.
 
 | Column | Type | Constraints |
 |--------|------|------------|
@@ -241,30 +257,33 @@ Save-up and pay-down goals.
 | `name` | `text` | NOT NULL |
 | `type` | `text` | `save_up` \| `pay_down`, NOT NULL |
 | `thumbnail_url` | `text` | |
-| `target_amount` | `integer` | Cents, NOT NULL |
-| `current_amount` | `integer` | Cents, default `0` — in-app allocation, not a bank transfer |
+| `target_amount` | `integer` | Base cents, NOT NULL |
 | `target_date` | `date` | nullable |
-| `linked_account_id` | `uuid` | FK → bank_account.id, nullable |
 | `sort_order` | `integer` | default `0` |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
+
+**Progress** is computed at read time: sum of associated BankAccount `current_balance` converted to Base at the latest Exchange rate. Save-up current = that sum. Pay-down current display = remaining owed (that sum); bar = `(target − remaining) / target`. Zero associations → 0.
 
 **Status** is computed at read time: `at_risk` if projected monthly contribution (remaining / months left) exceeds a simple affordability heuristic; otherwise `on_track`. No stored status column.
 
 ---
 
-### `goal_allocation`
+### `goal_account`
 
-Ledger of in-app moves between available cash and a goal.
+Exclusive association of a BankAccount to a Goal.
 
 | Column | Type | Constraints |
 |--------|------|------------|
 | `id` | `uuid` | PK, default `gen_random_uuid()` |
 | `user_id` | `text` | FK → user.id, NOT NULL |
 | `goal_id` | `uuid` | FK → goal.id, ON DELETE CASCADE, NOT NULL |
-| `from_account_id` | `uuid` | FK → bank_account.id, nullable |
-| `amount` | `integer` | Cents, NOT NULL (positive = toward goal) |
+| `bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE CASCADE, NOT NULL |
 | `created_at` | `timestamptz` | default `now()` |
+
+**Unique:** `(bank_account_id)` — a BankAccount belongs to at most one Goal. Associating an account already on another Goal **moves** the row.
+
+**App rules:** save-up Goals only accept `is_asset = true`. Pay-down Goals accept at most one `is_asset = false` BankAccount (refuse a second). Hidden BankAccounts cannot be associated.
 
 ---
 
@@ -295,15 +314,19 @@ A line item within a forecast section (e.g., "Rent", "Salary").
 | `section_id` | `uuid` | FK → forecast_section.id, NOT NULL, ON DELETE CASCADE |
 | `user_id` | `text` | FK → user.id, NOT NULL |
 | `name` | `text` | NOT NULL |
+| `category_id` | `uuid` | FK → category.id, nullable |
+| `recurring_item_id` | `uuid` | FK → recurring_item.id, nullable |
 | `day_of_month` | `integer` | Due date / pay day (1-31), nullable |
 | `sort_order` | `integer` | Display order within section |
 | `created_at` | `timestamptz` | default `now()` |
+
+**Actuals** are not stored. RecurringItem wins if `recurring_item_id` is set (match `merchant_name` + optional `bank_account_id` for the month); else Category. Neither → plan only.
 
 ---
 
 ### `forecast_cell`
 
-Monthly values for each forecast row. One cell per row per month. The UI edits these in a **drawer** (copy-across-months), not a 12-column grid.
+Plan amounts only. One cell per row per month. The UI edits these in a **drawer** (copy-across-months), not a 12-column grid.
 
 | Column | Type | Constraints |
 |--------|------|------------|
@@ -311,8 +334,7 @@ Monthly values for each forecast row. One cell per row per month. The UI edits t
 | `forecast_row_id` | `uuid` | FK → forecast_row.id, NOT NULL, ON DELETE CASCADE |
 | `year` | `integer` | NOT NULL |
 | `month` | `integer` | 1-12, NOT NULL |
-| `amount` | `integer` | In cents |
-| `is_actual` | `boolean` | default `false` (true = derived from real transactions) |
+| `amount` | `integer` | Plan in **Base** cents |
 | `updated_at` | `timestamptz` | default `now()` |
 
 **Unique:** `(forecast_row_id, year, month)`
@@ -327,8 +349,8 @@ Monthly values for each forecast row. One cell per row per month. The UI edits t
 |--------|------|------------|
 | `id` | `uuid` | PK, default `gen_random_uuid()` |
 | `user_id` | `text` | FK → user.id, UNIQUE, NOT NULL |
-| `currency` | `text` | default `USD` |
-| `dashboard_widgets` | `jsonb` | Widget id + order + visible. Default: budget, net_worth, spending, transactions, recurring, advice, weekly_recap |
+| `currency` | `text` | Base currency, default `USD` |
+| `dashboard_widgets` | `jsonb` | Widget id + order + visible. Default: budget, net_worth, spending, transactions, recurring |
 | `budget_copy_forward` | `boolean` | default `false` |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
@@ -341,13 +363,50 @@ Monthly values for each forecast row. One cell per row per month. The UI edits t
   { "id": "net_worth", "visible": true, "order": 1 },
   { "id": "spending", "visible": true, "order": 2 },
   { "id": "transactions", "visible": true, "order": 3 },
-  { "id": "recurring", "visible": true, "order": 4 },
-  { "id": "advice", "visible": true, "order": 5 },
-  { "id": "weekly_recap", "visible": true, "order": 6 }
+  { "id": "recurring", "visible": true, "order": 4 }
 ]
 ```
 
-Credit Score widget is omitted until a bureau partner exists.
+Credit Score widget is omitted until a bureau partner exists. Advice and Weekly Recap are not V1 widgets.
+
+---
+
+### `billing`
+
+One Stripe Customer and one Subscription per User.
+
+| Column | Type | Constraints |
+|--------|------|------------|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `user_id` | `text` | FK → user.id, UNIQUE, NOT NULL |
+| `stripe_customer_id` | `text` | UNIQUE, nullable until Stripe succeeds |
+| `stripe_subscription_id` | `text` | UNIQUE, nullable until Stripe succeeds |
+| `stripe_price_id` | `text` | nullable — V1 is the Free $0 Price |
+| `status` | `text` | Stripe subscription status, nullable |
+| `created_at` | `timestamptz` | default `now()` |
+| `updated_at` | `timestamptz` | default `now()` |
+
+Created after signup. Null Stripe IDs are retried on later authenticated requests. Signup/login never wait on Stripe. Webhooks update `status` and IDs.
+
+---
+
+### `fx_rate`
+
+Cached daily quotes into Base (and cross pairs as needed). Shared, not per-User.
+
+| Column | Type | Constraints |
+|--------|------|------------|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `date` | `date` | NOT NULL |
+| `from_currency` | `text` | ISO-4217, NOT NULL |
+| `to_currency` | `text` | ISO-4217, NOT NULL |
+| `rate` | `numeric` | NOT NULL |
+| `source` | `text` | default `frankfurter` |
+| `created_at` | `timestamptz` | default `now()` |
+
+**Unique:** `(date, from_currency, to_currency)`
+
+P&L converts native Transaction amounts at the rate for `transaction.date` (roll back to last business day if missing). Balances / net worth / Goal progress use the latest row per pair.
 
 ---
 
@@ -364,12 +423,13 @@ export const transaction = pgTable("transaction", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id").notNull().references(() => user.id),
   bankAccountId: uuid("bank_account_id").references(() => bankAccount.id),
-  categoryId: uuid("category_id").references(() => category.id),
+  categoryId: uuid("category_id").notNull().references(() => category.id),
   plaidTransactionId: text("plaid_transaction_id").unique(),
   name: text("name").notNull(),
   merchantName: text("merchant_name"),
   merchantLogoUrl: text("merchant_logo_url"),
-  amount: integer("amount").notNull(), // cents
+  amount: integer("amount").notNull(), // native cents
+  isoCurrencyCode: text("iso_currency_code").notNull(),
   date: date("date").notNull(),
   pending: boolean("pending").default(false),
   notes: text("notes"),

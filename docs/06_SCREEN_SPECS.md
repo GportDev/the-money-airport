@@ -1,4 +1,4 @@
-# Screen Specifications — CashPilot
+# Screen Specifications — Money Airport
 
 All screens share: collapsible **left sidebar** + **main content** (cards, grouped lists, charts) + **optional right summary panel**. Create/edit/detail open in a **right drawer**. The main layout never becomes a spreadsheet.
 
@@ -24,6 +24,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 │  Invest.   │                                             │              │
 │  Forecast  │                                             │              │
 │  ────────  │                                             │              │
+│  Free      │                                             │              │
 │  Profile   │                                             │              │
 └────────────┴─────────────────────────────────────────────┴──────────────┘
 ```
@@ -55,7 +56,6 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 │  [area chart]               │  …                             │
 │                             │  Recurring  $702 remaining     │
 │                             │  Citi  Every month  in 15d     │
-│                             │  Advice  Emergency fund  ░░    │
 └─────────────────────────────┴────────────────────────────────┘
 ```
 
@@ -65,6 +65,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 - **Customize** toggles widget visibility and order (persisted in settings).
 - Two columns on ≥1280px; single column below.
 - Widget headers deep-link to the full screen (Budget → `/budget`, etc.).
+- Default widgets: Budget, Net Worth, Spending, Transactions, Recurring.
 - Credit Score widget is not rendered unless a bureau partner is connected.
 - Empty state if no accounts: illustration + **Connect an account**.
 
@@ -123,7 +124,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 - Hero: net worth KPI + change + chart. Timeframe dropdown.
 - Collapsible groups by `displayGroup`. Header shows group total and period change.
-- Row: institution logo, name + last 4, type, optional Shared tag, sparkline, balance, last updated. Credit rows include a utilization bar.
+- Row: institution logo, name + last 4, type, sparkline, balance (native), last updated. Credit rows include a utilization bar.
 - Click row → account drawer (balance history sparkline, recent transactions).
 - **+ Add account:** Plaid Link or manual account form in a drawer.
 - **Refresh all** calls `/plaid/sync-all`.
@@ -155,7 +156,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 - Date-grouped feed. Date header shows that day's net. Infinite/virtual scroll.
 - Row: merchant logo + name; category icon + label; account logo + name; amount; chevron. Pending badge when `pending`.
 - Spend in default text; income/credits green with `+`.
-- Click row → **transaction drawer** (category select, notes, similar transactions).
+- Click row → **transaction drawer** (category select, notes, similar transactions, **This is a transfer** toggle).
 - Search (300ms debounce). Filters: account multi, category multi, amount, pending. All in URL search params.
 - **Edit multiple:** checkboxes → bulk category assign (drawer).
 - **Columns:** show/hide category and account.
@@ -220,7 +221,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 - Rows: icon + name, thin progress bar (green under / red over), Planned, Actual, Remaining. Remaining red when negative.
 - Group headers roll up totals.
 - Click category → drawer to set planned amount.
-- Settings gear: copy from previous month, copy-forward preference.
+- Settings gear: copy from previous month, copy-forward preference. No rollover.
 - **Show unbudgeted** reveals spend with no plan.
 - Right panel: large left-to-budget callout; tabs Summary / Income / Expenses; group progress bars (same as Dashboard widget).
 
@@ -245,7 +246,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 ### Behavior
 
 - Timeline list sorted by `nextDate`. Summary: remaining due vs already paid this month.
-- Row click → drawer: edit amount/cadence, mark paid, skip, deactivate.
+- Row click → drawer: edit amount/cadence, mark paid, skip, deactivate. Mark paid / skip do not insert a Transaction.
 - **+ Add** → manual recurring drawer.
 - Detection: banner when `/recurring/detect` finds candidates to confirm.
 
@@ -260,14 +261,13 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 ```
 ┌────────────────────────────────────────────┬─────────────────┐
 │  Goals   Save up | Pay down                                  │
-│          [Manage] [Allocate funds]              [+ Add goal] │
+│          [Manage] [Edit accounts]               [+ Add goal] │
 │  Save up                                      $101.86        │
 │  [img] Emergency fund  At risk  Jul 2027  $96.57             │
 │        █░░░░░░░░░░░░░░░░░░░░░░░░  1% of $10,000              │
 │  [img] Vacation        Dec 2027            $5.29             │
-│                                            │  $0 Available   │
-│                                            │  Goal accounts  │
-│                                            │  [Allocate]     │
+│                                            │  Ally  $2,000   │
+│                                            │  HYSA  $800     │
 │                                            │  [Edit accounts]│
 └────────────────────────────────────────────┴─────────────────┘
 ```
@@ -276,9 +276,9 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 - Sub-tabs: Save up (default), Pay down.
 - Goal cards: thumbnail, name, status badge, target date, current amount, progress bar, `% of $target`.
-- **+ Add goal** / card click → goal drawer.
-- **Allocate funds** → drawer: pick goal, source account, amount (in-app only).
-- Right panel: available for goals, goal-account balances, primary Allocate CTA, Edit goal accounts (toggles `isGoalAccount`).
+- **+ Add goal** / card click → goal drawer. Create allowed with zero BankAccounts (progress $0).
+- **Edit accounts** → associate BankAccounts (save-up: many assets; pay-down: 0 or 1 liability). Moving an account off another Goal shows a toast.
+- Right panel: associated BankAccount balances; **Edit accounts** primary CTA. No Allocate funds.
 
 ---
 
@@ -327,7 +327,8 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 - Year navigator. Summary **cards** (not a summary spreadsheet row).
 - Projected balance chart. Current month highlighted; past actuals solid, projections dashed.
 - Collapsible card groups. Each item: name, typical monthly amount, sparkline or month chips — **not** an editable 12-column matrix.
-- Click item → drawer: per-month amounts + "copy to all months". Add/delete item from section header / row action.
+- Click item → drawer: per-month Plan amounts + "copy to all months". Add/delete item from section header / row action. **Add from categories** and **Add from recurring** are one-shot seeds.
+- Past months: chart draws Plan (dashed) and Actual (solid) when Actuals exist.
 - Confirm dialog for delete.
 
 ---
@@ -345,13 +346,14 @@ Vertical stacked sections (cards), no sub-nav:
 - **Profile** — name, email (read-only), avatar, change password
 - **Accounts shortcut** — link to `/accounts` (connect/disconnect lives there)
 - **Categories** — opens category manager drawer
-- **Dashboard** — widget visibility / order (same as Customize)
-- **Budget** — copy-forward toggle
+- **Dashboard** — widget visibility / order (same as Customize). Defaults omit Advice and Weekly Recap.
+- **Budget** — copy-forward toggle (no rollover)
+- **Currency** — Base currency
 - **Data** — export transactions CSV
 
 ### Behavior
 
-- Disconnect still uses a **confirm dialog**, then soft-hides the Plaid item.
+- Disconnect uses a **confirm dialog**, then sets the Plaid item `disconnected` and **keeps** BankAccounts and Transactions.
 - Change password is a small form on the page or a confirm-style dialog.
 
 ---
@@ -360,12 +362,12 @@ Vertical stacked sections (cards), no sub-nav:
 
 | Drawer | Trigger | Contents |
 |--------|---------|----------|
-| Transaction | Row click / + Add | Merchant, date, amount, category select, account, notes, similar; or add form |
-| Account | Account row / + Add (manual) | History sparkline, recent tx; or manual account fields |
+| Transaction | Row click / + Add | Merchant, date, native amount, category, account, notes, similar, transfer toggle; or add form |
+| Account | Account row / + Add (manual) | History sparkline, recent tx; or manual account fields including currency |
 | Budget category | Budget row | Planned amount for category+month |
 | Recurring | Row / + Add | Amount, cadence, next date, mark paid, skip |
-| Goal | Card / + Add / Allocate | Name, thumbnail, target, date, type; or allocation fields |
-| Forecast item | Row / + Add | Name, day of month, 12 monthly amounts, copy-to-all |
+| Goal | Card / + Add / Edit accounts | Name, thumbnail, target, date, type; or associated BankAccounts |
+| Forecast item | Row / + Add | Name, day of month, 12 Plan amounts, copy-to-all |
 | Category manager | Filters gear / Settings | List with color/icon; create/edit; delete confirm |
 | Report transactions | Chart segment click | Filtered `transaction-feed` |
 

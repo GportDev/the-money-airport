@@ -1,4 +1,4 @@
-# Project Structure — CashPilot
+# Project Structure — Money Airport
 
 Monorepo with two packages: `client` (React) and `server` (NestJS).
 
@@ -9,7 +9,7 @@ The frontend is organized around **pages + widgets + drawers**, not tables + mod
 ## Root
 
 ```
-cashpilot/
+money-airport/
 ├── client/                     # React frontend
 ├── server/                     # NestJS backend
 ├── biome.json                  # Shared BiomeJS config
@@ -51,13 +51,13 @@ client/
 ├── src/
 │   ├── main.tsx
 │   ├── app.tsx                           # Providers + authenticated shell
-│   ├── router.tsx                        # TanStack Router + route tree
+│   ├── router.tsx                        # React Router createBrowserRouter + routes
 │   │
 │   ├── api/
 │   │   ├── client.ts
 │   │   ├── accounts.ts
-│   │   ├── advice.ts
 │   │   ├── auth.ts
+│   │   ├── billing.ts
 │   │   ├── budgets.ts
 │   │   ├── cash-flow.ts
 │   │   ├── categories.ts
@@ -73,8 +73,8 @@ client/
 │   │
 │   ├── hooks/
 │   │   ├── use-accounts.ts
-│   │   ├── use-advice.ts
 │   │   ├── use-auth.ts
+│   │   ├── use-billing.ts
 │   │   ├── use-budgets.ts
 │   │   ├── use-cash-flow.ts
 │   │   ├── use-categories.ts
@@ -124,9 +124,7 @@ client/
 │   │   │   ├── net-worth-widget.tsx
 │   │   │   ├── spending-widget.tsx
 │   │   │   ├── transactions-widget.tsx
-│   │   │   ├── recurring-widget.tsx
-│   │   │   ├── advice-widget.tsx
-│   │   │   └── weekly-recap-widget.tsx
+│   │   │   └── recurring-widget.tsx
 │   │   │
 │   │   ├── transactions/
 │   │   │   ├── transaction-row.tsx       # Logo, merchant, category, account, amount
@@ -208,6 +206,8 @@ server/
 │   │   │   ├── budget.ts
 │   │   │   ├── recurring-item.ts
 │   │   │   ├── goal.ts
+│   │   │   ├── billing.ts
+│   │   │   ├── fx-rate.ts
 │   │   │   ├── forecast.ts
 │   │   │   └── user-settings.ts
 │   │   └── seed.ts
@@ -224,7 +224,8 @@ server/
 │   ├── reports/
 │   ├── forecast/
 │   ├── investments/                      # Read-only filter of accounts
-│   ├── advice/                           # Deterministic rules, no table
+│   ├── billing/
+│   ├── fx/
 │   ├── settings/
 │   ├── export/
 │   │
@@ -250,10 +251,11 @@ Each domain folder is `*.module.ts` + `*.controller.ts` + `*.service.ts`.
 1. **One NestJS module per domain** — controller + service. No repositories layer (Drizzle is thin enough).
 2. **Drizzle directly in services** — inject the Drizzle instance; write queries inline.
 3. **Zod for validation** — not `class-validator`. Zod schemas define DTOs and pipe validates.
-4. **Auth guard on every controller** except auth and webhook routes.
+4. **Auth guard on every controller** except auth and webhook routes (`/plaid/webhook`, `/billing/webhook`).
 5. **All services receive `userId`** from the controller (extracted by `@CurrentUser()` decorator). Services never access the request object.
 6. **Encryption module** — Plaid access tokens encrypted with AES-256-GCM before storage.
-7. **DashboardModule composes** Accounts, Budgets, Transactions, Recurring, Advice — it does not own extra tables.
+7. **DashboardModule composes** Accounts, Budgets, Transactions, Recurring — it does not own extra tables.
+8. **FxModule** caches Frankfurter daily rates; totals convert at read. **BillingModule** creates Customer + $0 Subscription after signup and retries if Stripe is down.
 
 ---
 

@@ -1,4 +1,4 @@
-# Technical Architecture — CashPilot
+# Technical Architecture — Money Airport
 
 ## 1. Stack Decisions
 
@@ -10,7 +10,7 @@
 | **TailwindCSS 4** | Utility-first, no CSS files |
 | **shadcn/ui + Radix UI** | Accessible, composable primitives (Sheet for drawers, Card for widgets) |
 | **TanStack Query v5** | Server state management, caching, optimistic updates |
-| **TanStack Router** | Type-safe routing, search params as state |
+| **React Router 7** | Nested layouts, search params as URL state |
 | **TanStack Virtual** | Infinite/virtual lists for the transaction feed |
 | **Recharts** | Charts, sparklines, and stacked bars across Dashboard, Accounts, Cash Flow, Reports, Forecasting |
 | **BiomeJS** | Linter + formatter (replaces ESLint + Prettier) |
@@ -23,6 +23,7 @@
 | **Drizzle ORM** | Type-safe SQL, no magic, great migrations |
 | **PostgreSQL 16** | See database decision below |
 | **Plaid Node SDK** | Official SDK for bank connections |
+| **Stripe Node SDK** | Billing: Customer + Subscription (not Connect) |
 
 ### Database Decision: PostgreSQL
 
@@ -49,7 +50,7 @@
 ```
 ┌─────────────────────────────────────────────────────┐
 │                     Frontend                         │
-│  React + TanStack Router + TanStack Query            │
+│  React + React Router + TanStack Query               │
 │  shadcn/ui (Card, Sheet) + TailwindCSS + Recharts    │
 │  Port: 5173 (dev)                                    │
 └──────────────────────┬──────────────────────────────┘
@@ -69,7 +70,8 @@
 │  ├── DashboardModule (widget aggregates)             │
 │  ├── ForecastModule                                  │
 │  ├── ReportsModule                                   │
-│  └── AdviceModule (deterministic rules)              │
+│  ├── BillingModule (Stripe Customer + Subscription)  │
+│  └── FxModule (daily rates cache)                    │
 │  Port: 3000                                          │
 └──────────────────────┬──────────────────────────────┘
                        │ Drizzle ORM
@@ -86,6 +88,12 @@
 │                   Plaid API                          │
 │  Link Token → Access Token → Transactions            │
 └─────────────────────────────────────────────────────┘
+                       ▲
+                       │ Webhooks
+┌──────────────────────┴──────────────────────────────┐
+│                   Stripe API                         │
+│  Customer + Subscription (Free / $0 Price)           │
+└─────────────────────────────────────────────────────┘
 ```
 
 The UI is a widget/list/chart shell. The backend does not model spreadsheets. List screens consume cursor-paginated feeds; dashboard and account charts consume pre-aggregated series (daily snapshots, category rollups).
@@ -97,8 +105,9 @@ The UI is a widget/list/chart shell. The backend does not model spreadsheets. Li
 ```
 1. User → POST /api/auth/signup (email, password)
 2. BetterAuth creates user + session → sets HTTP-only cookie
-3. All subsequent requests include cookie → BetterAuth middleware validates
-4. Plaid Link: Frontend gets link_token from backend → user completes Link →
+3. BillingModule tries to create Stripe Customer + $0 Subscription (retry later if Stripe is down — never block login)
+4. All subsequent requests include cookie → BetterAuth middleware validates
+5. Plaid Link: Frontend gets link_token from backend → user completes Link →
    frontend sends public_token → backend exchanges for access_token → stored encrypted
 ```
 
@@ -133,14 +142,14 @@ Manual accounts (vehicles, property, cash) skip Plaid. They are created via `POS
 ### State Management
 - **Server state:** TanStack Query (all API data)
 - **Client state:** React `useState`/`useReducer` for UI state (drawer open, selected filters, widget customize mode)
-- **URL state:** TanStack Router search params for filters, date range, selected month/year, account scope
+- **URL state:** React Router `useSearchParams` for filters, date range, selected month/year, account scope
 - **No Redux/Zustand** — TanStack Query eliminates the need
 
 ### API Design
 - REST with consistent conventions (see API_SPEC.md)
 - Transaction feed uses **cursor pagination** (`?cursor&limit`), not page numbers
 - Dashboard, net worth, cash flow, and reports return **pre-aggregated series** so the client does not recompute charts from raw ledgers
-- All monetary values stored as **integers (cents)** — displayed as dollars in frontend
+- All monetary values stored as **integers (cents)** in the BankAccount’s ISO currency — displayed in native on rows; KPIs in Base currency
 - Dates stored as ISO 8601 strings, displayed in user's timezone
 
 ### UI Composition
@@ -169,6 +178,8 @@ Manual accounts (vehicles, property, cash) skip Plaid. They are created via `POS
 | Backend | Railway, Render, or Fly.io |
 | Database | Neon (serverless Postgres) or Supabase Postgres |
 | Plaid | Plaid Dashboard (sandbox → production) |
+| Stripe | Stripe Dashboard (test → live); Billing, not Connect |
+| FX | Frankfurter (`api.frankfurter.dev`) daily rates cached in `fx_rate` |
 
 ---
 
@@ -176,13 +187,16 @@ Manual accounts (vehicles, property, cash) skip Plaid. They are created via `POS
 
 ```env
 # Backend
-DATABASE_URL=postgresql://user:pass@host:5432/cashpilot
+DATABASE_URL=postgresql://user:pass@host:5432/money_airport
 BETTER_AUTH_SECRET=random-32-char-string
 BETTER_AUTH_URL=http://localhost:3000
 PLAID_CLIENT_ID=xxx
 PLAID_SECRET=xxx
 PLAID_ENV=sandbox  # sandbox | development | production
 ENCRYPTION_KEY=random-32-char-hex  # for Plaid access tokens
+STRIPE_SECRET_KEY=rk_test_xxx  # restricted key preferred over sk_
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+STRIPE_PRICE_FREE=price_xxx  # $0 recurring Price on Product "Free"
 
 # Frontend
 VITE_API_URL=http://localhost:3000/api
