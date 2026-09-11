@@ -12,6 +12,8 @@ import {
 	Wallet,
 } from "lucide-react";
 import { NavLink } from "react-router";
+import { authClient } from "../../auth/auth-client";
+import { useSession } from "../../auth/use-session";
 import { NAV_ITEMS } from "../../lib/constants";
 
 const NAV_ICONS = {
@@ -28,6 +30,13 @@ const NAV_ICONS = {
 } as const;
 
 export function Sidebar({ collapsed }: { collapsed: boolean }) {
+	const { data } = useSession();
+	const name = data?.user.name;
+
+	async function logOut() {
+		await authClient.signOut();
+		window.location.assign("/login");
+	}
 	return (
 		<aside
 			aria-label="Workspace"
@@ -51,8 +60,8 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 							className={({ isActive }) =>
 								`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
 									isActive
-										? "border-l-2 border-primary bg-primary/10 font-medium text-primary"
-										: "text-foreground hover:bg-muted"
+										? "bg-muted font-medium text-foreground"
+										: "text-muted-foreground hover:bg-muted hover:text-foreground"
 								}`
 							}
 						>
@@ -66,7 +75,16 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 				<p className="mb-2 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
 					Free
 				</p>
-				<p className="truncate text-sm text-muted-foreground">Profile</p>
+				{name ? <p className="truncate text-sm text-foreground">{name}</p> : null}
+				<button
+					className="truncate text-sm text-muted-foreground"
+					type="button"
+					onClick={() => {
+						void logOut();
+					}}
+				>
+					Profile
+				</button>
 			</div>
 		</aside>
 	);

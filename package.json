@@ -4,6 +4,9 @@
 	"scripts": {
 		"dev:server": "pnpm --filter server start:dev",
 		"dev:client": "pnpm --filter client dev",
+		"db:up": "docker compose up -d",
+		"db:down": "docker compose down",
+		"db:push": "pnpm --filter server exec drizzle-kit push --config drizzle.config.ts --force",
 		"test": "playwright test",
 		"check": "biome check e2e client/src server/src playwright.config.ts biome.json",
 		"typecheck": "pnpm -r typecheck"

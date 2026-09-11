@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 const databaseUrl =
-	process.env.DATABASE_URL ?? "postgresql://gportdev@localhost:5432/money_airport";
+	process.env.DATABASE_URL ?? "postgresql://money:money@localhost:5433/money_airport";
 
 export default defineConfig({
 	testDir: "./e2e",
@@ -10,7 +10,8 @@ export default defineConfig({
 	},
 	webServer: [
 		{
-			command: "pnpm --filter server start:dev",
+			command: "pnpm exec drizzle-kit push --config drizzle.config.ts && pnpm start:dev",
+			cwd: "server",
 			url: "http://localhost:3000/api/health",
 			timeout: 120_000,
 			reuseExistingServer: !process.env.CI,
@@ -18,6 +19,8 @@ export default defineConfig({
 			env: {
 				...process.env,
 				DATABASE_URL: databaseUrl,
+				BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? "playwright-better-auth-secret-32ch",
+				BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
 			},
 		},
 		{

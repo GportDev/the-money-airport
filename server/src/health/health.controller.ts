@@ -2,8 +2,10 @@ import { Controller, Get, Inject, Res } from "@nestjs/common";
 import { sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type { Response } from "express";
+import { Public } from "../auth/public.decorator";
 import { DATABASE } from "../db/db.module";
 
+@Public()
 @Controller("health")
 export class HealthController {
 	constructor(@Inject(DATABASE) private readonly db: PostgresJsDatabase) {}

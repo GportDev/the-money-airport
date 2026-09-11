@@ -12,16 +12,22 @@
 		"@nestjs/config": "^12.0.0",
 		"@nestjs/core": "^12.0.1",
 		"@nestjs/platform-express": "^12.0.1",
+		"better-auth": "^1.7.4",
+		"cors": "^2.8.6",
 		"drizzle-orm": "^0.45.2",
+		"express": "^5.2.1",
 		"postgres": "^3.4.9",
 		"reflect-metadata": "^0.2.2",
-		"rxjs": "^7.8.2"
+		"rxjs": "^7.8.2",
+		"stripe": "^22.6.2"
 	},
 	"devDependencies": {
 		"@nestjs/cli": "^12.0.0",
 		"@nestjs/schematics": "^12.0.0",
+		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.6",
 		"@types/node": "^22.20.2",
+		"drizzle-kit": "^0.31.10",
 		"typescript": "^6.0.3"
 	}
 }

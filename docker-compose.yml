@@ -1,0 +1,23 @@
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: money-airport-postgres:16
+    container_name: money-airport-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: money
+      POSTGRES_PASSWORD: money
+      POSTGRES_DB: money_airport
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U money -d money_airport"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
