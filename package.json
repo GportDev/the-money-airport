@@ -1,0 +1,15 @@
+{
+	"name": "money-airport",
+	"private": true,
+	"scripts": {
+		"dev:server": "pnpm --filter server start:dev",
+		"dev:client": "pnpm --filter client dev",
+		"test": "playwright test",
+		"check": "biome check e2e client/src server/src playwright.config.ts biome.json",
+		"typecheck": "pnpm -r typecheck"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.0.6",
+		"@playwright/test": "^1.55.0"
+	}
+}
