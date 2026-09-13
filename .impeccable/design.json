@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T14:22:20.000Z",
+  "title": "Design System: Money Airport",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Board Canvas",
+        "canonical": "#f7f7f6",
+        "tonalRamp": ["#0b0b0b", "#252524", "#424241", "#616160", "#828281", "#a5a5a4", "#c9c9c8", "#eeeeed"]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#171717",
+        "tonalRamp": ["#0b0b0b", "#252525", "#424242", "#616161", "#828282", "#a5a5a5", "#c9c9c9", "#eeeeee"]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#0b0b0b", "#252525", "#424242", "#616161", "#828282", "#a5a5a5", "#c9c9c9", "#eeeeee"]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Signal Orange",
+        "canonical": "#ea580c",
+        "tonalRamp": ["#3d0000", "#640000", "#8c0000", "#b41f00", "#dc4b00", "#ff7133", "#ff975b", "#ffbd82"]
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#0b0b0b", "#252525", "#424242", "#616161", "#828282", "#a5a5a5", "#c9c9c9", "#eeeeee"]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Wash",
+        "canonical": "#f5f5f4",
+        "tonalRamp": ["#0b0b0b", "#252524", "#424241", "#616160", "#828281", "#a5a5a4", "#c9c9c8", "#eeeeed"]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline Gray",
+        "canonical": "#e5e5e5",
+        "tonalRamp": ["#0b0b0b", "#252525", "#424242", "#616161", "#828282", "#a5a5a5", "#c9c9c9", "#eeeeee"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Wash",
+        "canonical": "#f5f5f4",
+        "tonalRamp": ["#0b0b0b", "#252524", "#424241", "#616160", "#828281", "#a5a5a4", "#c9c9c8", "#eeeeed"]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Quiet Gray",
+        "canonical": "#737373",
+        "tonalRamp": ["#0b0b0b", "#252525", "#424242", "#616161", "#828282", "#a5a5a5", "#c9c9c9", "#eeeeee"]
+      },
+      "ring": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#171717",
+        "tonalRamp": ["#0b0b0b", "#252525", "#424242", "#616161", "#828282", "#a5a5a5", "#c9c9c9", "#eeeeee"]
+      },
+      "positive": {
+        "role": "neutral",
+        "displayName": "On-Track Green",
+        "canonical": "#16a34a",
+        "tonalRamp": ["#001800", "#003700", "#005700", "#007920", "#029d44", "#44c167", "#6de78a", "#95ffaf"]
+      },
+      "negative": {
+        "role": "neutral",
+        "displayName": "Overage Red",
+        "canonical": "#dc2626",
+        "tonalRamp": ["#420000", "#6b0000", "#940000", "#bd0000", "#e73430", "#ff5f54", "#ff8778", "#ffae9c"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Largest type in the shell. Same as the page title. No poster scale ships."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles in the main column, 20px semibold Geist."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles. 14px semibold Geist, line-height 1."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "App chrome, nav labels, descriptions. 14px regular Geist."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Free chip and compact meta. 12px medium Geist. Not uppercase."
+      }
+    },
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "ease-in-out",
+        "purpose": "Sheet open and close easing."
+      },
+      {
+        "name": "duration-sheet-open",
+        "value": "500ms",
+        "purpose": "Right drawer enter."
+      },
+      {
+        "name": "duration-sheet-close",
+        "value": "300ms",
+        "purpose": "Right drawer exit."
+      },
+      {
+        "name": "duration-progress",
+        "value": "150ms",
+        "purpose": "Progress fill transform."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "Sheet max width 384px begins."
+      },
+      {
+        "name": "xl",
+        "value": "1280px",
+        "purpose": "Sidebar expands to 240px. Summary docks at 320px. Main and summary sit in a row."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Token-derived primary action. Orange fill, white label, Ink focus ring. No primitive ships yet.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Save</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 8px 16px; border: none; border-radius: 6px; background: var(--primary); color: var(--primary-foreground); font-family: \"Geist Variable\", ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 150ms ease-in-out; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--primary) 88%, black); } .ds-btn-primary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; } .ds-btn-primary:active { background: color-mix(in srgb, var(--primary) 80%, black); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Token-derived field. White fill, 1px gray stroke, Ink focus ring. No primitive ships yet.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search\" />",
+      "css": ".ds-input { display: block; width: 100%; height: 36px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--foreground); font-family: \"Geist Variable\", ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 400; } .ds-input::placeholder { color: var(--muted-foreground); } .ds-input:hover { border-color: var(--border); } .ds-input:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White surface on the canvas. 12px corners, 1px gray border, no shadow.",
+      "html": "<div class=\"ds-card\" data-slot=\"card\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Summary</div><div class=\"ds-card-desc\">White surface on the canvas.</div></div></div>",
+      "css": ".ds-card { display: flex; flex-direction: column; gap: 24px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); padding: 24px 0; font-family: \"Geist Variable\", ui-sans-serif, system-ui, sans-serif; } .ds-card-header { padding: 0 24px; } .ds-card-title { font-size: 14px; font-weight: 600; line-height: 1; color: var(--foreground); } .ds-card-desc { margin-top: 8px; font-size: 14px; font-weight: 400; color: var(--muted-foreground); }"
+    },
+    {
+      "name": "Amount",
+      "kind": "custom",
+      "refersTo": "amount",
+      "description": "Money and numeric figures. Geist Mono, tabular nums, -0.02em tracking.",
+      "html": "<span class=\"ds-amount\" data-slot=\"amount\">12,345.67</span>",
+      "css": ".ds-amount { font-family: \"Geist Mono Variable\", ui-monospace, SFMono-Regular, monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--foreground); font-size: 14px; } .ds-amount:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }"
+    },
+    {
+      "name": "Sidebar nav item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Default Quiet Gray. Active is Wash fill and medium weight, not a colored left border.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Primary\"><a class=\"ds-nav-item\" href=\"#\"><svg class=\"ds-nav-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\" rx=\"1\" /><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\" rx=\"1\" /><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\" rx=\"1\" /><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\" rx=\"1\" /></svg><span>Dashboard</span></a><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><svg class=\"ds-nav-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M3 10h18M5 10V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4M6 10v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8\" /></svg><span>Accounts</span></a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 4px; padding: 8px; font-family: \"Geist Variable\", ui-sans-serif, system-ui, sans-serif; } .ds-nav-item { display: flex; align-items: center; gap: 8px; border-radius: 6px; padding: 8px 12px; font-size: 14px; font-weight: 400; color: var(--muted-foreground); text-decoration: none; } .ds-nav-item:hover { background: var(--muted); color: var(--foreground); } .ds-nav-item:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; } .ds-nav-item-active { background: var(--muted); color: var(--foreground); font-weight: 500; } .ds-nav-icon { width: 16px; height: 16px; flex-shrink: 0; }"
+    },
+    {
+      "name": "Free chip",
+      "kind": "chip",
+      "refersTo": "chip-free",
+      "description": "Plan badge. Orange text on a 10% orange wash. Fully round, no border.",
+      "html": "<span class=\"ds-chip-free\">Free</span>",
+      "css": ".ds-chip-free { display: inline-block; border-radius: 9999px; background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--primary); font-family: \"Geist Variable\", ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 500; line-height: 1.33; padding: 2px 8px; } .ds-chip-free:hover { background: color-mix(in srgb, var(--primary) 14%, transparent); } .ds-chip-free:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }"
+    },
+    {
+      "name": "Progress",
+      "kind": "custom",
+      "refersTo": "progress",
+      "description": "8px full-round bar. Track is 20% orange. Fill is solid orange.",
+      "html": "<div class=\"ds-progress\" data-slot=\"progress\" role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"60\"><div class=\"ds-progress-fill\" data-slot=\"progress-indicator\"></div></div>",
+      "css": ".ds-progress { position: relative; height: 8px; width: 100%; overflow: hidden; border-radius: 9999px; background: color-mix(in srgb, var(--primary) 20%, transparent); } .ds-progress-fill { height: 100%; width: 100%; background: var(--primary); transform: translateX(-40%); transition: transform 150ms ease-out; } .ds-progress:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }"
+    },
+    {
+      "name": "Sheet / drawer",
+      "kind": "custom",
+      "refersTo": "sheet",
+      "description": "Right drawer on canvas. 1px gray left edge. Does not cover the left nav.",
+      "html": "<aside class=\"ds-sheet\" data-slot=\"sheet-content\"><div class=\"ds-sheet-header\"><p class=\"ds-sheet-title\">Details</p><p class=\"ds-sheet-desc\">Create and edit in a right drawer.</p></div></aside>",
+      "css": ".ds-sheet { display: flex; flex-direction: column; gap: 16px; width: 384px; max-width: 100%; height: 320px; background: var(--background); border-left: 1px solid var(--border); font-family: \"Geist Variable\", ui-sans-serif, system-ui, sans-serif; } .ds-sheet-header { display: flex; flex-direction: column; gap: 6px; padding: 16px; } .ds-sheet-title { margin: 0; font-size: 14px; font-weight: 600; color: var(--foreground); } .ds-sheet-desc { margin: 0; font-size: 14px; font-weight: 400; color: var(--muted-foreground); } .ds-sheet:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Quiet Terminal",
+    "overview": "A well-lit board you read in seconds. The shell is a pale canvas with white cards, one gray hairline, and a single orange accent used on actions, the Free chip, and progress fill. Status arrives as type, charts, and bar fill, not as chrome.\n\nThe type is Geist Variable at 14px for UI and 20px semibold for page titles. Geist Mono Variable is reserved for amounts. Light theme only. White cards. Soft gray borders. Rounded corners. Green means on track or income. Red means over budget or overage.\n\nThis is not aviation costume, not a spreadsheet, and not a SaaS gradient kit.",
+    "keyCharacteristics": [
+      "Flat depth: off-white canvas, white cards, 1px gray borders, no drop shadows",
+      "One accent (orange) for CTAs, Free, and progress. Never for borders",
+      "Geist for UI, Geist Mono for numbers only",
+      "Desktop-first rail: 240px sidebar, 56px header, right drawer that leaves the nav visible"
+    ],
+    "rules": [
+      {
+        "name": "The No-Colored-Border Rule",
+        "body": "Borders are 1px Hairline Gray. Orange, green, and red never become outlines, left rails, or card strokes.",
+        "section": "colors"
+      },
+      {
+        "name": "The Status-From-Fill Rule",
+        "body": "Green and red mark on-track/income and over-budget/overage in type, charts, and progress fill. They are not chrome.",
+        "section": "colors"
+      },
+      {
+        "name": "The Geist-Only Rule",
+        "body": "Geist Variable is the UI face. system-ui is fallback only, never the design face. No novelty or display fonts.",
+        "section": "typography"
+      },
+      {
+        "name": "The Numbers-Are-Mono Rule",
+        "body": "Geist Mono Variable is for money and numeric amounts via Amount. Never on labels, nav, headings, or body copy.",
+        "section": "typography"
+      },
+      {
+        "name": "The Board-First Rule",
+        "body": "Desktop-first. The left nav stays visible. Drawers open from the right and do not cover that rail.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces are flat at rest. Depth is canvas vs card, plus 1px gray borders. No card drop shadows. No zero-offset colored halos.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Soft-Corner Rule",
+        "body": "Cards 12px. Controls 6px. Pills and bars full-round. No sharp tickets, no squircles, no colored radii.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Quiet-Active Rule",
+        "body": "Active nav is Wash fill and medium weight. Not a colored left border, not orange text, not a pill in Signal Orange.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do use 1px Hairline Gray on cards, sidebar, header, summary, and drawers.",
+      "Do set amounts in Geist Mono with tabular nums and -0.02em tracking via Amount.",
+      "Do mark active nav with Wash fill and medium weight.",
+      "Do keep cards at 12px corners with no shadow.",
+      "Do use Signal Orange on primary actions, the Free chip, and progress fill.",
+      "Do keep focus as a 2px Ink outline with a 2px offset."
+    ],
+    "donts": [
+      "Don't put colored borders on cards, nav items, callouts, or alerts. No accent `border-left`, no rainbow outlines.",
+      "Don't use Geist Mono on labels, nav, or body copy.",
+      "Don't set system-ui as the design face.",
+      "Don't add card drop shadows or zero-offset colored halos.",
+      "Don't use novelty or display fonts. Geist only.",
+      "Don't treat orange as a border color.",
+      "Don't ship spreadsheet chrome (cell grids, column letters, click-to-edit cells).",
+      "Don't invent a dark theme."
+    ]
+  }
+}
