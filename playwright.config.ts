@@ -21,6 +21,8 @@ export default defineConfig({
 				DATABASE_URL: databaseUrl,
 				BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? "playwright-better-auth-secret-32ch",
 				BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+				ENCRYPTION_KEY: process.env.ENCRYPTION_KEY ?? "0".repeat(64),
+				PLAID_FAKE: process.env.PLAID_CLIENT_ID ? "" : "1",
 			},
 		},
 		{
