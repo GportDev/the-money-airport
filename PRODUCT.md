@@ -8,13 +8,13 @@ web
 
 ## Stack
 
-Confirmed in `docs/02_ARCHITECTURE.md` (binding):
+Intended stack, confirmed in `docs/02_ARCHITECTURE.md` (binding):
 
 - Frontend: React 19, TypeScript, Vite, TailwindCSS 4, shadcn/ui + Radix, TanStack Query v5, React Router 7, TanStack Virtual, Recharts, BiomeJS
 - Backend: NestJS, BetterAuth, Drizzle ORM, PostgreSQL 16, Plaid Node SDK, Stripe Node SDK
 - Deploy (recommended, not yet live): frontend on Vercel or Cloudflare Pages; backend on Railway, Render, or Fly.io; database on Neon or Supabase Postgres
 
-No application code exists yet. The repo is product and architecture docs only. Domain language is in `CONTEXT.md`.
+What's in the repo now: a pnpm monorepo. `client` is the Vite/React shell with the PRD routes as placeholders, a left sidebar, and a Free chip. `server` is NestJS with Config, Drizzle, a health endpoint, and local Postgres via Docker on port 5433. BetterAuth, Plaid, and Stripe are not installed yet. Domain language is in `CONTEXT.md`.
 
 ## Users
 
@@ -38,7 +38,7 @@ Daily ritual: connect or refresh banks, scan the dashboard, skim the date-groupe
 
 Bank data arrives via Plaid Link, then webhooks (`/transactions/sync`). Manual BankAccounts exist so net worth can include vehicles, property, and cash. Plaid access tokens are encrypted at rest. Sessions are HTTP-only cookies via BetterAuth (email/password and Google). After signup, BillingModule creates a Stripe Customer and a $0 Subscription without blocking login.
 
-The current repo has no running app, no logo files, and no production data. `docs/` is the spec. The shipping name is Money Airport.
+The client and server can run locally (`pnpm dev:client`, `pnpm dev:server`, `pnpm db:up`). Pages are placeholders, not product screens. No logo files and no production data. `docs/` remains the spec. The shipping name is Money Airport.
 
 ## Capabilities and Constraints
 
@@ -61,7 +61,7 @@ The current repo has no running app, no logo files, and no production data. `doc
 
 ## Evidence on Hand
 
-Specs and sample UI copy only (`CONTEXT.md`, `docs/01_PRD.md` through `docs/07_IMPLEMENTATION_GUIDE.md`). Screen specs use placeholder figures (greeting, merchant names, dollar amounts). There are no testimonials, case studies, press, production screenshots, or real balances. Future work must not invent them.
+Specs and sample UI copy (`CONTEXT.md`, `docs/01_PRD.md` through `docs/07_IMPLEMENTATION_GUIDE.md`). Screen specs use placeholder figures (greeting, merchant names, dollar amounts). The client shell exists (`client/src`): sidebar, layout, and a placeholder page for every nav route. There are no testimonials, case studies, press, production screenshots, or real balances. Future work must not invent them.
 
 ## Product Principles
 
