@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Open Dashboard",
+    "subtitle": "Session cookie in, pre-aggregated widget payload out. No client-side ledger fold.",
+    "output": "money-airport-dashboard.html",
+    "viewBox": [820, 760],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "session",
+        "label": "Session gate",
+        "focus": ["user", "spa", "api", "auth"],
+        "note": "RequireSession reads GET /api/auth/session. Missing cookie redirects to /login?next=."
+      },
+      {
+        "id": "compose",
+        "label": "Compose widgets",
+        "focus": ["api", "db", "fx"],
+        "note": "DashboardModule reads snapshots, budget rollups, recent Transactions, and Recurring. FxModule converts KPIs to Base."
+      },
+      {
+        "id": "render",
+        "label": "Render cards",
+        "focus": ["api", "spa", "user"],
+        "note": "One DashboardPayload fills Budget, Net Worth, Spending, Transactions, Recurring. Credit Score stays omitted until a bureau is wired."
+      }
+    ]
+  },
+  "participants": [
+    { "id": "user", "type": "external", "label": "User", "sublabel": "daily open" },
+    { "id": "spa", "type": "frontend", "label": "React SPA", "sublabel": "TanStack Query" },
+    { "id": "api", "type": "backend", "label": "Dashboard", "sublabel": "composes modules" },
+    { "id": "auth", "type": "security", "label": "BetterAuth", "sublabel": "cookie" },
+    { "id": "db", "type": "database", "label": "Postgres", "sublabel": "snapshots" },
+    { "id": "fx", "type": "cloud", "label": "FxModule", "sublabel": "fx_rate" }
+  ],
+  "segments": [
+    { "from": 150, "to": 305, "label": "01 / AUTH" },
+    { "from": 325, "to": 535, "label": "02 / AGGREGATE" },
+    { "from": 540, "to": 665, "label": "03 / RENDER" }
+  ],
+  "messages": [
+    { "id": "open-home", "from": "user", "to": "spa", "y": 180, "label": "GET /" },
+    { "id": "session", "from": "spa", "to": "api", "y": 218, "label": "GET /auth/session", "variant": "security" },
+    { "id": "verify", "from": "api", "to": "auth", "y": 256, "label": "validate cookie", "variant": "security" },
+    { "id": "claims", "from": "auth", "to": "api", "y": 292, "label": "user id", "variant": "return" },
+    { "id": "dashboard-get", "from": "spa", "to": "api", "y": 350, "label": "GET /dashboard?month=", "variant": "emphasis" },
+    { "id": "sql-rollups", "from": "api", "to": "db", "y": 395, "label": "snapshots + rollups", "variant": "emphasis" },
+    { "id": "rows", "from": "db", "to": "api", "y": 438, "label": "series + recent tx", "variant": "return" },
+    { "id": "fx-convert", "from": "api", "to": "fx", "y": 482, "label": "to Base cents", "variant": "security" },
+    { "id": "fx-ok", "from": "fx", "to": "api", "y": 512, "label": "converted KPIs", "variant": "return" },
+    { "id": "payload", "from": "api", "to": "spa", "y": 575, "label": "200 DashboardPayload", "variant": "return" },
+    { "id": "render", "from": "spa", "to": "user", "y": 620, "label": "widget grid", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "spa", "from": 175, "to": 628, "type": "frontend" },
+    { "participant": "api", "from": 218, "to": 582, "type": "backend" },
+    { "participant": "auth", "from": 251, "to": 298, "type": "security" },
+    { "participant": "db", "from": 390, "to": 445, "type": "database" },
+    { "participant": "fx", "from": 477, "to": 528, "type": "cloud" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Why this shape",
+      "items": [
+        "The client does not fold the month from raw Transactions",
+        "staleTime is 5 minutes for dashboard, cash flow, and the feed"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Scoped reads",
+      "items": [
+        "Every query is user_id scoped",
+        "Hidden accounts and Transfer tags are already stripped in the payload"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Empty state",
+      "items": [
+        "No BankAccounts: Connect an account, which starts the Plaid sequence",
+        "Today the page is still a placeholder card in client/src/pages/dashboard.tsx"
+      ]
+    }
+  ]
+}

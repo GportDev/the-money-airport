@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "PlaidItem lifecycle",
+    "subtitle": "One institution connection. Disconnect keeps BankAccounts and Transactions.",
+    "output": "money-airport-plaid-item.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "live-path",
+        "label": "Live connection",
+        "focus": ["linked", "initial", "live"],
+        "note": "Link writes the encrypted token, first sync loads 90 days, then webhooks keep the item live."
+      },
+      {
+        "id": "interruptions",
+        "label": "Reauth and errors",
+        "focus": ["live", "reauth", "errored"],
+        "note": "ITEM_LOGIN_REQUIRED pauses sync until the User updates Link. Refresh all retries error."
+      },
+      {
+        "id": "disconnect",
+        "label": "Disconnect",
+        "focus": ["live", "errored", "disconnected"],
+        "note": "Status becomes disconnected. History stays. It is not a BankAccount delete."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Connection phases" },
+    { "id": "waiting", "label": "Holds" },
+    { "id": "exceptions", "label": "Recoverable error" },
+    { "id": "terminal", "label": "Kept history" }
+  ],
+  "states": [
+    { "id": "linked", "type": "start", "label": "Linked", "sublabel": "token encrypted", "lane": "main", "col": 0, "step": "01", "tag": "PlaidItem" },
+    { "id": "initial", "type": "active", "label": "Initial sync", "sublabel": "90 days + snapshots", "lane": "main", "col": 1, "step": "02", "tag": "blocking" },
+    { "id": "live", "type": "success", "label": "Live", "sublabel": "webhook cursor", "lane": "main", "col": 2, "step": "03", "tag": "active" },
+    { "id": "reauth", "type": "waiting", "label": "Needs reauth", "sublabel": "update Link", "lane": "waiting", "col": 0, "tag": "login required" },
+    { "id": "errored", "type": "failure", "label": "Error", "sublabel": "error_code set", "lane": "exceptions", "col": 0, "yOffset": 78, "tag": "retryable" },
+    { "id": "disconnected", "type": "failure", "label": "Disconnected", "sublabel": "history kept", "lane": "terminal", "col": 1, "tag": "terminal" }
+  ],
+  "transitions": [
+    { "id": "link-to-sync", "from": "linked", "to": "initial", "variant": "emphasis" },
+    { "id": "sync-to-live", "from": "initial", "to": "live", "variant": "emphasis" },
+    { "id": "live-to-reauth", "from": "live", "to": "reauth", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "straight" },
+    { "id": "live-to-error", "from": "live", "to": "errored", "variant": "security", "fromSide": "left", "toSide": "left", "via": [[320, 157], [320, 385]] },
+    { "id": "live-to-off", "from": "live", "to": "disconnected", "variant": "dashed", "fromSide": "right", "toSide": "top", "via": [[480, 188], [480, 430], [556, 430]] }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Live",
+      "items": [
+        "Webhook or Refresh all calls /transactions/sync with the stored cursor",
+        "Current balances update and a daily account_balance_snapshot row is upserted"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Holds",
+      "items": [
+        "Needs reauth is a wait, not an exit. Completing Link returns the item to Live",
+        "Error stores Plaid error_code. Manual sync is the retry"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Disconnect",
+      "items": [
+        "Confirm dialog, then status=disconnected",
+        "BankAccounts and Transactions remain. Hidden flags still omit them from net worth"
+      ]
+    }
+  ]
+}

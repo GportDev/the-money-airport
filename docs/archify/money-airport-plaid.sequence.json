@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Plaid Link and first sync",
+    "subtitle": "Connect a BankAccount, encrypt the access token, write opening snapshots",
+    "output": "money-airport-plaid.html",
+    "viewBox": [820, 860],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "link-token",
+        "label": "Open Plaid Link",
+        "focus": ["user", "spa", "api", "plaid"],
+        "note": "SPA asks NestJS for a link_token, then opens Plaid Link in the browser."
+      },
+      {
+        "id": "exchange",
+        "label": "Exchange token",
+        "focus": ["spa", "api", "plaid", "db"],
+        "note": "public_token becomes an access_token, encrypted at rest on PlaidItem. Accounts are stored including institution logo."
+      },
+      {
+        "id": "initial-sync",
+        "label": "Initial sync",
+        "focus": ["api", "plaid", "db", "spa"],
+        "note": "Last 90 days of transactions plus opening balance snapshots. Later webhooks replay the same sync path."
+      }
+    ]
+  },
+  "participants": [
+    { "id": "user", "type": "external", "label": "User", "sublabel": "browser" },
+    { "id": "spa", "type": "frontend", "label": "React SPA", "sublabel": "Accounts" },
+    { "id": "api", "type": "backend", "label": "NestJS", "sublabel": "PlaidModule" },
+    { "id": "plaid", "type": "cloud", "label": "Plaid", "sublabel": "Link + API" },
+    { "id": "db", "type": "database", "label": "Postgres", "sublabel": "encrypted token" }
+  ],
+  "segments": [
+    { "from": 150, "to": 330, "label": "01 / LINK" },
+    { "from": 350, "to": 560, "label": "02 / EXCHANGE" },
+    { "from": 580, "to": 760, "label": "03 / SYNC" }
+  ],
+  "messages": [
+    { "id": "connect-click", "from": "user", "to": "spa", "y": 175, "label": "Connect account" },
+    { "id": "create-link", "from": "spa", "to": "api", "y": 215, "label": "POST /plaid/create-link-token", "variant": "emphasis" },
+    { "id": "plaid-link-token", "from": "api", "to": "plaid", "y": 255, "label": "create link token", "variant": "security" },
+    { "id": "link-token-back", "from": "plaid", "to": "api", "y": 295, "label": "link_token", "variant": "return" },
+    { "id": "open-link", "from": "spa", "to": "user", "y": 335, "label": "open Plaid Link", "variant": "return" },
+    { "id": "bank-auth", "from": "user", "to": "plaid", "y": 385, "label": "bank login", "variant": "security" },
+    { "id": "public-token", "from": "plaid", "to": "spa", "y": 425, "label": "public_token", "variant": "return" },
+    { "id": "exchange", "from": "spa", "to": "api", "y": 465, "label": "POST /plaid/exchange-token", "variant": "emphasis" },
+    { "id": "plaid-exchange", "from": "api", "to": "plaid", "y": 505, "label": "exchange public_token", "variant": "security" },
+    { "id": "store-item", "from": "api", "to": "db", "y": 545, "label": "PlaidItem + BankAccounts", "variant": "emphasis" },
+    { "id": "tx-sync", "from": "api", "to": "plaid", "y": 610, "label": "/transactions/sync", "variant": "emphasis" },
+    { "id": "upsert-ledger", "from": "api", "to": "db", "y": 655, "label": "tx + snapshots", "variant": "emphasis" },
+    { "id": "accounts-json", "from": "api", "to": "spa", "y": 700, "label": "200 item + accounts", "variant": "return" },
+    { "id": "render-accounts", "from": "spa", "to": "user", "y": 740, "label": "Accounts list", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "spa", "from": 210, "to": 745, "type": "frontend" },
+    { "participant": "api", "from": 215, "to": 708, "type": "backend" },
+    { "participant": "plaid", "from": 250, "to": 300, "type": "cloud" },
+    { "participant": "plaid", "from": 380, "to": 430, "type": "cloud" },
+    { "participant": "plaid", "from": 500, "to": 530, "type": "cloud" },
+    { "participant": "plaid", "from": 605, "to": 640, "type": "cloud" },
+    { "participant": "db", "from": 540, "to": 565, "type": "database" },
+    { "participant": "db", "from": 650, "to": 680, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Happy path",
+      "items": [
+        "Same sync path for the first 90 days, later webhooks, Refresh all, and POST /plaid/sync/:itemId",
+        "Manual BankAccounts skip this diagram: POST /api/accounts writes the row and a snapshot only"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Secrets",
+      "items": [
+        "access_token is encrypted with AES-256-GCM before insert",
+        "Plaid webhook POST /api/plaid/webhook is unauthenticated and must be verified"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "After sync",
+      "items": [
+        "Pair same-currency internal Transfers within 3 days and tag them",
+        "Pending rows count in Budget and Spending. Disconnect keeps history"
+      ]
+    }
+  ]
+}

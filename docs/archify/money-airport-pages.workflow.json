@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Money Airport pages",
+    "subtitle": "Guest gate, authenticated shell, glance → books → plan, right drawers",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "sign-in",
+        "label": "Sign in",
+        "focus": ["login", "signup", "layout"],
+        "note": "GuestOnly covers /login /signup /forgot-password. A session cookie unlocks PageLayout."
+      },
+      {
+        "id": "daily-glance",
+        "label": "Daily glance",
+        "focus": ["layout", "dashboard", "transactions", "budget", "recurring"],
+        "note": "Open Dashboard, skim the feed, check Budget, glance Recurring. Widget headers deep-link to the full screen."
+      },
+      {
+        "id": "summary-drawers",
+        "label": "Summary and drawers",
+        "focus": ["accounts", "budget", "layout", "settings"],
+        "note": "Right summary panel only on Accounts, Budget, and Goals. Create/edit/detail is a Sheet, never a cell grid."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "guest", "label": "GuestOnly" },
+    { "id": "shell", "label": "PageLayout" },
+    { "id": "glance", "label": "Glance" },
+    { "id": "books", "label": "Books" },
+    { "id": "plan", "label": "Plan" }
+  ],
+  "phases": [
+    { "id": "auth", "label": "Auth", "fromCol": 0, "toCol": 1 },
+    { "id": "home", "label": "Home", "fromCol": 2, "toCol": 2, "variant": "emphasis" },
+    { "id": "drill", "label": "Drill in", "fromCol": 3, "toCol": 5 }
+  ],
+  "groups": [
+    { "id": "guest_routes", "label": "Public routes", "lane": "guest", "fromCol": 0, "toCol": 1, "variant": "dashed" },
+    { "id": "net_worth", "label": "Summary panel", "lane": "books", "fromCol": 2, "toCol": 2, "variant": "emphasis" },
+    { "id": "budget_panel", "label": "Summary panel", "lane": "plan", "fromCol": 2, "toCol": 2, "variant": "emphasis" }
+  ],
+  "mainPath": ["login", "layout", "dashboard", "accounts", "budget"],
+  "nodes": [
+    { "id": "login", "lane": "guest", "col": 0, "type": "security", "label": "Login", "sublabel": "/login" },
+    { "id": "signup", "lane": "guest", "col": 1, "type": "frontend", "label": "Signup", "sublabel": "then Free chip" },
+    { "id": "layout", "lane": "shell", "col": 2, "type": "frontend", "label": "Shell", "sublabel": "nav + header", "tag": "RequireSession" },
+    { "id": "settings", "lane": "shell", "col": 5, "type": "frontend", "label": "Settings", "sublabel": "gear, not nav" },
+    { "id": "dashboard", "lane": "glance", "col": 2, "type": "frontend", "label": "Dashboard", "sublabel": "/ widgets" },
+    { "id": "cashflow", "lane": "glance", "col": 5, "type": "frontend", "label": "Cash Flow", "sublabel": "month KPIs" },
+    { "id": "accounts", "lane": "books", "col": 2, "type": "frontend", "label": "Accounts", "sublabel": "net worth", "tag": "right panel" },
+    { "id": "transactions", "lane": "books", "col": 5, "type": "frontend", "label": "Transactions", "sublabel": "date feed" },
+    { "id": "budget", "lane": "plan", "col": 2, "type": "frontend", "label": "Budget", "sublabel": "month plan", "tag": "right panel" },
+    { "id": "recurring", "lane": "plan", "col": 5, "type": "frontend", "label": "Recurring", "sublabel": "bills" }
+  ],
+  "edges": [
+    { "id": "login-to-shell", "from": "login", "to": "layout", "label": "session cookie", "variant": "emphasis", "fromSide": "bottom", "toSide": "left", "route": "drop" },
+    { "id": "signup-to-shell", "from": "signup", "to": "layout", "variant": "dashed", "fromSide": "bottom", "toSide": "left", "route": "drop" },
+    { "id": "shell-to-home", "from": "layout", "to": "dashboard", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "shell-to-settings", "from": "layout", "to": "settings" },
+    { "id": "dash-to-cashflow", "from": "dashboard", "to": "cashflow" },
+    { "id": "dash-to-accounts", "from": "dashboard", "to": "accounts", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "cashflow-to-tx", "from": "cashflow", "to": "transactions", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "accounts-to-budget", "from": "accounts", "to": "budget", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "tx-to-recurring", "from": "transactions", "to": "recurring", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Sidebar order",
+      "items": [
+        "Dashboard, Cash Flow, Accounts, Transactions, Reports, Budget, Recurring, Goals, Investments, Forecasting",
+        "Settings is the header gear. Footer shows profile plus a Free chip, not Trial"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Also in the router",
+      "items": [
+        "Reports /reports, Goals /goals (summary panel), Investments /investments, Forecasting /forecast, 404",
+        "Forgot password is GuestOnly. Receipts and Retail Sync tabs stay empty in V1"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Shell rules",
+      "items": [
+        "URL holds month, filters, and account scope",
+        "One right Sheet at a time for create/edit/detail; it does not cover the left nav",
+        "Confirm dialogs only: delete, disconnect, copy budgets"
+      ]
+    }
+  ]
+}

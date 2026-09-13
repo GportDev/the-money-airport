@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Money Airport",
+    "subtitle": "V1 system map: widget dashboard, one User, Base-currency totals",
+    "output": "money-airport.html",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "request-path",
+        "label": "Open a page",
+        "focus": ["user", "spa", "api", "db"],
+        "note": "Browser shell calls NestJS over REST with a session cookie. Charts read SQL aggregates, not a client-side ledger."
+      },
+      {
+        "id": "identity-billing",
+        "label": "Signup and Free plan",
+        "focus": ["user", "spa", "auth", "api", "stripe"],
+        "note": "BetterAuth sets the cookie. BillingModule creates a Stripe Customer and $0 Subscription without blocking login."
+      },
+      {
+        "id": "bank-ingest",
+        "label": "Bank ingest",
+        "focus": ["spa", "api", "plaid", "db"],
+        "note": "Plaid Link plus webhooks write BankAccounts, Transactions, and daily snapshots. Access tokens stay encrypted at rest."
+      }
+    ]
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "User", "sublabel": "one login", "pos": [40, 300], "size": [120, 60] },
+    { "id": "spa", "type": "frontend", "label": "React SPA", "sublabel": "Vite :5173", "pos": [220, 300], "size": [130, 60], "tag": "shell live" },
+    { "id": "auth", "type": "security", "label": "BetterAuth", "sublabel": "HTTP-only cookie", "pos": [460, 120], "size": [130, 64], "tag": "email + Google" },
+    { "id": "api", "type": "backend", "label": "NestJS API", "sublabel": "REST :3000", "pos": [460, 300], "size": [130, 60] },
+    { "id": "stripe", "type": "external", "label": "Stripe", "sublabel": "Billing not Connect", "pos": [40, 120], "size": [130, 64], "tag": "Free $0" },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "Drizzle :5433", "pos": [700, 300], "size": [130, 60] },
+    { "id": "plaid", "type": "external", "label": "Plaid", "sublabel": "Link + webhooks", "pos": [220, 480], "size": [130, 60], "tag": "spec" },
+    { "id": "fx", "type": "cloud", "label": "Frankfurter", "sublabel": "daily ISO rates", "pos": [700, 480], "size": [130, 60], "tag": "cached" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Browser", "wraps": ["spa"] },
+    { "kind": "security-group", "label": "NestJS process (auth guard; webhooks public)", "wraps": ["auth", "api"] },
+    { "kind": "region", "label": "Postgres 16 — auth + public schemas", "wraps": ["db"] }
+  ],
+  "connections": [
+    { "id": "user-to-spa", "from": "user", "to": "spa", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "spa-to-api", "from": "spa", "to": "api", "label": "REST + cookie", "variant": "emphasis" },
+    { "id": "api-to-auth", "from": "api", "to": "auth", "label": "session", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "api-to-db", "from": "api", "to": "db", "label": "SQL" },
+    { "id": "api-to-stripe", "from": "api", "to": "stripe", "label": "Customer + $0 Sub", "variant": "dashed", "fromSide": "left", "toSide": "right", "via": [[400, 330], [400, 152], [170, 152]], "labelAt": [400, 220] },
+    { "id": "plaid-to-api", "from": "plaid", "to": "api", "label": "Link + sync", "variant": "security", "fromSide": "right", "toSide": "bottom", "via": [[400, 510], [525, 510], [525, 364]], "labelAt": [462, 528] },
+    { "id": "api-to-fx", "from": "api", "to": "fx", "fromSide": "bottom", "toSide": "left", "via": [[525, 400], [525, 510], [700, 510]], "labelAt": [560, 498] }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Shipped in the repo",
+      "items": [
+        "Client shell: sidebar, PageLayout, all PRD routes as placeholders, login/signup",
+        "Server: BetterAuth, BillingModule, health, Drizzle, Postgres on Docker :5433",
+        "RequireSession pings GET /api/billing after login so Free signup can catch up"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "V1 modules still spec",
+      "items": [
+        "Plaid, Accounts, Transactions, Categories, Budgets, Recurring, Goals, Dashboard, Forecast, Reports, Fx, Export",
+        "Recommended deploy is Vercel + Railway/Fly + Neon; nothing is live yet"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Money rules",
+      "items": [
+        "Native amounts are integer cents on the BankAccount currency",
+        "KPIs convert to the User Base currency at read (PnL uses the Transaction date)",
+        "Feeds paginate; widgets read snapshots and rollups, never the raw ledger on the client"
+      ]
+    }
+  ]
+}

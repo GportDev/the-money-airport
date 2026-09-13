@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Money Airport data flow",
+    "subtitle": "Native cents in, Base-currency widgets out. Transfers excluded from spend totals.",
+    "output": "money-airport-data.html",
+    "viewBox": [1080, 760],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "plaid-path",
+        "label": "Plaid into the ledger",
+        "focus": ["plaid", "sync", "transactions", "snapshots"],
+        "note": "Sync upserts Transactions, flips Plaid signs, assigns Uncategorized, then maps PFC. User-set categories stay."
+      },
+      {
+        "id": "fx-boundary",
+        "label": "FX into Base",
+        "focus": ["frankfurter", "fx", "transactions", "dashboard"],
+        "note": "Frankfurter rates cache in fx_rate. PnL uses the Transaction date. Balances and Goals use the latest rate."
+      },
+      {
+        "id": "read-models",
+        "label": "What pages read",
+        "focus": ["snapshots", "transactions", "plans", "dashboard", "feed", "planning"],
+        "note": "Widgets read snapshots and rollups. The feed paginates. Plan amounts are stored; Actuals are summed at read."
+      }
+    ]
+  },
+  "stages": [
+    { "label": "Sources" },
+    { "label": "Ingest" },
+    { "label": "Store" },
+    { "label": "Convert" },
+    { "label": "Pages" }
+  ],
+  "nodes": [
+    { "id": "plaid", "type": "external", "label": "Plaid", "sublabel": "institutions", "stage": 0, "row": 0, "tag": "encrypted token" },
+    { "id": "manual", "type": "frontend", "label": "Manual", "sublabel": "cash / vehicle", "stage": 0, "row": 2, "tag": "net worth" },
+    { "id": "frankfurter", "type": "cloud", "label": "Frankfurter", "sublabel": "ISO quotes", "stage": 0, "row": 4, "tag": "daily" },
+    { "id": "sync", "type": "backend", "label": "Plaid sync", "sublabel": "flip + Uncategorized", "stage": 1, "row": 0, "tag": "90-day first" },
+    { "id": "fx", "type": "backend", "label": "FxModule", "sublabel": "fx_rate cache", "stage": 1, "row": 4, "tag": "read-time" },
+    { "id": "transactions", "type": "database", "label": "Transaction", "sublabel": "native cents", "stage": 2, "row": 0, "tag": "pending counts" },
+    { "id": "snapshots", "type": "database", "label": "Snapshots", "sublabel": "daily balances", "stage": 2, "row": 2, "tag": "charts" },
+    { "id": "plans", "type": "database", "label": "Plans", "sublabel": "budget / forecast", "stage": 2, "row": 4, "tag": "stored plan" },
+    { "id": "base", "type": "security", "label": "Base totals", "sublabel": "User currency", "stage": 3, "row": 1, "tag": "not native" },
+    { "id": "dashboard", "type": "frontend", "label": "Dashboard", "sublabel": "widget payload", "stage": 4, "row": 0 },
+    { "id": "feed", "type": "frontend", "label": "Tx feed", "sublabel": "cursor page", "stage": 4, "row": 2 },
+    { "id": "planning", "type": "frontend", "label": "Plan screens", "sublabel": "Budget Goals Forecast", "stage": 4, "row": 4 }
+  ],
+  "flows": [
+    { "id": "plaid-sync", "from": "plaid", "to": "sync", "label": "posted tx", "classification": "encrypted token", "variant": "security", "route": "straight", "labelAt": [208, 112] },
+    { "id": "manual-snapshots", "from": "manual", "to": "snapshots", "label": "manual balances", "classification": "user-owned", "fromSide": "right", "toSide": "left", "via": [[205, 385], [420, 385]], "labelAt": [300, 372] },
+    { "id": "quotes-in", "from": "frankfurter", "to": "fx", "label": "ISO rates", "classification": "non-PII", "variant": "dashed", "route": "straight" },
+    { "id": "sync-tx", "from": "sync", "to": "transactions", "label": "native cents", "classification": "PII touch", "variant": "emphasis", "route": "straight", "labelAt": [422, 144] },
+    { "id": "sync-snapshots", "from": "sync", "to": "snapshots", "label": "daily balance", "classification": "native", "variant": "emphasis", "fromSide": "bottom", "toSide": "left", "via": [[315, 200], [420, 200], [420, 385]], "labelAt": [438, 268] },
+    { "id": "fx-to-base", "from": "fx", "to": "base", "label": "dated rates", "classification": "read-only", "variant": "security", "fromSide": "top", "toSide": "bottom", "via": [[315, 500], [745, 500], [745, 330]], "labelAt": [530, 516] },
+    { "id": "tx-to-base", "from": "transactions", "to": "base", "label": "PnL dated", "classification": "Base cents", "variant": "emphasis", "fromSide": "right", "toSide": "left", "via": [[640, 157], [640, 271]], "labelAt": [658, 200] },
+    { "id": "snap-to-base", "from": "snapshots", "to": "base", "label": "net worth", "classification": "latest rate", "variant": "emphasis", "fromSide": "right", "toSide": "left", "via": [[640, 385], [640, 271]], "labelAt": [658, 330] },
+    { "id": "base-dashboard", "from": "base", "to": "dashboard", "label": "widget KPIs", "classification": "read-only", "variant": "emphasis", "fromSide": "right", "toSide": "left", "via": [[830, 271], [830, 157], [904, 157]], "labelAt": [848, 200] },
+    { "id": "tx-feed", "from": "transactions", "to": "feed", "label": "cursor feed", "classification": "native rows", "fromSide": "right", "toSide": "left", "via": [[870, 157], [870, 385], [904, 385]], "labelAt": [888, 320] },
+    { "id": "plans-planning", "from": "plans", "to": "planning", "label": "plan amounts", "classification": "stored plan", "route": "straight" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Ledger rules",
+      "items": [
+        "Positive = income, negative = expense after ingest (Plaid signs are flipped)",
+        "Every Transaction has a Category. Uncategorized is seeded and cannot be deleted",
+        "Internal Transfer pairs are tagged and dropped from Budget, Spending, Reports, and Cash Flow totals"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What stays out of totals",
+      "items": [
+        "Hidden BankAccounts skip net worth, Budget scope, and Goals",
+        "Disconnect sets PlaidItem to disconnected and keeps history",
+        "Crypto / unofficial codes are omitted from V1 Base totals"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Read models",
+      "items": [
+        "DashboardModule composes Accounts, Budgets, Transactions, Recurring — it owns no extra tables",
+        "Goal progress is associated BankAccount balances, not an envelope",
+        "Recurring mark-paid / skip advance the schedule only; they do not insert a Transaction"
+      ]
+    }
+  ]
+}
