@@ -17,18 +17,25 @@ User (BetterAuth)
  │         ├── 1:N → Transaction
  │         │         └── N:1 → Category
  │         ├── 1:N → AccountBalanceSnapshot
- │         └── 0:1 → GoalAccount (exclusive)
+ │         ├── 1:N → CardStatement   (credit only)
+ │         ├── 0:1 → LoanTerms       (loan only)
+ │         ├── 0:1 → GoalAccount (exclusive)
+ │         └── 1:N → Goal (as Fund host)
  ├── 1:N → Category (kind + budget_group; includes Uncategorized)
  ├── 1:N → Budget (per category per month)
  ├── 1:N → RecurringItem
  ├── 1:N → Goal
- │         └── 1:N → GoalAccount
+ │         ├── 1:N → GoalAccount     (funding = accounts)
+ │         └── 1:N → GoalFundEntry   (funding = fund)
  ├── 1:N → ForecastSection
- │         └── 1:N → ForecastRow
- │                    ├── 0:1 → Category
- │                    ├── 0:1 → RecurringItem
- │                    └── 1:N → ForecastCell  (plan amounts only)
- ├── 1:1 → UserSettings (dashboard layout JSON, base currency)
+ │         ├── 1:N → ForecastRow
+ │         │          ├── 0:1 → Category
+ │         │          ├── 0:1 → RecurringItem
+ │         │          ├── 0:1 → BankAccount (pay-from)
+ │         │          ├── 0:1 → Goal (Fund target)
+ │         │          └── 1:N → ForecastCell  (plan amounts only)
+ │         └── 1:N → ForecastOneOff
+ ├── 1:1 → UserSettings (dashboard layout JSON, base currency, plan settings)
  └── FxRate (shared daily quotes; not per-user)
 ```
 
@@ -93,6 +100,16 @@ Individual accounts — Plaid-linked or manual (vehicles, property, cash on hand
 | `iso_currency_code` | `text` | default `USD` |
 | `is_asset` | `boolean` | default `true` (false for credit cards and loans) |
 | `is_hidden` | `boolean` | default `false` — omit from net worth, Budget scope, Goals |
+| `in_cash_plan` | `boolean` | Operating cash. Default `true` when `type = checking`, else `false` |
+| `in_debt_plan` | `boolean` | Default `true` for liabilities; ignored for assets |
+| `debt_priority` | `integer` | nullable — order under the `custom` debt strategy |
+| `apr_bps` | `integer` | nullable — purchase APR in basis points (2900 = 29.00%). Credit and loan |
+| `apy_bps` | `integer` | nullable — savings/investment APY in basis points, User-entered |
+| `statement_close_day` | `integer` | 1-31, nullable — credit only |
+| `payment_due_day` | `integer` | 1-31, nullable — credit only |
+| `payment_rule` | `text` | `statement_balance` \| `new_charges` \| `minimum` \| `fixed`, default `statement_balance` — credit only |
+| `fixed_payment` | `integer` | Cents, nullable — used when `payment_rule = fixed` |
+| `overridden_fields` | `text[]` | Card-term columns the User set by hand; Plaid Liabilities sync skips them |
 | `last_synced_at` | `timestamptz` | |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
@@ -100,6 +117,55 @@ Individual accounts — Plaid-linked or manual (vehicles, property, cash on hand
 **Indexes:** `(user_id)`, `(plaid_item_id)`, `(user_id, display_group)`
 
 **Net worth:** sum of visible asset balances − sum of visible liability balances, each converted to Base at the **latest** Exchange rate. Hidden BankAccounts are omitted. Manual BankAccounts are included. Unofficial/crypto currencies are omitted from the total.
+
+---
+
+### `card_statement`
+
+One closed Statement of a credit BankAccount. From Plaid Liabilities (`last_statement_balance`, `minimum_payment_amount`, `next_payment_due_date`, `last_statement_issue_date`) or entered by the User.
+
+| Column | Type | Constraints |
+|--------|------|------------|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `user_id` | `text` | FK → user.id, NOT NULL |
+| `bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE CASCADE, NOT NULL |
+| `period_start` | `date` | NOT NULL |
+| `period_end` | `date` | NOT NULL — the close date |
+| `statement_balance` | `integer` | Native cents, NOT NULL |
+| `minimum_payment` | `integer` | Native cents, nullable |
+| `due_date` | `date` | nullable |
+| `source` | `text` | `plaid` \| `manual`, NOT NULL |
+| `created_at` | `timestamptz` | default `now()` |
+| `updated_at` | `timestamptz` | default `now()` |
+
+**Unique:** `(bank_account_id, period_end)`
+
+**Index:** `(bank_account_id, period_end DESC)` — latest Statement
+
+Current period spend = sum of the card's non-Transfer Transactions dated after the latest `period_end`. When Plaid gives no `period_start`, use the previous Statement's `period_end + 1` (or `period_end − 1 month + 1` for the first).
+
+---
+
+### `loan_terms`
+
+Optional repayment facts for one loan BankAccount. The Amortization schedule is computed at read time, never stored.
+
+| Column | Type | Constraints |
+|--------|------|------------|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `user_id` | `text` | FK → user.id, NOT NULL |
+| `bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE CASCADE, UNIQUE, NOT NULL |
+| `principal` | `integer` | Native cents, nullable |
+| `term_months` | `integer` | nullable |
+| `first_payment_date` | `date` | nullable |
+| `payment_day` | `integer` | 1-31, nullable |
+| `scheduled_payment` | `integer` | Native cents, nullable — null = computed from principal, `bank_account.apr_bps`, term |
+| `extra_payment` | `integer` | Native cents, default `0` |
+| `source` | `text` | `plaid` \| `manual`, NOT NULL |
+| `created_at` | `timestamptz` | default `now()` |
+| `updated_at` | `timestamptz` | default `now()` |
+
+Scheduled payment (when null) = `round(P · r / (1 − (1 + r)^−n))` with `r = apr / 12`, `n = term_months`; `r = 0` → `P / n`. Balance-only loans have no row, or a row with null principal/term.
 
 ---
 
@@ -256,6 +322,8 @@ Save-up and pay-down Goals. Progress is **not** stored.
 | `user_id` | `text` | FK → user.id, NOT NULL |
 | `name` | `text` | NOT NULL |
 | `type` | `text` | `save_up` \| `pay_down`, NOT NULL |
+| `funding` | `text` | `accounts` \| `fund`, NOT NULL, default `accounts`. `fund` only with `save_up` |
+| `host_bank_account_id` | `uuid` | FK → bank_account.id, nullable — required when `funding = fund`; must be a visible asset |
 | `thumbnail_url` | `text` | |
 | `target_amount` | `integer` | Base cents, NOT NULL |
 | `target_date` | `date` | nullable |
@@ -263,7 +331,11 @@ Save-up and pay-down Goals. Progress is **not** stored.
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
 
-**Progress** is computed at read time: sum of associated BankAccount `current_balance` converted to Base at the latest Exchange rate. Save-up current = that sum. Pay-down current display = remaining owed (that sum); bar = `(target − remaining) / target`. Zero associations → 0.
+**Index:** `(host_bank_account_id)`
+
+**Progress** is computed at read time. Accounts funding: sum of associated BankAccount `current_balance` converted to Base at the latest Exchange rate. Save-up current = that sum. Pay-down current display = remaining owed (that sum); bar = `(target − remaining) / target`. Zero associations → 0. Fund funding: sum of `goal_fund_entry.amount` (native host currency) converted to Base at the latest rate.
+
+**Unassigned** for a host = host `current_balance` − sum of its Funds (native). Negative → warning only.
 
 **Status** is computed at read time: `at_risk` if projected monthly contribution (remaining / months left) exceeds a simple affordability heuristic; otherwise `on_track`. No stored status column.
 
@@ -283,13 +355,35 @@ Exclusive association of a BankAccount to a Goal.
 
 **Unique:** `(bank_account_id)` — a BankAccount belongs to at most one Goal. Associating an account already on another Goal **moves** the row.
 
-**App rules:** save-up Goals only accept `is_asset = true`. Pay-down Goals accept at most one `is_asset = false` BankAccount (refuse a second). Hidden BankAccounts cannot be associated.
+**App rules:** save-up Goals only accept `is_asset = true`. Pay-down Goals accept at most one `is_asset = false` BankAccount (refuse a second). Hidden BankAccounts cannot be associated. Only `funding = accounts` Goals have rows here. A BankAccount that is any Goal's `host_bank_account_id` cannot be associated (and vice versa).
+
+---
+
+### `goal_fund_entry`
+
+Dated movements on a Fund (CONTEXT: Fund entry).
+
+| Column | Type | Constraints |
+|--------|------|------------|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `user_id` | `text` | FK → user.id, NOT NULL |
+| `goal_id` | `uuid` | FK → goal.id, ON DELETE CASCADE, NOT NULL |
+| `date` | `date` | NOT NULL |
+| `amount` | `integer` | Native host cents, signed: + deposit / interest, − withdrawal |
+| `kind` | `text` | `deposit` \| `withdrawal` \| `interest`, NOT NULL |
+| `transaction_id` | `uuid` | FK → transaction.id, ON DELETE SET NULL, nullable, UNIQUE |
+| `note` | `text` | nullable |
+| `created_at` | `timestamptz` | default `now()` |
+
+**Index:** `(goal_id, date)`
+
+Interest split: when an interest Transaction lands on a host, insert one `interest` row per Fund on that host, pro rata by Fund balance at the start of that month; rounding cents go to the largest Fund. Re-running is idempotent per `(transaction, goal)`. Deleting the Transaction deletes its interest rows.
 
 ---
 
 ### `forecast_section`
 
-Defines a section in the forecast (Revenue, Savings, Fixed Expenses, Variable Expenses).
+Defines a section in the forecast (Revenue, Savings, Fixed Expenses, Variable Expenses). The Debt section in the UI is computed by the engine and has no row here.
 
 | Column | Type | Constraints |
 |--------|------|------------|
@@ -317,10 +411,38 @@ A line item within a forecast section (e.g., "Rent", "Salary").
 | `category_id` | `uuid` | FK → category.id, nullable |
 | `recurring_item_id` | `uuid` | FK → recurring_item.id, nullable |
 | `day_of_month` | `integer` | Due date / pay day (1-31), nullable |
+| `bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE SET NULL, nullable — pay-from / receive-into. Null = Operating cash. A credit BankAccount puts the spend on that card |
+| `goal_id` | `uuid` | FK → goal.id, ON DELETE SET NULL, nullable — savings rows only; a Fund the deposits grow |
 | `sort_order` | `integer` | Display order within section |
 | `created_at` | `timestamptz` | default `now()` |
 
 **Actuals** are not stored. RecurringItem wins if `recurring_item_id` is set (match `merchant_name` + optional `bank_account_id` for the month); else Category. Neither → plan only.
+
+---
+
+### `forecast_one_off`
+
+A single dated plan item (CONTEXT: One-off).
+
+| Column | Type | Constraints |
+|--------|------|------------|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `user_id` | `text` | FK → user.id, NOT NULL |
+| `section_id` | `uuid` | FK → forecast_section.id, ON DELETE CASCADE, NOT NULL |
+| `name` | `text` | NOT NULL |
+| `date` | `date` | NOT NULL — expected date |
+| `amount` | `integer` | Base cents, signed: + inflow, − outflow |
+| `bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE SET NULL, nullable — null = Operating cash |
+| `category_id` | `uuid` | FK → category.id, nullable |
+| `goal_id` | `uuid` | FK → goal.id, ON DELETE SET NULL, nullable — Fund deposit/withdrawal |
+| `status` | `text` | `expected` \| `done` \| `cancelled`, default `expected` |
+| `matched_transaction_id` | `uuid` | FK → transaction.id, ON DELETE SET NULL, nullable |
+| `created_at` | `timestamptz` | default `now()` |
+| `updated_at` | `timestamptz` | default `now()` |
+
+**Index:** `(user_id, date)`, `(user_id, status)`
+
+Matching runs after each sync for `expected` rows: same sign, `|amount|` within 5%, date within ±7 days, same BankAccount when set. Only `expected` items count in the projection; `done` items are already in balances.
 
 ---
 
@@ -352,6 +474,9 @@ Plan amounts only. One cell per row per month. The UI edits these in a **drawer*
 | `currency` | `text` | Base currency, default `USD` |
 | `dashboard_widgets` | `jsonb` | Widget id + order + visible. Default: budget, net_worth, spending, transactions, recurring |
 | `budget_copy_forward` | `boolean` | default `false` |
+| `safety_buffer` | `integer` | Base cents, default `15000` |
+| `payback_day` | `integer` | 1-31, nullable — null = last day of month |
+| `debt_strategy` | `text` | `avalanche` \| `snowball` \| `custom`, default `avalanche` |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
 

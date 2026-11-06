@@ -42,13 +42,13 @@ The client and server can run locally (`pnpm dev:client`, `pnpm dev:server`, `pn
 
 ## Capabilities and Constraints
 
-**V1 ships (from `docs/01_PRD.md`, binding):** auth; Stripe Customer + Free Subscription at $0 (no payment method); Plaid connect/sync/disconnect (history kept) plus manual BankAccounts; FX into Base currency; Dashboard widget grid (Budget, Net Worth, Spending, Transactions, Recurring; Credit Score hidden until a bureau is wired); Accounts with net-worth hero and grouped rows; Transactions as a date-grouped infinite feed; Budget with Fixed / Flexible / Non-Monthly and copy-forward; Cash Flow; Reports; Recurring; Goals (save-up / pay-down, progress = associated BankAccount balances); Investments (balances and allocation, no trading); Forecasting as monthly cards and charts with plan vs Actuals.
+**V1 ships (from `docs/01_PRD.md`, binding):** auth; Stripe Customer + Free Subscription at $0 (no payment method); Plaid connect/sync/disconnect (history kept) with optional Liabilities (Statements, APR, loan terms) plus manual BankAccounts; FX into Base currency; Dashboard widget grid (Budget, Net Worth, Spending, Transactions, Recurring; Credit Score hidden until a bureau is wired); Accounts with net-worth hero and grouped rows, card Statement periods and Card terms, Loan terms, APY; Transactions as a date-grouped infinite feed; Budget with Fixed / Flexible / Non-Monthly and copy-forward; Cash Flow; Reports; Recurring; Goals (save-up / pay-down, progress = associated BankAccount balances, or Funds that share one host account); Investments (balances and allocation, no trading); Forecasting with Year, Month, and Debt tabs: a day-by-day Operating cash projection with a Safety buffer, cards paid on their due dates, One-offs, and a Debt plan that sends Payback to cards and loans in strategy order with spillover, plus loan amortization and extra-payment scenarios; plan vs Actuals.
 
 **Shell (binding):** left sidebar nav in this order: Dashboard, Cash Flow, Accounts, Transactions, Reports, Budget, Recurring, Goals, Investments, Forecasting. Footer is profile with a **Free** chip (not Trial). Settings is a gear in the top chrome, not a nav item. Right summary panel on Accounts, Budget, and Goals only. One drawer at a time; it does not cover the left nav.
 
 **Data (binding):** native Money stored as integer cents plus ISO currency; totals in Base currency; cursor-paginated transaction feeds; dashboard/net-worth/cash-flow/reports consume pre-aggregated series (daily snapshots, category rollups), never a client-side rebuild from the raw ledger. Every query is scoped by `user_id`. Transfers (paired internal legs) are excluded from spend totals. Pending counts. Hidden BankAccounts are omitted from net worth, Budget scope, and Goals.
 
-**V1 does not ship:** native apps; receipt OCR / retail-sync ingestion (tabs may exist empty); credit bureau if unwired; push/SMS/email bill reminders; household multi-user editing or Shared tags; brokerage trading or tax lots; Advice; AI Assistant; Weekly Recap; budget rollover; paid Stripe Prices or Checkout; payment methods; Stripe Connect; auto-pairing Transfers across currencies; crypto / unofficial currency totals.
+**V1 does not ship:** native apps; receipt OCR / retail-sync ingestion (tabs may exist empty); credit bureau if unwired; push/SMS/email bill reminders; household multi-user editing or Shared tags; brokerage trading or tax lots; Advice; AI Assistant; Weekly Recap; budget rollover; paid Stripe Prices or Checkout; payment methods; Stripe Connect; auto-pairing Transfers across currencies; crypto / unofficial currency totals; remittance and tax calculators (Remessa Online / Wise, IOF, pro-labore, INSS, IRRF); spreadsheet or CSV import of history or opening balances; payroll audit; moving money or paying bills (the plan only projects).
 
 **Open:** public launch audience beyond the founder; a later paid Product.
 
@@ -70,7 +70,8 @@ Specs and sample UI copy (`CONTEXT.md`, `docs/01_PRD.md` through `docs/07_IMPLEM
 3. Banks come in through Plaid. Manual BankAccounts fill net worth; they are not a second product.
 4. Never ship a spreadsheet. If a screen wants a grid, the screen is wrong.
 5. Do not recompute the month from the whole ledger on the client. Feeds paginate; charts read snapshots and rollups.
-6. Totals are Base currency. Native amounts stay native. Goal progress is real balances, not envelopes.
+6. Totals are Base currency. Native amounts stay native. Goal progress is real balances; a Fund is a ledger inside one real account and shows what is Unassigned, never a free-floating envelope.
+7. The plan protects the Safety buffer. Payback is what is left above it, never a guess that overdraws checking.
 
 ## Accessibility & Inclusion
 

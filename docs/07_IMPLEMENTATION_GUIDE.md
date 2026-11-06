@@ -194,11 +194,16 @@ GROUP BY b.id, c.id;
 ### Phase 7 — Recurring + Goals (Days 19-21)
 
 ```
-1. recurring_item + goal + goal_account tables
+1. recurring_item + goal + goal_account + goal_fund_entry tables; goal.funding + host_bank_account_id
 2. Recurring list, detect-from-history, mark paid / skip (no Transaction insert), drawer
 3. Goals: save-up / pay-down cards, Edit accounts drawer, right panel of associated BankAccounts
-4. Wire Dashboard recurring widget
-5. Verify: upcoming bill countdown; associating a BankAccount updates Goal progress (real balances, FX to Base)
+4. Funds: Fund funding in the goal drawer, Fund drawer with entries, Unassigned on host + right panel,
+   "Assign to Fund" in the Transaction drawer, interest split after sync (pro rata by month-start balance)
+5. APY field on savings/investment account drawers
+6. Wire Dashboard recurring widget
+7. Verify: associating a BankAccount updates Goal progress (real balances, FX to Base);
+   three Funds on one host sum correctly, Unassigned goes negative with a warning,
+   an interest Transaction splits into entries that add up to the cent
 ```
 
 ---
@@ -214,16 +219,72 @@ GROUP BY b.id, c.id;
 
 ---
 
-### Phase 9 — Forecasting (Days 25-28)
+### Phase 9 — Forecasting: Year + Month (Days 25-30)
 
 ```
-1. forecast_section, forecast_row, forecast_cell tables
-2. ForecastModule: CRUD + summary series
-3. Page: summary cards, projected-balance chart, collapsible item cards with sparklines
-4. Forecast item drawer (monthly Plan amounts + copy-to-all) — not a 12-column grid
-5. One-shot Add from categories / Add from recurring
-6. Actuals overlay for past months (computed at read; RecurringItem merchant match else Category)
-7. Verify: edit Plan in drawer → chart updates; past months show Plan and Actual separately
+1. forecast_section, forecast_row (+ bank_account_id, goal_id), forecast_cell, forecast_one_off tables;
+   user_settings.safety_buffer / payback_day / debt_strategy; bank_account.in_cash_plan
+2. ForecastModule: CRUD, One-offs, One-off matching after sync
+3. ProjectionService v1: day-by-day Operating cash from plan rows (day_of_month), One-offs,
+   card-paid rows into card balances, card payments on due day (Payment rule, no Statements yet:
+   use current balance), savings deposits into Funds, APY growth. Unit-test with fixed fixtures.
+4. Year tab: summary cards, projected-balance chart with buffer line + shortfall callout,
+   collapsible item cards with sparklines, One-offs per section
+5. Forecast item drawer (monthly Plan amounts + copy-to-all, pay-from, Fund) — not a 12-column grid
+6. Month tab: daily chart, low point, date-grouped items with balance after
+7. One-shot Add from categories / Add from recurring
+8. Actuals overlay for past months (computed at read; RecurringItem merchant match else Category)
+9. Verify: edit Plan in drawer → chart updates; a row paid from a card moves the cash hit to the
+   card's due date; a day under the buffer shows as a shortfall; past months show Plan and Actual
+```
+
+---
+
+### Phase 10 — Debt plan: cards, loans, Payback (Days 31-36)
+
+```
+1. bank_account card-term columns (apr_bps, statement_close_day, payment_due_day, payment_rule,
+   fixed_payment, overridden_fields, in_debt_plan, debt_priority); card_statement; loan_terms
+2. Plaid: add optional_products [liabilities] to Link; /liabilities/get on sync → Statements,
+   Card terms, loan_terms (respect overridden_fields). Sandbox: user_good has credit + loan liabilities
+3. Account drawer: credit section (Statement, current period spend, Card terms form, Statement
+   periods navigator, manual Statement), loan section (Loan terms form), toggles
+4. AmortizationService: scheduled payment, schedule, extra-payment scenarios (+$0…$300, custom),
+   months saved, interest saved. Unit-test against a known schedule (e.g. $32,605.50, 7%, 75 mo → $538/mo)
+5. ProjectionService v2: Statements drive card payments; Projected interest; loan payments from the
+   schedule; Payback on payback day (lowest cash until next income − buffer), Debt plan order
+   (avalanche / snowball / custom), spillover; computed Debt section; F12.25 dedupe
+6. Debt tab: hero, strategy/buffer/payback-day controls, stacked-bar chart, liability cards with drag
+   order, Loan payoff drawer
+7. Goals Pay down: payoff month from the Debt plan
+8. Verify: Payback never takes cash below the buffer on any day until the next income; Payback
+   past the last card spills to a balance-only BRL loan at the latest rate; changing strategy
+   reorders and changes the debt-free month; a User-set APR survives a Plaid sync
+```
+
+**Payback rule (reference):**
+
+```typescript
+// server/src/forecast/projection.service.ts
+// cash: projected Operating cash by day, before Payback, for this month and next
+function paybackAmount(cash: DayBalance[], paybackDay: string, nextIncomeDay: string, buffer: number, payableDebt: number) {
+  const window = cash.filter((d) => d.date >= paybackDay && d.date < nextIncomeDay);
+  const low = Math.min(...window.map((d) => d.value));
+  return Math.min(Math.max(0, low - buffer), payableDebt);
+}
+
+function allocate(amount: number, plan: Liability[]) {
+  // plan is already in Debt plan order; balances are after scheduled payments
+  const split: { id: string; amount: number }[] = [];
+  let left = amount;
+  for (const l of plan) {
+    if (left <= 0) break;
+    const take = Math.min(left, l.balanceAfterScheduled);
+    if (take > 0) split.push({ id: l.id, amount: take });
+    left -= take;
+  }
+  return { split, leftover: left }; // leftover stays in Operating cash
+}
 ```
 
 **Actuals merge logic:**
@@ -254,7 +315,7 @@ async getFullYear(userId: string, year: number) {
 
 ---
 
-### Phase 10 — Polish (Days 29-31)
+### Phase 11 — Polish (Days 37-39)
 
 ```
 1. Skeleton cards/lists on every page
@@ -263,10 +324,10 @@ async getFullYear(userId: string, year: number) {
 4. Responsive: stack right panel under main at 1024px; icon-rail at 375px
 5. Export CSV (transactions + accounts)
 6. Dark mode tokens (palette in SCREEN_SPECS)
-7. Settings page (profile, categories, dashboard widgets, budget copy-forward, base currency)
+7. Settings page (profile, categories, dashboard widgets, budget copy-forward, base currency, Plan)
 ```
 
-AI Assistant, Advice, and Weekly Recap are out of V1.
+AI Assistant, Advice, Weekly Recap, remittance/tax calculators, spreadsheet/CSV import, and payroll audit are out of V1.
 
 ---
 

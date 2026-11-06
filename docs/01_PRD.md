@@ -83,6 +83,7 @@ Single-user app with authentication (future multi-user household support possibl
 | F2.7 | Show last-updated timestamp per account (e.g. "9 hours ago") |
 | F2.8 | `is_hidden` excludes a BankAccount from net worth, Budget account-scope, and Goals. |
 | F2.9 | Amounts stay in the BankAccount’s ISO currency. Totals convert to Base currency (default USD). P&L uses the Transaction-date rate; balances use the latest rate. Fiat ISO only; unofficial/crypto omitted from totals with a banner. |
+| F2.10 | Request Plaid **Liabilities** where the institution supports it (optional product: Link never fails because of it). On each sync, upsert the latest Statement (balance, minimum payment, due date) and Card terms (APR, limit) for credit BankAccounts, and balance/APR/term for loans. Fields the User has overridden are not overwritten. Institutions without Liabilities (and manual BankAccounts) use User-entered terms and Statements. |
 
 ### F3 — Dashboard (Home)
 
@@ -115,6 +116,11 @@ Net-worth overview plus hierarchical account list. Not a settings dump.
 | F4.7 | Header actions: Filters, Refresh all, **+ Add account** (Plaid Link or manual). |
 | F4.8 | **Right summary panel** — Assets vs Liabilities. Toggle Totals / Percent. Horizontal stacked bars with color-coded categories (e.g. Vehicles, Investments, Cash / Credit Cards, Loans). |
 | F4.9 | Download CSV from the summary panel. |
+| F4.10 | **Credit card drawer** adds: credit limit, available, utilization %; last Statement (balance, minimum payment, due date + countdown); current period spend (charges since the last close); APR and Projected interest for next period; Payment rule. **Card terms** are editable in the drawer (APR, limit, statement close day, payment due day, Payment rule, fixed amount). A manual Statement can be added when Plaid has none. |
+| F4.11 | **Statement periods:** the card drawer groups the card's Transactions by Statement period (`Dec 12 – Jan 11 · due Feb 5`) with a period navigator, period total, and its Statement balance. Calendar-month views elsewhere are unchanged. |
+| F4.12 | **Loan drawer** adds Loan terms (principal, APR, term months, first payment date, payment day, scheduled payment, extra monthly payment) and links to the loan payoff drawer (F12.24). Balance-only loans (no APR/term) are allowed, in any ISO currency. |
+| F4.13 | Savings and investment drawers have an **APY** field used by the Forecast. Savings drawers that host Funds list them with balances and the Unassigned remainder (F10.11). |
+| F4.14 | Each cash BankAccount has an **in cash plan** toggle (Operating cash). Each liability has an **in debt plan** toggle. Both live in the account drawer. |
 
 ### F5 — Transactions
 
@@ -196,7 +202,7 @@ Upcoming bills and subscriptions as a timeline list, not a grid.
 
 ### F10 — Goals
 
-Card list of save-up and pay-down Goals. Progress is associated BankAccount balances, not an in-app envelope.
+Card list of save-up and pay-down Goals. Progress is either associated BankAccount balances or, for a Fund, its own entries inside one real host BankAccount.
 
 | ID | Requirement |
 |----|-------------|
@@ -205,10 +211,15 @@ Card list of save-up and pay-down Goals. Progress is associated BankAccount bala
 | F10.3 | Group total (sum of current amounts, Base currency) at the top of the list. |
 | F10.4 | **Goal card:** thumbnail, name, status badge (On track / At risk), target date, current amount, thin progress bar, `% of $target`. |
 | F10.5 | **Right panel:** associated BankAccounts and balances; **Edit accounts** primary CTA. |
-| F10.6 | Add/edit Goal in a right drawer: name, thumbnail, target amount, target date, type. Create is allowed with zero BankAccounts (progress $0). |
-| F10.7 | Progress is computed at read time from associated BankAccount balances (latest FX into Base). No `goal_allocation` ledger. |
+| F10.6 | Add/edit Goal in a right drawer: name, thumbnail, target amount, target date, type, funding (**Accounts** or **Fund**; save-up only). Create is allowed with zero BankAccounts (progress $0). |
+| F10.7 | Accounts-funded progress is computed at read time from associated BankAccount balances (latest FX into Base). Fund progress is the sum of its Fund entries (F10.11). No other allocation ledger. |
 | F10.8 | Save-up: many asset BankAccounts (`is_asset = true`). Pay-down: zero or one liability (`is_asset = false`). A BankAccount belongs to at most one Goal; associating one already on another Goal **moves** it (toast). Associating a second liability on a pay-down Goal **refuses**. |
 | F10.9 | Pay-down: current display = remaining owed. Bar = `(target − remaining) / target`. Default `target_amount` to the liability balance when the first (only) liability is associated; User can edit. Do not auto-change target after that. |
+| F10.10 | Pay-down cards show the liability's payoff month from the Debt plan (F12.18) and link to the Forecasting **Debt** tab. |
+| F10.11 | **Funds:** a save-up Goal with funding = Fund picks one visible asset host BankAccount. Many Funds may share a host. Fund balance = sum of its Fund entries (native host currency, shown in Base at the latest rate). The host's drawer and the Goals right panel show each Fund plus **Unassigned** (host balance − sum of Funds); a negative Unassigned shows a warning, never blocks. A host cannot also be in a Goal association. |
+| F10.12 | Fund drawer lists Fund entries by date (deposit / withdrawal / interest) with a running Fund balance shown in the date header; **+ Entry** adds one. A `savings_transfer` Transaction into or out of the host offers "Assign to Fund" in the Transaction drawer, which creates the entry linked to that Transaction (one Transaction → at most one Fund entry). |
+| F10.13 | When a host gets an interest Transaction (Plaid PFC `INCOME` / `INCOME_INTEREST_EARNED`, or User-tagged), the app splits it into interest entries across that host's Funds pro rata by month-start Fund balance; rounding cents go to the largest Fund. Unassigned keeps its share implicitly. |
+| F10.14 | Fund status (On track / At risk) uses the Fund's planned monthly deposits from the Forecast (savings rows pointing at it) plus projected interest at the host's APY, against target amount and date. |
 
 ### F11 — Investments
 
@@ -223,21 +234,52 @@ Holdings overview beyond a raw balance. V1 is balances + allocation, not a full 
 
 ### F12 — Forecasting
 
-Forward-looking plan visualized as charts and monthly cards — not a 12-column spreadsheet.
+Forward-looking plan visualized as charts and monthly cards — not a 12-column spreadsheet. Three sub-tabs: **Year** (default), **Month**, and **Debt**. All three read one projection engine (F12.14).
+
+**Year**
 
 | ID | Requirement |
 |----|-------------|
 | F12.1 | Year selector (`◀ 2026 ▶`). |
-| F12.2 | Summary cards auto-calculated from the plan: projected cash flow, checking balance, credit card total, savings total, fixed expenses, variable expenses. |
+| F12.2 | Summary cards auto-calculated from the plan: projected cash flow, Operating cash balance, credit card total, savings total (including Funds), fixed expenses, variable expenses, debt payments (scheduled + Payback), total debt. |
 | F12.3 | **Projected balance chart** across 12 months (line/area). |
 | F12.4 | Sections as collapsible card groups: Revenue, Savings, Fixed expenses, Variable expenses. Each item shows name, typical monthly amount, and a 12-month sparkline or month chips — not an editable cell matrix. |
-| F12.5 | Click an item → right drawer to set monthly amounts (copy across months supported). |
+| F12.5 | Click an item → right drawer to set monthly amounts (copy across months supported), day of month, pay-from / receive-into BankAccount (Operating cash by default, or a credit card), and for savings rows the target Fund. |
 | F12.6 | Add / delete line items per section. |
 | F12.7 | Past months show **Actuals** from Transactions when available, visually distinct from the Plan (e.g. filled vs dashed). Plan amounts stay stored; Actuals are computed at read time. |
 | F12.8 | Current month highlighted in the chart and month chips. |
 | F12.9 | ForecastRow may have `category_id` and/or `recurring_item_id`. RecurringItem wins for Actuals if set (merchant_name match, and `bank_account_id` when the RecurringItem has one); otherwise Category. Neither → projection only. |
 | F12.10 | One-shot **Add from categories** (skip Uncategorized and rows that already have that Category). Map: income → revenue; fixed → fixed_expense; flexible and non_monthly → variable_expense; “Savings Transfer” → savings. Separate **Add from recurring** skipping RecurringItems already linked. Twelve-month amounts edit in the drawer only. |
-| F12.11 | Projected cash balance starts from today’s Cash group (`display_group=cash`). Each future month: `prior + revenue − fixed − variable − savings`. Past months use snapshots. Card totals are a separate series, not mixed into that cash line. |
+| F12.11 | Projected Operating cash starts from today's Operating cash balance. Each future month: `prior + revenue − (fixed + variable paid from Operating cash) − savings deposits − card payments − loan payments − Payback`. Spending on rows paid from a card goes into that card's balance, not Operating cash; it reaches Operating cash only as the card's payment on its due date. Past months use snapshots. Card totals stay a separate series, never added to the cash line. |
+| F12.12 | A read-only **Debt** section (computed, not deletable) shows per month: each card payment, each loan payment, and Payback with its split per liability. Edit it from the Debt tab, not the Year drawer. |
+| F12.13 | **One-offs** per section: name, date, amount, pay-from / receive-into BankAccount, optional Category and Fund. Listed under their section with an Expected / Done / Cancelled badge; matching a Transaction marks it Done (CONTEXT: One-off). Expected reimbursements are revenue One-offs. |
+
+**Engine**
+
+| ID | Requirement |
+|----|-------------|
+| F12.14 | The projection runs **day by day** for every future day of the selected range: plan items land on their `day_of_month` (clamped to the month's last day; no day → day 1 for revenue, last day for expenses), One-offs on their date, card payments on the card's due day, loan payments on the loan's payment day. Computed at read time; nothing about the projection is stored. |
+| F12.15 | **Card balances** next period = balance − scheduled payment (Payment rule) − Payback + Projected interest + card-paid plan spending. Projected interest = (Statement balance − scheduled payment − Payback, if positive) × APR / 12. Card with no APR → 0 interest and a "Add APR" hint. |
+| F12.16 | **Loan balances** follow the Amortization schedule plus extra payment plus Payback. Balance-only loans drop by whatever is paid. Native currency is kept; payments from Operating cash convert at the latest rate. |
+| F12.17 | **Savings** and Fund balances grow by deposits and compound monthly at the account's APY (Fund share pro rata, F10.13). |
+| F12.18 | **Payback** (CONTEXT: Payback): on the payback day (Setting, default the last day of the month), amount = lowest projected Operating cash from the payback day until the next revenue item lands, minus the Safety buffer, floored at 0, capped at the total payable debt after scheduled payments. Allocate in Debt plan order; each liability takes up to its remaining balance; the rest spills over to the next. Leftover stays in cash. Shows a payoff month per liability and a debt-free month overall. |
+| F12.19 | Any projected day where Operating cash < Safety buffer is a **shortfall**: red on the charts, listed in a callout with the day and amount short. Payback can never cause a shortfall; plan items can. |
+
+**Month**
+
+| ID | Requirement |
+|----|-------------|
+| F12.20 | Month navigator. Area chart of daily Operating cash (past days from snapshots solid, future projected dashed) with a horizontal Safety buffer line and a **low point** callout (date + amount). Below: plan items grouped by date (income, bills, card payments, loan payments, savings deposits, One-offs, Payback with its spillover split); each date header shows the day's net and the projected balance after it. Date-grouped list, not a running-balance table column. Row click opens the item's drawer. |
+
+**Debt**
+
+| ID | Requirement |
+|----|-------------|
+| F12.21 | Hero: total debt (Base), debt-free month, projected interest for the next 12 months, total utilization (sum balances / sum limits). Strategy selector (Avalanche / Snowball / Custom) and Safety buffer and payback day controls. |
+| F12.22 | One card per in-plan liability, in Debt plan order (drag to reorder switches strategy to Custom): name, balance, share of total debt %, limit / available / utilization bar (cards), Statement balance, minimum payment, due date countdown, APR, Payment rule, this month's scheduled payment + Payback, Projected interest, payoff month. |
+| F12.23 | Chart: stacked bars of projected balance per liability by month until debt-free, with Payback marked. |
+| F12.24 | **Loan payoff drawer** (from a loan card or F4.12): base payment, total interest, payoff date; extra-payment scenarios as compare cards for +$0 / 50 / 100 / 150 / 200 / 250 / 300 and a custom amount: payment, payoff months, months saved, total interest, interest saved. Amortization schedule as a balance chart plus a year-grouped collapsible list (period, payment, interest, principal, extra, ending balance). Choosing a scenario sets the loan's extra monthly payment. |
+| F12.25 | Card and loan payments already modeled by the engine are not also counted from ForecastRows: rows linked to a RecurringItem whose matches are Transfers into a liability are flagged "counted in Debt" and excluded from totals. |
 
 ---
 
@@ -255,6 +297,7 @@ Opened from the top-chrome gear (not a primary nav item).
 | S6 | Data export (CSV) |
 | S7 | Notifications preferences (in-app; push is out of scope for V1) |
 | S8 | Base currency (ISO). Changing it rebuilds cached base amounts. |
+| S9 | Plan: Safety buffer (default $150), payback day (default last day of month), debt strategy (Avalanche default). Same controls as the Forecasting Debt tab. |
 
 ---
 
@@ -297,5 +340,9 @@ Opened from the top-chrome gear (not a primary nav item).
 - Paid Stripe Prices, Checkout, payment methods, and Stripe Connect (Free $0 Subscription only)
 - Advice, AI Assistant, Weekly Recap
 - Budget remaining/overage rollover
+- Remittance and tax calculators (Remessa Online / Wise fees, IOF, pro-labore, INSS, IRRF)
+- Spreadsheet or CSV import of past history or opening balances (history comes from Plaid or manual entry)
+- Payroll audit (checking paychecks against hours, rate, and withholding)
+- Moving money or paying bills: Payback and payment plans are projections, the User pays at the bank
 - Auto-pairing Transfers across currencies
 - Crypto / unofficial currency codes in totals

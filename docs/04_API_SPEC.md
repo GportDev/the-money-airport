@@ -95,8 +95,12 @@ interface DashboardPayload {
 | GET | `/accounts/net-worth` | `?range=1m\|3m\|1y\|ytd` | `{ data: NetWorthResponse }` |
 | GET | `/accounts/:id` | — | `{ data: AccountDetail }` |
 | POST | `/accounts` | `{ name, type, displayGroup, currentBalance, creditLimit? }` | `{ data: Account }` | Manual account |
-| PATCH | `/accounts/:id` | `{ name?, currentBalance?, creditLimit?, isHidden? }` | `{ data: Account }` |
+| PATCH | `/accounts/:id` | `{ name?, currentBalance?, creditLimit?, isHidden?, inCashPlan?, inDebtPlan?, debtPriority?, aprBps?, apyBps?, statementCloseDay?, paymentDueDay?, paymentRule?, fixedPayment? }` | `{ data: Account }` | Card-term fields set here are added to `overriddenFields` |
 | DELETE | `/accounts/:id` | — | `{ success }` | Manual accounts only |
+| GET | `/accounts/:id/statements` | `?periodEnd?` (default latest) | `{ data: StatementPeriod }` | Credit only. Transactions grouped by Statement period |
+| POST | `/accounts/:id/statements` | `{ periodStart, periodEnd, statementBalance, minimumPayment?, dueDate? }` | `{ data: CardStatement }` | Manual Statement |
+| PUT | `/accounts/:id/loan-terms` | `{ principal?, termMonths?, firstPaymentDate?, paymentDay?, scheduledPayment?, extraPayment? }` | `{ data: LoanTerms }` | Loan only |
+| GET | `/accounts/:id/amortization` | `?extra=<cents>` | `{ data: Amortization }` | Loan only; computed |
 
 ```typescript
 interface Account {
@@ -116,7 +120,81 @@ interface Account {
   source: "plaid" | "manual";
   isoCurrencyCode: string;
   isHidden: boolean;
+  inCashPlan: boolean;
+  inDebtPlan: boolean;
+  aprBps: number | null;
+  apyBps: number | null;
   sparkline: { date: string; value: number }[]; // last ~30 days, native
+  card: CardSummary | null;   // credit only
+  loan: LoanTerms | null;     // loan only
+  funds: { goalId: string; name: string; balance: number }[]; // host only
+  unassigned: number | null;  // host only: balance − sum(funds), native
+}
+
+interface CardSummary {
+  statementCloseDay: number | null;
+  paymentDueDay: number | null;
+  paymentRule: "statement_balance" | "new_charges" | "minimum" | "fixed";
+  fixedPayment: number | null;
+  latestStatement: CardStatement | null;
+  currentPeriodSpend: number;      // native, since latest periodEnd
+  projectedInterest: number;       // native, next period
+  utilization: number | null;      // 0..1
+  overriddenFields: string[];
+}
+
+interface CardStatement {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  statementBalance: number;
+  minimumPayment: number | null;
+  dueDate: string | null;
+  source: "plaid" | "manual";
+}
+
+interface StatementPeriod {
+  statement: CardStatement | null; // null = current open period
+  periodStart: string;
+  periodEnd: string;
+  total: number;
+  previousPeriodEnd: string | null;
+  nextPeriodEnd: string | null;
+  transactions: TransactionListItem[]; // client groups by date, like the feed
+}
+
+interface LoanTerms {
+  principal: number | null;
+  termMonths: number | null;
+  firstPaymentDate: string | null;
+  paymentDay: number | null;
+  scheduledPayment: number | null; // stored or computed
+  extraPayment: number;
+  source: "plaid" | "manual";
+}
+
+interface Amortization {
+  basePayment: number;
+  baseTotalInterest: number;
+  basePayoffDate: string;
+  scenarios: {                     // extra = 0, 5000, 10000 … 30000, plus ?extra
+    extra: number;
+    payment: number;
+    payoffMonths: number;
+    monthsSaved: number;
+    totalInterest: number;
+    interestSaved: number;
+  }[];
+  schedule: {                      // for the requested extra (default: stored extraPayment)
+    period: number;
+    date: string;
+    beginningBalance: number;
+    payment: number;
+    interest: number;
+    principal: number;
+    extra: number;
+    endingBalance: number;
+  }[];
 }
 
 interface NetWorthResponse {
@@ -284,9 +362,12 @@ interface RecurringListItem {
 | Method | Path | Query/Body | Response |
 |--------|------|-----------|----------|
 | GET | `/goals` | `?type=save_up\|pay_down` | `{ data: { totalCurrent: number; goals: Goal[] } }` |
-| POST | `/goals` | `{ name, type, targetAmount, targetDate?, thumbnailUrl? }` | `{ data: Goal }` |
+| POST | `/goals` | `{ name, type, targetAmount, targetDate?, thumbnailUrl?, funding?, hostBankAccountId? }` | `{ data: Goal }` | `funding: "fund"` requires `hostBankAccountId` (visible asset, not in a Goal association) |
 | PATCH | `/goals/:id` | `{ name?, targetAmount?, targetDate?, thumbnailUrl?, sortOrder? }` | `{ data: Goal }` |
-| PUT | `/goals/:id/accounts` | `{ bankAccountIds: string[] }` | `{ data: Goal }` | Save-up: many assets. Pay-down: 0–1 liability. Move if exclusive conflict. |
+| PUT | `/goals/:id/accounts` | `{ bankAccountIds: string[] }` | `{ data: Goal }` | Accounts funding only. Save-up: many assets. Pay-down: 0–1 liability. Move if exclusive conflict. Refuse Fund hosts. |
+| GET | `/goals/:id/entries` | `?cursor` | `{ data: FundEntry[]; nextCursor }` | Fund only, newest first |
+| POST | `/goals/:id/entries` | `{ date, amount, kind, transactionId?, note? }` | `{ data: FundEntry }` | `transactionId` must be on the host and not already used |
+| DELETE | `/goals/:id/entries/:entryId` | — | `{ success }` | |
 | DELETE | `/goals/:id` | — | `{ success }` |
 
 ```typescript
@@ -294,15 +375,30 @@ interface Goal {
   id: string;
   name: string;
   type: "save_up" | "pay_down";
+  funding: "accounts" | "fund";
   thumbnailUrl: string | null;
   targetAmount: number;
   currentAmount: number; // computed
   targetDate: string | null;
   status: "on_track" | "at_risk";
   percentComplete: number;
-  accounts: Account[];
+  accounts: Account[];               // accounts funding
+  host: { id: string; name: string; unassigned: number } | null; // fund funding
+  payoffMonth: string | null;        // pay-down: from the Debt plan
+}
+
+interface FundEntry {
+  id: string;
+  date: string;
+  amount: number;          // native host cents, signed
+  kind: "deposit" | "withdrawal" | "interest";
+  transactionId: string | null;
+  note: string | null;
+  balanceAfter: number;    // computed running Fund balance
 }
 ```
+
+The Transaction drawer's "Assign to Fund" calls `POST /goals/:id/entries` with `transactionId`.
 
 ---
 
@@ -347,14 +443,38 @@ Click-through uses `GET /transactions` with category + date filters in a drawer 
 
 | Method | Path | Body | Response |
 |--------|------|------|----------|
-| POST | `/forecast/rows` | `{ sectionId, name, dayOfMonth?, defaultAmount?, categoryId?, recurringItemId? }` | `{ data: ForecastRow }` |
-| PATCH | `/forecast/rows/:id` | `{ name?, dayOfMonth?, sortOrder?, categoryId?, recurringItemId? }` | `{ data: ForecastRow }` |
+| POST | `/forecast/rows` | `{ sectionId, name, dayOfMonth?, defaultAmount?, categoryId?, recurringItemId?, bankAccountId?, goalId? }` | `{ data: ForecastRow }` |
+| PATCH | `/forecast/rows/:id` | `{ name?, dayOfMonth?, sortOrder?, categoryId?, recurringItemId?, bankAccountId?, goalId? }` | `{ data: ForecastRow }` | `bankAccountId` null = Operating cash; `goalId` savings rows only, must be a Fund |
 | POST | `/forecast/rows/from-categories` | `{ year }` | `{ data: ForecastRow[] }` | One-shot seed; skip Uncategorized and existing category links |
 | POST | `/forecast/rows/from-recurring` | `{ year }` | `{ data: ForecastRow[] }` | Skip RecurringItems already linked |
 | PUT | `/forecast/rows/:id/amounts` | `{ year, amounts: Record<number, number>, copyToAll?: boolean }` | `{ data: ForecastRow }` |
 | DELETE | `/forecast/rows/:id` | — | `{ success }` |
 
 `amounts` is month (1-12) → cents. The drawer sends this instead of per-cell PUTs. `copyToAll` writes the same amount to every month.
+
+### One-offs
+
+| Method | Path | Body | Response |
+|--------|------|------|----------|
+| GET | `/forecast/one-offs` | `?year&status?` | `{ data: OneOff[] }` |
+| POST | `/forecast/one-offs` | `{ sectionId, name, date, amount, bankAccountId?, categoryId?, goalId? }` | `{ data: OneOff }` |
+| PATCH | `/forecast/one-offs/:id` | `{ name?, date?, amount?, bankAccountId?, categoryId?, goalId?, status?, matchedTransactionId? }` | `{ data: OneOff }` |
+| DELETE | `/forecast/one-offs/:id` | — | `{ success }` |
+
+```typescript
+interface OneOff {
+  id: string;
+  sectionId: string;
+  name: string;
+  date: string;
+  amount: number;           // Base cents, signed
+  bankAccountId: string | null;
+  categoryId: string | null;
+  goalId: string | null;
+  status: "expected" | "done" | "cancelled";
+  matchedTransactionId: string | null;
+}
+```
 
 ### Full Year Response
 
@@ -369,9 +489,25 @@ interface ForecastSectionFull {
     dayOfMonth: number | null;
     categoryId: string | null;
     recurringItemId: string | null;
+    bankAccountId: string | null;   // pay-from; null = Operating cash
+    goalId: string | null;          // Fund target (savings rows)
+    countedInDebt: boolean;         // F12.25: excluded from totals
     typicalMonthly: number;
     sparkline: number[]; // 12 plan values
     cells: Record<number, { plan: number; actual: number | null }>;
+  }[];
+  oneOffs: OneOff[];
+  totals: Record<number, number>;
+}
+
+// Computed Debt section, returned alongside the stored sections
+interface ForecastDebtSection {
+  type: "debt";
+  rows: {
+    bankAccountId: string;
+    name: string;
+    kind: "card_payment" | "loan_payment";
+    cells: Record<number, { scheduled: number; payback: number; actual: number | null }>;
   }[];
   totals: Record<number, number>;
 }
@@ -386,14 +522,77 @@ interface ForecastSectionFull {
 ```typescript
 interface ForecastSummary {
   cashFlow: Record<number, number>;
-  checkingBalance: Record<number, number>;
+  operatingCash: Record<number, number>;     // month-end
+  lowPoint: Record<number, { date: string; value: number }>;
+  shortfalls: { date: string; short: number }[];
   creditCardTotal: Record<number, number>;
-  savingsTotal: Record<number, number>;
+  savingsTotal: Record<number, number>;      // includes Funds and APY growth
   fixedExpensesTotal: Record<number, number>;
   variableExpensesTotal: Record<number, number>;
+  debtPaymentsTotal: Record<number, number>; // scheduled + Payback
+  paybackTotal: Record<number, number>;
+  debtTotal: Record<number, number>;
   projectedBalanceSeries: { month: number; value: number }[];
 }
 ```
+
+### Month (daily projection)
+
+| Method | Path | Query | Response |
+|--------|------|-------|----------|
+| GET | `/forecast/month` | `?year&month` | `{ data: ForecastMonth }` |
+
+```typescript
+interface ForecastMonth {
+  safetyBuffer: number;
+  openingBalance: number;
+  series: { date: string; value: number; projected: boolean }[]; // one point per day
+  lowPoint: { date: string; value: number };
+  shortfalls: { date: string; short: number }[];
+  days: {
+    date: string;
+    net: number;
+    balanceAfter: number;
+    items: {
+      kind: "revenue" | "fixed" | "variable" | "savings" | "one_off" | "card_payment" | "loan_payment" | "payback";
+      name: string;
+      amount: number;                   // Base cents, signed
+      sourceId: string | null;          // forecast_row / one_off / bank_account id
+      split?: { bankAccountId: string; name: string; amount: number }[]; // payback spillover
+    }[];
+  }[];
+}
+```
+
+### Debt plan
+
+| Method | Path | Body / Query | Response |
+|--------|------|------|----------|
+| GET | `/forecast/debt` | `?months=24` | `{ data: DebtPlan }` |
+| PUT | `/forecast/debt/order` | `{ bankAccountIds: string[] }` | `{ data: DebtPlan }` | Sets `debt_priority` and switches strategy to `custom` |
+
+```typescript
+interface DebtPlan {
+  strategy: "avalanche" | "snowball" | "custom";
+  safetyBuffer: number;
+  paybackDay: number | null;
+  totalDebt: number;                 // Base
+  debtFreeMonth: string | null;      // YYYY-MM, null if never within range
+  projectedInterest12m: number;
+  utilization: number | null;
+  liabilities: {
+    account: Account;
+    share: number;                   // balance / totalDebt
+    scheduledPayment: number;        // this month, Base
+    payback: number;                 // this month, Base
+    projectedInterest: number;       // next period, Base
+    payoffMonth: string | null;
+  }[];
+  series: { month: string; balances: Record<string, number>; payback: number }[];
+}
+```
+
+Engine rules are PRD F12.14–F12.19. One service (`ProjectionService`) computes the day-by-day run; `summary`, `month`, `sections` (Debt section), and `debt` all read it, so numbers always agree.
 
 ---
 
@@ -402,7 +601,7 @@ interface ForecastSummary {
 | Method | Path | Body | Response |
 |--------|------|------|----------|
 | GET | `/settings` | — | `{ data: UserSettings }` |
-| PATCH | `/settings` | `{ currency?, dashboardWidgets?, budgetCopyForward? }` | `{ data: UserSettings }` |
+| PATCH | `/settings` | `{ currency?, dashboardWidgets?, budgetCopyForward?, safetyBuffer?, paybackDay?, debtStrategy? }` | `{ data: UserSettings }` |
 
 ---
 

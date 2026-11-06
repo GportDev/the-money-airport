@@ -125,7 +125,11 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 - Hero: net worth KPI + change + chart. Timeframe dropdown.
 - Collapsible groups by `displayGroup`. Header shows group total and period change.
 - Row: institution logo, name + last 4, type, sparkline, balance (native), last updated. Credit rows include a utilization bar.
-- Click row → account drawer (balance history sparkline, recent transactions).
+- Click row → account drawer (balance history sparkline, recent transactions). The drawer adds a section by type:
+  - **Credit:** limit / available / utilization bar; last Statement card (balance, minimum, due date countdown); current period spend; APR and Projected interest; Payment rule select; **Statement periods** list with `◀ Dec 12 – Jan 11 · due Feb 5 ▶` navigator, period total, date-grouped charges. Card terms edit inline in the drawer form; Plaid-filled fields show a "from bank" hint until overridden. **+ Statement** for manual entry.
+  - **Loan:** Loan terms form; base payment, payoff date, total interest; **View payoff** opens the loan payoff drawer (S10 Debt).
+  - **Savings / investment:** APY field. Fund hosts list Funds + Unassigned (warning style if negative).
+  - **All cash:** "In cash plan" toggle. **All liabilities:** "In debt plan" toggle.
 - **+ Add account:** Plaid Link or manual account form in a drawer.
 - **Refresh all** calls `/plaid/sync-all`.
 - Right panel: Assets vs Liabilities stacked bars; Totals / Percent toggle.
@@ -278,7 +282,10 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 - Goal cards: thumbnail, name, status badge, target date, current amount, progress bar, `% of $target`.
 - **+ Add goal** / card click → goal drawer. Create allowed with zero BankAccounts (progress $0).
 - **Edit accounts** → associate BankAccounts (save-up: many assets; pay-down: 0 or 1 liability). Moving an account off another Goal shows a toast.
-- Right panel: associated BankAccount balances; **Edit accounts** primary CTA. No Allocate funds.
+- Goal drawer has a **Funding** choice for save-up: Accounts (default) or Fund (pick a host BankAccount). Fund cards show a small "in {host}" label.
+- Fund card click → Fund drawer: balance, target, date-grouped Fund entries (deposit / withdrawal / interest) with balance after each date, **+ Entry**.
+- Right panel: associated BankAccount balances; for each Fund host, its Funds and **Unassigned** (warning if negative). **Edit accounts** primary CTA. No Allocate funds.
+- Pay down tab: each card shows the payoff month from the Debt plan and a link **See debt plan** → `/forecast?tab=debt`.
 
 ---
 
@@ -306,30 +313,88 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 ## S10 — Forecasting
 
-**Route:** `/forecast`
+**Route:** `/forecast` — sub-tabs in the URL: `?tab=year` (default) | `month` | `debt`.
 
-### Layout
+### Year — Layout
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  Forecasting                              ◀ 2026 ▶           │
-│  [Cash flow] [Checking] [Cards] [Savings] [Fixed] [Variable] │
-│  [projected balance area chart — 12 months]                  │
+│  Forecasting   Year | Month | Debt            ◀ 2026 ▶       │
+│  [Cash flow] [Cash] [Cards] [Savings] [Fixed] [Variable]     │
+│  [Debt payments] [Total debt]                                │
+│  [projected balance area chart — 12 months, buffer line]     │
+│  ⚠ 2 shortfalls: Mar 6 (−$42), Apr 6 (−$18)                  │
 │                                                              │
 │  Revenue                                                     │
 │  Salary     $3,400/mo typical    [12-month sparkline]     >  │
+│  Reimbursement  Mar 14  $250  Expected                    >  │
 │  Savings / Fixed expenses / Variable expenses  (same)        │
+│  Debt (computed)                                             │
+│  Amex payment  $2,097 Jan … [sparkline]   Payback $1,453  >  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Behavior
+### Year — Behavior
 
 - Year navigator. Summary **cards** (not a summary spreadsheet row).
-- Projected balance chart. Current month highlighted; past actuals solid, projections dashed.
-- Collapsible card groups. Each item: name, typical monthly amount, sparkline or month chips — **not** an editable 12-column matrix.
-- Click item → drawer: per-month Plan amounts + "copy to all months". Add/delete item from section header / row action. **Add from categories** and **Add from recurring** are one-shot seeds.
+- Projected balance chart (Operating cash, month-end). Current month highlighted; past actuals solid, projections dashed. Safety buffer as a thin horizontal line. Shortfall callout lists days below the buffer; clicking one opens that Month.
+- Collapsible card groups. Each item: name, typical monthly amount, sparkline or month chips — **not** an editable 12-column matrix. Items paid from a card show the card's logo; savings items pointing at a Fund show the Fund name.
+- One-offs sit under their section with date, amount, and an Expected / Done / Cancelled badge.
+- Click item → drawer: per-month Plan amounts + "copy to all months", day of month, pay-from account, Fund (savings). Add/delete item from section header / row action; **+ One-off** in each section header. **Add from categories** and **Add from recurring** are one-shot seeds.
+- Debt section is read-only: card payments, loan payments, Payback per month. Row click → Debt tab focused on that liability.
 - Past months: chart draws Plan (dashed) and Actual (solid) when Actuals exist.
 - Confirm dialog for delete.
+
+### Month — Layout
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Forecasting   Year | Month | Debt          ◀ January 2027 ▶ │
+│  Opening $4,524   Low point $150 on Jan 6   Closing $9,115   │
+│  [daily area chart · buffer line $150 · today marker]        │
+│                                                              │
+│  Jan 1 · −$1,500 · balance $3,024                            │
+│    Rent                                   −$1,500            │
+│  Jan 3 · −$2,835 · balance $189                              │
+│    Amex payment (statement)               −$2,097            │
+│    Car loan payment                         −$538            │
+│    Electricity                              −$200            │
+│  Jan 30 · +$3,211 · balance $9,115                           │
+│    SEO Gets                               +$3,633            │
+│    Payback  −$1,453  (Delta $1,200 · Blue $253)              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Month — Behavior
+
+- Daily chart: past days from snapshots (solid), future projected (dashed), Safety buffer line, low point dot, red fill on shortfall days.
+- Date-grouped list of plan items; header shows day net and balance after. Not a table with a running-balance column.
+- Payback rows expand to show the spillover split. Clicking an item opens its source drawer (forecast item, One-off, account).
+
+### Debt — Layout
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Forecasting   Year | Month | Debt                           │
+│  Total debt $8,564   Debt-free Jun 2027   Interest 12m $312  │
+│  Strategy [Avalanche ▾]  Buffer [$150]  Payback day [Last ▾] │
+│  [stacked bars: balance per liability by month · payback ▲]  │
+│                                                              │
+│  ≡ Amex Delta   $6,046 · 71%   ████████░░ 40% of $15,000     │
+│    Statement $6,200 · min $600 · due Feb 5 (in 12 days)      │
+│    APR 29% · Pay: statement · this month $2,568 + $1,200     │
+│    Interest next period $0 · paid off Apr 2027            >  │
+│  ≡ Truck loan   $31,980 · 7% APR · $538/mo · Mar 2033     >  │
+│  ≡ André (BRL)  R$51,680 ≈ $9,381 · balance only · May 2027  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Debt — Behavior
+
+- Strategy, Safety buffer, payback day edit inline and recompute (same values as Settings → Plan).
+- Liability cards in Debt plan order; drag handle (≡) reorders and switches to Custom. Out-of-plan liabilities sit in a collapsed "Not in plan" group.
+- Card click → account drawer (credit section). Loan click → **Loan payoff drawer**: summary (payment, total interest, payoff date), extra-payment compare cards (+$0 … +$300, custom), balance chart, year-grouped amortization list. **Use this** on a scenario saves `extra_payment`.
+- Text summary under the chart for screen readers (debt-free month, total interest).
 
 ---
 
@@ -348,6 +413,7 @@ Vertical stacked sections (cards), no sub-nav:
 - **Categories** — opens category manager drawer
 - **Dashboard** — widget visibility / order (same as Customize). Defaults omit Advice and Weekly Recap.
 - **Budget** — copy-forward toggle (no rollover)
+- **Plan** — Safety buffer, payback day, debt strategy
 - **Currency** — Base currency
 - **Data** — export transactions CSV
 
@@ -362,12 +428,15 @@ Vertical stacked sections (cards), no sub-nav:
 
 | Drawer | Trigger | Contents |
 |--------|---------|----------|
-| Transaction | Row click / + Add | Merchant, date, native amount, category, account, notes, similar, transfer toggle; or add form |
-| Account | Account row / + Add (manual) | History sparkline, recent tx; or manual account fields including currency |
+| Transaction | Row click / + Add | Merchant, date, native amount, category, account, notes, similar, transfer toggle, **Assign to Fund** (savings transfers on a host); or add form |
+| Account | Account row / + Add (manual) | History sparkline, recent tx, in cash plan / in debt plan toggles; credit: Card terms, Statement, Statement periods; loan: Loan terms; savings: APY, Funds + Unassigned; or manual account fields including currency |
+| Loan payoff | Debt tab loan / account drawer **View payoff** | Payment, total interest, payoff date, extra-payment scenarios, balance chart, amortization by year |
 | Budget category | Budget row | Planned amount for category+month |
 | Recurring | Row / + Add | Amount, cadence, next date, mark paid, skip |
-| Goal | Card / + Add / Edit accounts | Name, thumbnail, target, date, type; or associated BankAccounts |
-| Forecast item | Row / + Add | Name, day of month, 12 Plan amounts, copy-to-all |
+| Goal | Card / + Add / Edit accounts | Name, thumbnail, target, date, type, funding (Accounts / Fund + host); or associated BankAccounts |
+| Fund | Fund card | Balance, target, date-grouped entries, + Entry |
+| Forecast item | Row / + Add | Name, day of month, 12 Plan amounts, copy-to-all, pay-from account, Fund (savings) |
+| One-off | One-off row / + One-off | Name, date, amount, account, Category, Fund, status, matched Transaction |
 | Category manager | Filters gear / Settings | List with color/icon; create/edit; delete confirm |
 | Report transactions | Chart segment click | Filtered `transaction-feed` |
 
@@ -375,7 +444,7 @@ Vertical stacked sections (cards), no sub-nav:
 
 | Dialog | Trigger |
 |--------|---------|
-| Confirm delete | Delete category, forecast row, goal, manual account |
+| Confirm delete | Delete category, forecast row, One-off, goal, Fund entry, manual Statement, manual account |
 | Confirm disconnect | Disconnect Plaid item |
 | Confirm copy budgets | Copy previous month |
 

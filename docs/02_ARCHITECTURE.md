@@ -118,6 +118,8 @@ The UI is a widget/list/chart shell. The backend does not model spreadsheets. Li
 ```
 Connect Account:
 1. POST /api/plaid/create-link-token → { link_token }
+   products: [transactions]; optional_products: [liabilities]
+   (Link never fails when an institution lacks Liabilities)
 2. Frontend opens Plaid Link with token
 3. User authenticates with bank
 4. Plaid Link returns public_token + metadata
@@ -130,10 +132,16 @@ Ongoing Sync:
 2. Backend calls /transactions/sync with cursor
 3. New/modified/removed transactions upserted/deleted
 4. Current balances updated; a daily row is upserted into account_balance_snapshot
-5. Manual: POST /api/plaid/sync/:itemId (or "Refresh all") triggers the same flow
+5. If the item has Liabilities: /liabilities/get → upsert card_statement (latest Statement),
+   Card terms (APR, limit) and loan_terms (principal, rate, term, next payment),
+   skipping any field in bank_account.overridden_fields
+6. Post-sync jobs: Transfer pairing, One-off matching, Fund interest split
+7. Manual: POST /api/plaid/sync/:itemId (or "Refresh all") triggers the same flow
 ```
 
-Manual accounts (vehicles, property, cash) skip Plaid. They are created via `POST /api/accounts` and participate in net worth only.
+Manual accounts (vehicles, property, cash, personal loans) skip Plaid. They are created via `POST /api/accounts` and take User-entered Card terms, Statements, Loan terms, and APY.
+
+**Projection engine:** `ProjectionService` (ForecastModule) runs the day-by-day plan (PRD F12.14–F12.19) in memory per request from plan rows, One-offs, Card terms, Statements, Loan terms, Funds, and settings. Nothing it computes is stored. Year summary, Month, Debt section, and Debt plan all call it, so they always agree. A year at daily resolution for ~20 accounts is small enough to compute per request; cache per User for 60s keyed on a plan-version counter bumped by any write.
 
 ---
 
