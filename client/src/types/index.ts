@@ -48,3 +48,61 @@ export type NetWorth = {
 	liabilities: { group: string; total: number }[];
 	groups: GroupSummary[];
 };
+
+export type CategoryKind = "income" | "expense";
+export type BudgetGroup = "fixed" | "flexible" | "non_monthly";
+
+export type Category = {
+	id: string;
+	name: string;
+	color: string;
+	icon: string;
+	kind: CategoryKind;
+	budgetGroup: BudgetGroup | null;
+	isDefault: boolean;
+	isUncategorized: boolean;
+};
+
+export type TransferTag = "transfer" | "savings_transfer";
+
+export type TransactionListItem = {
+	id: string;
+	date: string;
+	name: string;
+	merchantName: string | null;
+	merchantLogoUrl: string | null;
+	amount: number;
+	isoCurrencyCode: string;
+	pending: boolean;
+	isManual: boolean;
+	tags: string[];
+	category: { id: string; name: string; icon: string; color: string } | null;
+	account: {
+		id: string;
+		name: string;
+		mask: string | null;
+		institutionLogo: string | null;
+	} | null;
+};
+
+export type TransactionDetail = TransactionListItem & {
+	notes: string | null;
+	plaidPfcPrimary: string | null;
+	similar: TransactionListItem[];
+};
+
+export type TransactionPage = {
+	data: TransactionListItem[];
+	meta: { nextCursor: string | null; limit: number };
+};
+
+export type TransactionFilters = {
+	dateFrom?: string;
+	dateTo?: string;
+	accountIds?: string[];
+	categoryIds?: string[];
+	search?: string;
+	pending?: boolean;
+	amountMin?: number;
+	amountMax?: number;
+};

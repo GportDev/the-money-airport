@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { and, eq } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
@@ -7,15 +7,29 @@ import { decryptToken, encryptToken } from "../crypto/token-crypto";
 import { DATABASE } from "../db/db.module";
 import { bankAccount } from "../db/schema/bank-account";
 import { plaidItem } from "../db/schema/plaid-item";
+import {
+	type IngestResult,
+	TransactionIngestService,
+} from "../transactions/transaction-ingest.service";
 import { PLAID_PORT, type PlaidPort } from "./plaid.port";
+
+type PlaidWebhook = {
+	webhook_type?: string;
+	webhook_code?: string;
+	item_id?: string;
+	error?: { error_code?: string } | null;
+};
 
 @Injectable()
 export class PlaidService {
+	private readonly logger = new Logger(PlaidService.name);
+
 	constructor(
 		@Inject(DATABASE) private readonly db: PostgresJsDatabase,
 		@Inject(PLAID_PORT) private readonly plaid: PlaidPort,
 		private readonly config: ConfigService,
 		private readonly accounts: AccountsService,
+		private readonly ingest: TransactionIngestService,
 	) {}
 
 	async createLinkToken(userId: string, itemId?: string) {
@@ -34,7 +48,16 @@ export class PlaidService {
 		if (!this.plaid.configured) {
 			throw new BadRequestException("Plaid is not configured");
 		}
-		const { accessToken, itemId } = await this.plaid.exchangePublicToken(publicToken);
+		let exchanged: { accessToken: string; itemId: string };
+		try {
+			exchanged = await this.plaid.exchangePublicToken(publicToken);
+		} catch (error) {
+			if (plaidErrorCode(error) === "INVALID_PUBLIC_TOKEN") {
+				throw new BadRequestException("Invalid public token");
+			}
+			throw error;
+		}
+		const { accessToken, itemId } = exchanged;
 		const details = await this.plaid.getAccounts(accessToken);
 		const encrypted = encryptToken(accessToken, this.encryptionKey());
 		const existing = await this.itemByPlaidId(userId, itemId);
@@ -79,6 +102,12 @@ export class PlaidService {
 		for (const account of details.accounts) {
 			await this.upsertAccount(userId, item.id, account);
 		}
+		// First pull. Plaid may still be preparing history; the webhook or Refresh all fills the rest.
+		try {
+			await this.syncTransactions(item);
+		} catch (error) {
+			this.logger.warn(`Initial transactions sync failed: ${plaidErrorCode(error)}`);
+		}
 
 		const accounts = (await this.accounts.list(userId)).filter(
 			(row) => row.source === "plaid" && row.institutionName === item.institutionName,
@@ -93,10 +122,10 @@ export class PlaidService {
 	async syncItem(userId: string, itemRowId: string) {
 		const item = await this.ownedItem(userId, itemRowId);
 		if (item.status === "disconnected") {
-			return { ok: true, skipped: true };
+			return { ok: true, skipped: true, added: 0, modified: 0, removed: 0 };
 		}
-		await this.refreshItem(item);
-		return { ok: true, skipped: false };
+		const result = await this.refreshItem(item);
+		return { ok: true, skipped: false, ...result };
 	}
 
 	async syncAll(userId: string) {
@@ -135,8 +164,17 @@ export class PlaidService {
 		return { success: true };
 	}
 
-	async handleWebhook(verification: string | undefined, body: { item_id?: string }) {
-		if (!verification) {
+	async handleWebhook(verification: string | undefined, rawBody: Buffer | undefined) {
+		if (!verification || !Buffer.isBuffer(rawBody)) {
+			throw new BadRequestException("Invalid Plaid webhook");
+		}
+		if (!(await this.plaid.verifyWebhook(verification, rawBody))) {
+			throw new BadRequestException("Invalid Plaid webhook");
+		}
+		let body: PlaidWebhook;
+		try {
+			body = JSON.parse(rawBody.toString("utf8")) as PlaidWebhook;
+		} catch {
 			throw new BadRequestException("Invalid Plaid webhook");
 		}
 		if (!body.item_id) {
@@ -150,17 +188,30 @@ export class PlaidService {
 		if (!item || item.status === "disconnected") {
 			return { received: true };
 		}
-		await this.refreshItem(item);
+		if (body.webhook_type === "ITEM" && body.webhook_code === "ERROR") {
+			await this.db
+				.update(plaidItem)
+				.set({ errorCode: body.error?.error_code ?? "ITEM_ERROR", updatedAt: new Date() })
+				.where(eq(plaidItem.id, item.id));
+			return { received: true };
+		}
+		try {
+			await this.refreshItem(item);
+		} catch (error) {
+			// Plaid retries non-2xx webhooks; the error is already stored on the PlaidItem.
+			this.logger.warn(`Webhook refresh failed: ${plaidErrorCode(error)}`);
+		}
 		return { received: true };
 	}
 
-	private async refreshItem(item: typeof plaidItem.$inferSelect) {
+	private async refreshItem(item: typeof plaidItem.$inferSelect): Promise<IngestResult> {
 		const accessToken = this.decrypt(item.accessToken);
 		try {
 			const details = await this.plaid.getAccounts(accessToken);
 			for (const account of details.accounts) {
 				await this.upsertAccount(item.userId, item.id, account);
 			}
+			const result = await this.syncTransactions(item, accessToken);
 			await this.db
 				.update(plaidItem)
 				.set({
@@ -170,6 +221,7 @@ export class PlaidService {
 					errorCode: null,
 				})
 				.where(eq(plaidItem.id, item.id));
+			return result;
 		} catch (error) {
 			const errorCode = plaidErrorCode(error);
 			await this.db
@@ -179,7 +231,28 @@ export class PlaidService {
 			if (errorCode !== "ITEM_LOGIN_REQUIRED") {
 				throw error;
 			}
+			return { added: 0, modified: 0, removed: 0 };
 		}
+	}
+
+	/** Pulls changes since the stored cursor, applies them, then saves the new cursor. */
+	private async syncTransactions(item: typeof plaidItem.$inferSelect, accessToken?: string) {
+		const [fresh] = await this.db
+			.select({ cursor: plaidItem.cursor })
+			.from(plaidItem)
+			.where(eq(plaidItem.id, item.id))
+			.limit(1);
+		const cursor = fresh?.cursor ?? null;
+		const page = await this.plaid.syncTransactions(
+			accessToken ?? this.decrypt(item.accessToken),
+			cursor,
+		);
+		const result = await this.ingest.apply(item.userId, item.id, page);
+		await this.db
+			.update(plaidItem)
+			.set({ cursor: page.nextCursor || cursor, updatedAt: new Date() })
+			.where(eq(plaidItem.id, item.id));
+		return result;
 	}
 
 	private async ownedItem(userId: string, id: string) {

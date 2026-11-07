@@ -90,8 +90,9 @@ export class PlaidController {
 	@HttpCode(200)
 	async webhook(
 		@Headers("plaid-verification") verification: string | undefined,
-		@Body() body: { item_id?: string },
+		@Body() rawBody: Buffer | undefined,
 	) {
-		return this.plaid.handleWebhook(verification, body);
+		// main.ts mounts a raw body parser on this route so the JWT body hash can be checked.
+		return this.plaid.handleWebhook(verification, rawBody);
 	}
 }

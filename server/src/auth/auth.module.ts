@@ -4,6 +4,8 @@ import { APP_GUARD } from "@nestjs/core";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { BillingModule } from "../billing/billing.module";
 import { BillingService } from "../billing/billing.service";
+import { CategoriesModule } from "../categories/categories.module";
+import { CategoriesService } from "../categories/categories.service";
 import { DATABASE } from "../db/db.module";
 import { createAuth } from "./auth";
 import { AUTH } from "./auth.constants";
@@ -11,12 +13,17 @@ import { AuthGuard } from "./auth.guard";
 
 @Global()
 @Module({
-	imports: [BillingModule],
+	imports: [BillingModule, CategoriesModule],
 	providers: [
 		{
 			provide: AUTH,
-			inject: [DATABASE, ConfigService, BillingService],
-			useFactory: (db: PostgresJsDatabase, config: ConfigService, billing: BillingService) => {
+			inject: [DATABASE, ConfigService, BillingService, CategoriesService],
+			useFactory: (
+				db: PostgresJsDatabase,
+				config: ConfigService,
+				billing: BillingService,
+				categories: CategoriesService,
+			) => {
 				const secret = config.get<string>("BETTER_AUTH_SECRET");
 				const baseURL = config.get<string>("BETTER_AUTH_URL");
 				if (!secret || !baseURL) {
@@ -29,6 +36,7 @@ import { AuthGuard } from "./auth.guard";
 					googleClientSecret: config.get<string>("GOOGLE_CLIENT_SECRET"),
 					onUserCreated: async (user) => {
 						void billing.ensure(user.id, user.email, user.name);
+						await categories.ensureDefaults(user.id);
 					},
 				});
 			},

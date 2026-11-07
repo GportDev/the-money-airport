@@ -2,6 +2,8 @@ export * from "./account-balance-snapshot";
 export * from "./auth";
 export * from "./bank-account";
 export * from "./billing";
+export * from "./category";
 export * from "./fx-rate";
 export * from "./plaid-item";
+export * from "./transaction";
 export * from "./user-settings";

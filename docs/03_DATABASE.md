@@ -234,7 +234,8 @@ All transactions from all accounts + manual entries.
 | `user_id` | `text` | FK → user.id, NOT NULL |
 | `bank_account_id` | `uuid` | FK → bank_account.id, nullable (null = manual, unassigned) |
 | `category_id` | `uuid` | FK → category.id, NOT NULL |
-| `plaid_transaction_id` | `text` | UNIQUE, nullable (null = manual) |
+| `plaid_transaction_id` | `text` | nullable (null = manual); unique per `(user_id, plaid_transaction_id)` |
+| `pending_transaction_id` | `text` | Plaid id of the pending row this posted row replaced |
 | `name` | `text` | NOT NULL |
 | `merchant_name` | `text` | |
 | `merchant_logo_url` | `text` | From Plaid when available |
@@ -247,15 +248,19 @@ All transactions from all accounts + manual entries.
 | `notes` | `text` | |
 | `tags` | `text[]` | `transfer` \| `savings_transfer` for internal pairs |
 | `is_manual` | `boolean` | default `false` |
+| `category_locked` | `boolean` | default `false`; set when the User picks a Category. Sync never changes a locked Category |
+| `tags_locked` | `boolean` | default `false`; set when the User toggles the transfer tag. Transfer pairing skips locked rows |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
+
+**Pending to posted:** when Plaid sends a posted row with `pending_transaction_id`, the existing pending row is updated in place (new Plaid id, `pending=false`), so its id, Category, notes, and tags survive. The pending id Plaid then lists in `removed` no longer matches anything.
 
 **Indexes:**
 - `(user_id, date DESC)` — feed and cash-flow queries
 - `(user_id, category_id)` — budget/report queries
 - `(bank_account_id, date)` — account-specific queries
-- `(plaid_transaction_id)` — upsert on sync
-- GIN `(user_id)` + `pg_trgm` on `name` / `merchant_name` — search
+- `(user_id, plaid_transaction_id)` unique — upsert on sync
+- Search uses `ILIKE` on `name` / `merchant_name` / `notes`; add `pg_trgm` GIN indexes if feeds get large
 
 **Amount convention:** Plaid returns positive = debit (money leaving), negative = credit (money coming in). **Normalize on ingest:** flip the sign so that positive = income, negative = expense.
 

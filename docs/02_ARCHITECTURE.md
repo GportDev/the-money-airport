@@ -125,10 +125,12 @@ Connect Account:
 4. Plaid Link returns public_token + metadata
 5. POST /api/plaid/exchange-token → backend exchanges for access_token
 6. Backend fetches accounts → stores in DB (including institution logo when available)
-7. Backend fetches initial transactions (last 90 days) and writes opening balance snapshots
+7. Backend pulls initial transactions via /transactions/sync (up to 24 months, `days_requested: 730`) and writes opening balance snapshots
 
 Ongoing Sync:
-1. Plaid webhook hits POST /api/plaid/webhook
+1. Plaid webhook hits POST /api/plaid/webhook. The raw body is kept and the `Plaid-Verification`
+   JWT is checked (ES256 key from /webhook_verification_key/get, `iat` under 5 minutes,
+   `request_body_sha256` matches the body). Unverified requests get 400.
 2. Backend calls /transactions/sync with cursor
 3. New/modified/removed transactions upserted/deleted
 4. Current balances updated; a daily row is upserted into account_balance_snapshot
@@ -200,7 +202,8 @@ BETTER_AUTH_SECRET=random-32-char-string
 BETTER_AUTH_URL=http://localhost:3000
 PLAID_CLIENT_ID=xxx
 PLAID_SECRET=xxx
-PLAID_ENV=sandbox  # sandbox | development | production
+PLAID_ENV=sandbox  # sandbox | production (Plaid retired Development)
+PLAID_WEBHOOK_URL=https://api.example.com/api/plaid/webhook  # optional; set on new link tokens
 ENCRYPTION_KEY=random-32-char-hex  # for Plaid access tokens
 STRIPE_SECRET_KEY=rk_test_xxx  # restricted key preferred over sk_
 STRIPE_WEBHOOK_SECRET=whsec_xxx

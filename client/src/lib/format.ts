@@ -36,3 +36,23 @@ export function formatSyncedAt(iso: string | null) {
 	}
 	return `${Math.floor(hours / 24)}d ago`;
 }
+
+/** "August 13, 2026" for a YYYY-MM-DD date, without shifting by the local timezone. */
+export function formatLongDate(isoDate: string) {
+	return new Intl.DateTimeFormat("en-US", {
+		dateStyle: "long",
+		timeZone: "UTC",
+	}).format(new Date(`${isoDate}T00:00:00Z`));
+}
+
+/** Signed money: "+$0.59" for income, "-$4.75" for spend. */
+export function formatSignedMoney(cents: number, currency = "USD") {
+	const formatted = formatMoney(Math.abs(cents), currency);
+	return cents > 0 ? `+${formatted}` : cents < 0 ? `-${formatted}` : formatted;
+}
+
+export function todayIso() {
+	const now = new Date();
+	const offset = now.getTimezoneOffset() * 60_000;
+	return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+}

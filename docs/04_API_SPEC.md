@@ -45,7 +45,7 @@ BetterAuth handles these routes automatically. Key endpoints:
 |--------|------|------|----------|-------|
 | POST | `/plaid/create-link-token` | — | `{ linkToken }` | Generate Plaid Link token |
 | POST | `/plaid/exchange-token` | `{ publicToken, metadata }` | `{ item, accounts[] }` | Exchange public token, store access token, fetch accounts |
-| POST | `/plaid/sync/:itemId` | — | `{ added, modified, removed }` | Manual transaction sync + balance snapshot |
+| POST | `/plaid/sync/:itemId` | — | `{ ok, skipped, added, modified, removed }` | Manual transaction sync + balance snapshot |
 | POST | `/plaid/sync-all` | — | `{ items: number }` | "Refresh all" |
 | DELETE | `/plaid/items/:itemId` | — | `{ success }` | Disconnect: keep history, status `disconnected` |
 | POST | `/plaid/webhook` | Plaid webhook payload | 200 | No auth — verify webhook |
@@ -215,13 +215,16 @@ interface NetWorthResponse {
 
 | Method | Path | Query/Body | Response |
 |--------|------|-----------|----------|
-| GET | `/transactions` | `?cursor&limit&dateFrom&dateTo&accountId&categoryId&search&pending&sortBy&sortDir` | `{ data: TransactionListItem[], meta }` |
+| GET | `/transactions` | `?cursor&limit&dateFrom&dateTo&accountId&categoryId&search&pending&amountMin&amountMax&sortDir` | `{ data: TransactionListItem[], meta }` |
 | GET | `/transactions/:id` | — | `{ data: TransactionDetail }` |
 | POST | `/transactions` | `{ name, amount, date, categoryId?, bankAccountId?, notes? }` | `{ data: Transaction }` |
-| PATCH | `/transactions/:id` | `{ categoryId?, notes?, tags? }` | `{ data: Transaction }` |
+| PATCH | `/transactions/:id` | `{ categoryId?, notes?, tags?, name?, amount?, date?, bankAccountId? }` | `{ data: TransactionDetail }` |
 | PATCH | `/transactions/bulk-categorize` | `{ transactionIds: string[], categoryId: string }` | `{ data: { updated: number } }` |
+| DELETE | `/transactions/:id` | — | `{ data: { success } }` |
 
-`limit` default 50. `nextCursor` is an opaque `(date, id)` key. `accountId` and `categoryId` accept repeated params (multi-select).
+`limit` default 50, max 200. `nextCursor` is an opaque `(date, id)` key; the feed sorts by date (`sortDir` `desc` default). `accountId` and `categoryId` accept repeated params (multi-select). `amountMin` / `amountMax` compare absolute cents. `search` matches name, merchant, and notes.
+
+`name`, `amount`, `date`, and `bankAccountId` change only on manual Transactions, and only manual Transactions can be deleted (400 otherwise). Setting `categoryId` locks the Category against later syncs; setting `tags` locks the transfer flag against automatic pairing. A Transfer whose Category is Savings Transfer is stored as `savings_transfer`.
 
 ```typescript
 interface TransactionListItem {
@@ -233,6 +236,7 @@ interface TransactionListItem {
   amount: number; // native cents
   isoCurrencyCode: string;
   pending: boolean;
+  isManual: boolean;
   tags: string[];
   category: { id: string; name: string; icon: string; color: string } | null;
   account: { id: string; name: string; mask: string | null; institutionLogo: string | null } | null;
@@ -240,6 +244,7 @@ interface TransactionListItem {
 
 interface TransactionDetail extends TransactionListItem {
   notes: string | null;
+  plaidPfcPrimary: string | null;
   similar: TransactionListItem[]; // same merchant, recent
 }
 ```

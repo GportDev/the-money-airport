@@ -18,6 +18,8 @@ async function bootstrap() {
 	http.use(cors(corsOptions));
 	http.all("/api/auth/*splat", toNodeHandler(auth));
 	http.use("/api/billing/webhook", raw({ type: "application/json" }));
+	// Plaid signs a SHA-256 of the exact body bytes, so keep them raw.
+	http.use("/api/plaid/webhook", raw({ type: () => true, limit: "1mb" }));
 	app.use(json());
 	app.setGlobalPrefix("api");
 	app.enableCors(corsOptions);
