@@ -171,7 +171,7 @@ function FeedRow({
 			aria-pressed={selecting ? checked : undefined}
 			className={cn(
 				"grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-border px-1 py-3 text-left text-sm hover:bg-muted/50 md:grid-cols-[auto_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto]",
-				checked && "bg-muted",
+				checked ? "bg-muted" : isTransfer(item) && "bg-muted/40",
 			)}
 		>
 			<span className="flex items-center gap-2">

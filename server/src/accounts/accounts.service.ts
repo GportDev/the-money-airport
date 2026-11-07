@@ -285,7 +285,7 @@ export class AccountsService {
 		};
 	}
 
-	private async baseCurrency(userId: string) {
+	async baseCurrency(userId: string) {
 		const [existing] = await this.db
 			.select()
 			.from(userSettings)

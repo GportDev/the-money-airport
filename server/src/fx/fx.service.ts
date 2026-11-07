@@ -28,6 +28,17 @@ export class FxService {
 		return Math.round(cents * rate);
 	}
 
+	/** Multiplier from one fiat currency to another, or null when no rate is known. */
+	async rateFor(from: string, to: string, onDate?: string) {
+		if (!this.isFiat(from) || !this.isFiat(to)) {
+			return null;
+		}
+		if (from === to) {
+			return 1;
+		}
+		return this.rate(from, to, onDate);
+	}
+
 	private async rate(from: string, to: string, onDate?: string) {
 		const cached = await this.cachedRate(from, to, onDate);
 		if (cached !== null) {

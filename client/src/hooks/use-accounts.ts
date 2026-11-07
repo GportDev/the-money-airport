@@ -6,6 +6,7 @@ import {
 	getNetWorth,
 	updateAccount,
 } from "../api/accounts";
+import { invalidateLedger } from "../lib/invalidate";
 
 export function useAccounts() {
 	return useQuery({
@@ -28,7 +29,7 @@ function useAccountsMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>) {
 	return useMutation({
 		mutationFn: fn,
 		onSuccess: () => {
-			void client.invalidateQueries({ queryKey: ["accounts"] });
+			void invalidateLedger(client);
 		},
 	});
 }

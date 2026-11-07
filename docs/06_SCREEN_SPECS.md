@@ -92,7 +92,8 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 ### Behavior
 
-- Account scope: all accounts or one. Month navigator.
+- Account scope: all accounts or one. Month navigator. Both live in the URL: `?month=YYYY-MM&account=<id>`.
+- Daily / Weekly toggle (`?view=weekly`; weeks are days 1–7, 8–14, …). Running balance checkbox shows or hides the overlay: net worth for all accounts, balance for one asset account, amount owed for one card or loan.
 - Three KPI cards (income green, expenses, net semantic).
 - Chart is the primary view. Running balance is an area overlay, never a table column.
 - Below: same date-grouped `transaction-feed` as S4, scoped to month/account.

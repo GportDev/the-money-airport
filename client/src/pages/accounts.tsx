@@ -16,6 +16,7 @@ import {
 	useUpdateAccount,
 } from "../hooks/use-accounts";
 import { isUnofficialCurrency } from "../lib/format";
+import { invalidateLedger } from "../lib/invalidate";
 import { type BankAccount, DISPLAY_GROUPS } from "../types";
 
 export function AccountsPage() {
@@ -68,7 +69,7 @@ export function AccountsPage() {
 					className="rounded-md border border-border px-3 py-2 text-sm"
 					type="button"
 					onClick={() => {
-						void syncAll().then(() => queryClient.invalidateQueries({ queryKey: ["accounts"] }));
+						void syncAll().then(() => invalidateLedger(queryClient));
 					}}
 				>
 					Refresh all
@@ -215,7 +216,7 @@ export function AccountsPage() {
 								}
 					}
 					onReconnected={() => {
-						void queryClient.invalidateQueries({ queryKey: ["accounts"] });
+						void invalidateLedger(queryClient);
 						setDrawer("closed");
 					}}
 				/>
@@ -240,7 +241,7 @@ export function AccountsPage() {
 							return;
 						}
 						void disconnectItem(pendingDisconnect.plaidItemId).then(() => {
-							void queryClient.invalidateQueries({ queryKey: ["accounts"] });
+							void invalidateLedger(queryClient);
 							setPendingDisconnect(null);
 						});
 					}}

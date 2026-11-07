@@ -259,24 +259,37 @@ Visual month series — not a running-balance table.
 
 | Method | Path | Query | Response |
 |--------|------|-------|----------|
-| GET | `/cash-flow` | `?accountId&year&month` | `{ data: CashFlowResponse }` |
+| GET | `/cash-flow` | `?accountId&year&month` (year and month default to the current UTC month) | `{ data: CashFlowResponse }` |
 
 ```typescript
 interface CashFlowResponse {
+  year: number;
+  month: number;
+  baseCurrency: string;
+  accountId: string | null;
+  runningBalanceKind: "net_worth" | "balance" | "owed";
   summary: {
-    totalIncome: number;
-    totalExpenses: number;
+    totalIncome: number;   // Base currency, Transfers excluded, Pending counted
+    totalExpenses: number; // absolute outflow
     netCashFlow: number;
   };
   daily: {
-    day: number;           // 1-31
+    day: number;           // 1-31, one row per day of the month
+    date: string;          // YYYY-MM-DD
     income: number;
     expenses: number;      // absolute outflow
     net: number;
-    runningBalance: number; // optional overlay; all-accounts uses net-worth proxy
+    runningBalance: number | null; // end of day; null after today
   }[];
+  omittedCurrencies: string[]; // no FX rate into Base currency; left out
 }
 ```
+
+- Income and expenses convert at each day's FX rate (latest rate for future-dated rows).
+- `runningBalance` walks back from today's balances: value(day) = current balance − every later Transaction on that BankAccount, Transfers included (they move balances). Converted at the latest rate.
+  - No `accountId`: `net_worth`, visible BankAccounts, assets minus liabilities.
+  - Asset `accountId`: `balance`. Credit or loan `accountId`: `owed` (positive).
+- An `accountId` the User does not own returns 404.
 
 Transaction rows under the chart reuse `GET /transactions` with the same `accountId` + month range.
 

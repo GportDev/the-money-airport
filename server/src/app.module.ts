@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { AccountsModule } from "./accounts/accounts.module";
 import { AuthModule } from "./auth/auth.module";
 import { BillingModule } from "./billing/billing.module";
+import { CashFlowModule } from "./cash-flow/cash-flow.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { DbModule } from "./db/db.module";
 import { FxModule } from "./fx/fx.module";
@@ -26,6 +27,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		PlaidModule,
 		CategoriesModule,
 		TransactionsModule,
+		CashFlowModule,
 	],
 })
 export class AppModule {}

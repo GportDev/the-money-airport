@@ -106,3 +106,25 @@ export type TransactionFilters = {
 	amountMin?: number;
 	amountMax?: number;
 };
+
+export type RunningBalanceKind = "net_worth" | "balance" | "owed";
+
+export type CashFlowDay = {
+	day: number;
+	date: string;
+	income: number;
+	expenses: number;
+	net: number;
+	runningBalance: number | null;
+};
+
+export type CashFlow = {
+	year: number;
+	month: number;
+	baseCurrency: string;
+	accountId: string | null;
+	runningBalanceKind: RunningBalanceKind;
+	summary: { totalIncome: number; totalExpenses: number; netCashFlow: number };
+	daily: CashFlowDay[];
+	omittedCurrencies: string[];
+};
