@@ -58,32 +58,42 @@ Single payload for the home widget grid. Honors `dashboard_widgets` visibility; 
 
 | Method | Path | Query | Response |
 |--------|------|-------|----------|
-| GET | `/dashboard` | `?month=YYYY-MM` (default: current) | `{ data: DashboardPayload }` |
+| GET | `/dashboard` | `?month=YYYY-MM` (default: current UTC month), `?netWorthRange` (`1m`, `3m`, `1y`, or `ytd`; default `1m`) | `{ data: DashboardPayload }` |
 
 ```typescript
 interface DashboardPayload {
-  greetingName: string;
+  month: string;          // YYYY-MM
+  baseCurrency: string;
+  greetingName: string;   // first word of the User's name
+  hasAccounts: boolean;   // false: the client shows the Connect an account empty state
+  widgets: { id: WidgetId; visible: boolean; order: number }[];
+  // Each widget below is null when the User hid it; hidden widgets are not computed.
   budget: {
+    hasBudget: boolean;   // false until Budgets (Phase 6); planned is 0
     groups: { key: "fixed" | "flexible" | "non_monthly"; planned: number; spent: number; remaining: number }[];
-  };
+  } | null;
   netWorth: {
+    range: "1m" | "3m" | "1y" | "ytd";
     current: number;
     change: number;
     changePercent: number; // 0-1
     series: { date: string; value: number }[];
-  };
+  } | null;
   spending: {
-    total: number;
-    thisMonth: { day: number; amount: number }[];
-    lastMonth: { day: number; amount: number }[];
-  };
-  transactions: TransactionListItem[]; // most recent ~8
+    total: number;                                 // month to date
+    thisMonth: { day: number; amount: number }[];  // running total, through today
+    lastMonth: { day: number; amount: number }[];  // running total, whole month
+  } | null;
+  transactions: TransactionListItem[] | null; // most recent 8
   recurring: {
     remainingDue: number;
-    upcoming: RecurringListItem[]; // next ~5
-  };
+    upcoming: RecurringListItem[]; // next ~5; empty until Recurring (Phase 7)
+  } | null;
 }
 ```
+
+- Budget `spent` is net of refunds per budget group (expense categories only), Transfers excluded, Pending counted, in Base currency.
+- Spending uses the same gross outflow as Cash Flow `expenses` (Transfers excluded).
 
 ---
 
@@ -620,6 +630,9 @@ Engine rules are PRD F12.14–F12.19. One service (`ProjectionService`) computes
 |--------|------|------|----------|
 | GET | `/settings` | — | `{ data: UserSettings }` |
 | PATCH | `/settings` | `{ currency?, dashboardWidgets?, budgetCopyForward?, safetyBuffer?, paybackDay?, debtStrategy? }` | `{ data: UserSettings }` |
+
+- Implemented now: `currency` (official ISO code, uppercase), `dashboardWidgets`, `budgetCopyForward`. The Forecasting fields arrive with Phase 9; unknown keys return 400.
+- `dashboardWidgets` is normalized on save and read: unknown ids and duplicates are rejected or dropped, missing widgets are appended visible, and `order` is renumbered from 0.
 
 ---
 

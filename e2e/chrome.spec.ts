@@ -48,7 +48,9 @@ test("right summary panel only on accounts, budget, and goals", async ({ page })
 test("main column is not a spreadsheet grid", async ({ page }) => {
 	await page.goto("/");
 	await expect(page.getByRole("grid")).toHaveCount(0);
-	await expect(page.getByRole("main").getByText("Money Airport")).toBeVisible();
+	await expect(
+		page.getByRole("main").getByRole("heading", { name: "Connect an account" }),
+	).toBeVisible();
 });
 
 test("narrow viewport uses a 64px sidebar", async ({ page }) => {

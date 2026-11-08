@@ -128,3 +128,51 @@ export type CashFlow = {
 	daily: CashFlowDay[];
 	omittedCurrencies: string[];
 };
+
+export const DASHBOARD_WIDGET_IDS = [
+	"budget",
+	"net_worth",
+	"spending",
+	"transactions",
+	"recurring",
+] as const;
+
+export type DashboardWidgetId = (typeof DASHBOARD_WIDGET_IDS)[number];
+
+export type DashboardWidget = { id: DashboardWidgetId; visible: boolean; order: number };
+
+export type UserSettings = {
+	currency: string;
+	dashboardWidgets: DashboardWidget[];
+	budgetCopyForward: boolean;
+};
+
+export type BudgetGroupKey = "fixed" | "flexible" | "non_monthly";
+
+export type NetWorthRange = "1m" | "3m" | "1y" | "ytd";
+
+export type Dashboard = {
+	month: string;
+	baseCurrency: string;
+	greetingName: string;
+	hasAccounts: boolean;
+	widgets: DashboardWidget[];
+	budget: {
+		hasBudget: boolean;
+		groups: { key: BudgetGroupKey; planned: number; spent: number; remaining: number }[];
+	} | null;
+	netWorth: {
+		range: NetWorthRange;
+		current: number;
+		change: number;
+		changePercent: number;
+		series: { date: string; value: number }[];
+	} | null;
+	spending: {
+		total: number;
+		thisMonth: { day: number; amount: number }[];
+		lastMonth: { day: number; amount: number }[];
+	} | null;
+	transactions: TransactionListItem[] | null;
+	recurring: { remainingDue: number; upcoming: never[] } | null;
+};

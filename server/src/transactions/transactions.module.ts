@@ -8,6 +8,6 @@ import { TransactionsService } from "./transactions.service";
 	imports: [CategoriesModule],
 	controllers: [TransactionsController],
 	providers: [TransactionsService, TransactionIngestService],
-	exports: [TransactionIngestService],
+	exports: [TransactionIngestService, TransactionsService],
 })
 export class TransactionsModule {}

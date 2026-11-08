@@ -6,10 +6,12 @@ import { AuthModule } from "./auth/auth.module";
 import { BillingModule } from "./billing/billing.module";
 import { CashFlowModule } from "./cash-flow/cash-flow.module";
 import { CategoriesModule } from "./categories/categories.module";
+import { DashboardModule } from "./dashboard/dashboard.module";
 import { DbModule } from "./db/db.module";
 import { FxModule } from "./fx/fx.module";
 import { HealthModule } from "./health/health.module";
 import { PlaidModule } from "./plaid/plaid.module";
+import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 
 @Module({
@@ -28,6 +30,8 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		CategoriesModule,
 		TransactionsModule,
 		CashFlowModule,
+		SettingsModule,
+		DashboardModule,
 	],
 })
 export class AppModule {}

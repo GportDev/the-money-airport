@@ -23,6 +23,7 @@ function useCategoryMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>) {
 			void client.invalidateQueries({ queryKey: ["categories"] });
 			// Renames, recolors, and deletes show up on every feed row.
 			void client.invalidateQueries({ queryKey: ["transactions"] });
+			void client.invalidateQueries({ queryKey: ["dashboard"] });
 		},
 	});
 }

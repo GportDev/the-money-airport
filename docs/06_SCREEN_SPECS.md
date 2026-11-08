@@ -61,9 +61,11 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 ### Behavior
 
-- Personalized greeting by time of day.
+- Page title stays **Dashboard** (every screen's h1 matches its nav label); the greeting sits under it, by local time of day.
 - **Customize** toggles widget visibility and order (persisted in settings).
-- Two columns on ≥1280px; single column below.
+- Two columns on ≥1280px; single column below. Wide screens stack widgets in two independent columns (1st, 3rd, 5th left; 2nd, 4th right) so tall widgets leave no gaps.
+- Budget widget before Budgets exist: spent per group, empty bars, and a **Set up a budget** link. Recurring widget: empty state until Recurring exists.
+- Recent transaction rows open the transaction drawer.
 - Widget headers deep-link to the full screen (Budget → `/budget`, etc.).
 - Default widgets: Budget, Net Worth, Spending, Transactions, Recurring.
 - Credit Score widget is not rendered unless a bureau partner is connected.

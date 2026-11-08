@@ -22,8 +22,8 @@ test("signup with email lands on Dashboard with Free", async ({ page }) => {
 	await signUp(page, { name: "Gabriel" });
 	await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 	await expect(page.getByText("Free", { exact: true })).toBeVisible();
-	await expect(page.getByText("Gabriel")).toBeVisible();
-	await expect(page.getByRole("main").getByText("Money Airport")).toBeVisible();
+	await expect(page.getByText("Gabriel", { exact: true })).toBeVisible();
+	await expect(page.getByText(/^Good (morning|afternoon|evening), Gabriel!$/)).toBeVisible();
 	await expect(page.getByText("Trial")).toHaveCount(0);
 });
 

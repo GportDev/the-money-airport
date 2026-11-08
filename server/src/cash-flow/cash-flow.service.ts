@@ -29,6 +29,7 @@ export class CashFlowService {
 		year: number,
 		month: number,
 		accountId?: string,
+		options: { runningBalance?: boolean } = {},
 	): Promise<CashFlowResponse> {
 		const base = await this.accounts.baseCurrency(userId);
 		const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -94,14 +95,17 @@ export class CashFlowService {
 			: scoped.isAsset
 				? "balance"
 				: "owed";
-		const balances = await this.runningBalances(
-			userId,
-			balanceAccounts,
-			monthStart,
-			daysInMonth,
-			(currency) => rateInto(currency),
-			omitted,
-		);
+		const balances =
+			options.runningBalance === false
+				? null
+				: await this.runningBalances(
+						userId,
+						balanceAccounts,
+						monthStart,
+						daysInMonth,
+						(currency) => rateInto(currency),
+						omitted,
+					);
 		const today = new Date().toISOString().slice(0, 10);
 
 		const daily: CashFlowDay[] = [];
