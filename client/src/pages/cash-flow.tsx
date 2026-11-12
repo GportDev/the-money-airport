@@ -1,45 +1,23 @@
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { CashFlowChart, type CashFlowGranularity } from "../components/cash-flow/cash-flow-chart";
-import { ConfirmDialog } from "../components/confirm-dialog";
-import { TransactionDrawer } from "../components/drawers/transaction-drawer";
-import { PageHeader } from "../components/layout/page-header";
-import { TransactionFeed } from "../components/transactions/transaction-feed";
-import { Amount } from "../components/ui/amount";
-import { useAccounts } from "../hooks/use-accounts";
-import { useCashFlow } from "../hooks/use-cash-flow";
-import { useDeleteTransaction, useTransactionFeed } from "../hooks/use-transactions";
-import { cn } from "../lib/cn";
-import { formatMoney, todayIso } from "../lib/format";
-import type { TransactionDetail, TransactionFilters } from "../types";
+import { CashFlowChart, type CashFlowGranularity } from "@/components/cash-flow/cash-flow-chart";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { TransactionDrawer } from "@/components/drawers/transaction-drawer";
+import { MonthNavigator } from "@/components/layout/month-navigator";
+import { PageHeader } from "@/components/layout/page-header";
+import { TransactionFeed } from "@/components/transactions/transaction-feed";
+import { Amount } from "@/components/ui/amount";
+import { useAccounts } from "@/hooks/use-accounts";
+import { useCashFlow } from "@/hooks/use-cash-flow";
+import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
+import { cn } from "@/lib/cn";
+import { formatMoney } from "@/lib/format";
+import { monthLabel, parseMonth, shiftMonth } from "@/lib/month";
+import type { TransactionDetail, TransactionFilters } from "@/types";
 
 function pad(value: number) {
 	return String(value).padStart(2, "0");
-}
-
-/** `?month=YYYY-MM`, falling back to the User's current month. */
-function parseMonth(value: string | null) {
-	const match = value ? /^(\d{4})-(\d{2})$/.exec(value) : null;
-	const year = match ? Number(match[1]) : Number(todayIso().slice(0, 4));
-	const month = match ? Number(match[2]) : Number(todayIso().slice(5, 7));
-	if (month < 1 || month > 12) {
-		return { year: Number(todayIso().slice(0, 4)), month: Number(todayIso().slice(5, 7)) };
-	}
-	return { year, month };
-}
-
-function shiftMonth(year: number, month: number, delta: number) {
-	const index = year * 12 + (month - 1) + delta;
-	return `${Math.floor(index / 12)}-${pad((index % 12) + 1)}`;
-}
-
-function monthLabel(year: number, month: number) {
-	return new Intl.DateTimeFormat("en-US", {
-		month: "long",
-		year: "numeric",
-		timeZone: "UTC",
-	}).format(new Date(Date.UTC(year, month - 1, 1)));
 }
 
 export function CashFlowPage() {
@@ -102,27 +80,13 @@ export function CashFlowPage() {
 						))}
 					</select>
 				</label>
-				<div className="flex items-center gap-1">
-					<button
-						type="button"
-						className="rounded-md p-2 hover:bg-foreground/5"
-						aria-label="Previous month"
-						onClick={() => patchParams((next) => next.set("month", shiftMonth(year, month, -1)))}
-					>
-						<ChevronLeft aria-hidden className="size-4" />
-					</button>
-					<p className="min-w-32 text-center text-sm font-medium" aria-live="polite">
-						{monthLabel(year, month)}
-					</p>
-					<button
-						type="button"
-						className="rounded-md p-2 hover:bg-foreground/5"
-						aria-label="Next month"
-						onClick={() => patchParams((next) => next.set("month", shiftMonth(year, month, 1)))}
-					>
-						<ChevronRight aria-hidden className="size-4" />
-					</button>
-				</div>
+				<MonthNavigator
+					year={year}
+					month={month}
+					onShift={(delta) =>
+						patchParams((next) => next.set("month", shiftMonth(year, month, delta)))
+					}
+				/>
 				<button
 					className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 					type="button"

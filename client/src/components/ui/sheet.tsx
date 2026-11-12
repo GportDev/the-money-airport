@@ -2,7 +2,7 @@ import { Drawer } from "@base-ui/react/drawer";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
 import { useEffect, useRef, useState } from "react";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 /**
  * Side drawer built on Base UI's Drawer: slides in from the right, swipe right or press

@@ -1,23 +1,23 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
-import { disconnectItem, syncAll } from "../api/plaid";
-import { AccountGroups } from "../components/accounts/account-groups";
-import { ConnectPlaidButton } from "../components/accounts/connect-plaid-button";
-import { NetWorthHero } from "../components/accounts/net-worth-hero";
-import { ConfirmDialog } from "../components/confirm-dialog";
-import { AccountDrawer } from "../components/drawers/account-drawer";
-import { PageHeader } from "../components/layout/page-header";
+import { disconnectItem, syncAll } from "@/api/plaid";
+import { AccountGroups } from "@/components/accounts/account-groups";
+import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
+import { NetWorthHero } from "@/components/accounts/net-worth-hero";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { AccountDrawer } from "@/components/drawers/account-drawer";
+import { PageHeader } from "@/components/layout/page-header";
 import {
 	useAccounts,
 	useCreateAccount,
 	useDeleteAccount,
 	useNetWorth,
 	useUpdateAccount,
-} from "../hooks/use-accounts";
-import { isUnofficialCurrency } from "../lib/format";
-import { invalidateLedger } from "../lib/invalidate";
-import { type BankAccount, DISPLAY_GROUPS } from "../types";
+} from "@/hooks/use-accounts";
+import { isUnofficialCurrency } from "@/lib/format";
+import { invalidateLedger } from "@/lib/invalidate";
+import { type BankAccount, DISPLAY_GROUPS } from "@/types";
 
 export function AccountsPage() {
 	const [searchParams, setSearchParams] = useSearchParams();

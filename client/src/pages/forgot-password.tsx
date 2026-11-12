@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
-import { authClient } from "../auth/auth-client";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { authClient } from "@/auth/auth-client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function ForgotPasswordPage() {
 	const [email, setEmail] = useState("");

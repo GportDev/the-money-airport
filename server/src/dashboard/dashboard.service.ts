@@ -1,23 +1,19 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, eq, gte, isNotNull, lte, ne, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { AccountsService } from "../accounts/accounts.service";
 import type { NetWorthRange } from "../accounts/accounts.types";
+import { BudgetsService } from "../budgets/budgets.service";
 import { CashFlowService } from "../cash-flow/cash-flow.service";
 import type { CashFlowResponse } from "../cash-flow/cash-flow.types";
 import { DATABASE } from "../db/db.module";
 import { bankAccount } from "../db/schema/bank-account";
-import { category } from "../db/schema/category";
-import { transaction } from "../db/schema/transaction";
-import { FxService } from "../fx/fx.service";
 import type { DashboardWidgetId } from "../settings/dashboard-widgets";
 import { SettingsService } from "../settings/settings.service";
 import { TransactionsService } from "../transactions/transactions.service";
 import type { BudgetGroupKey, DashboardPayload } from "./dashboard.types";
 
 const RECENT_TRANSACTIONS = 8;
-const BUDGET_GROUPS: BudgetGroupKey[] = ["fixed", "flexible", "non_monthly"];
-const notTransfer = sql`not (${transaction.tags} && array['transfer','savings_transfer']::text[])`;
 
 function pad(value: number) {
 	return String(value).padStart(2, "0");
@@ -42,7 +38,7 @@ export class DashboardService {
 		private readonly cashFlow: CashFlowService,
 		private readonly transactions: TransactionsService,
 		private readonly settings: SettingsService,
-		private readonly fx: FxService,
+		private readonly budgets: BudgetsService,
 	) {}
 
 	async get(
@@ -129,48 +125,20 @@ export class DashboardService {
 		};
 	}
 
-	/**
-	 * Spent per Budget group this month, net of refunds, in Base currency. Planned amounts
-	 * arrive with Budgets (Phase 6); until then `hasBudget` is false and planned is 0.
-	 */
+	/** Expense groups of this month's Budget; `hasBudget` is false until something is planned. */
 	private async budget(userId: string, year: number, month: number) {
-		const base = await this.accounts.baseCurrency(userId);
-		const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-		const rows = await this.db
-			.select({
-				group: category.budgetGroup,
-				currency: transaction.isoCurrencyCode,
-				date: transaction.date,
-				amount: sql<string>`sum(${transaction.amount})`,
-			})
-			.from(transaction)
-			.innerJoin(category, eq(category.id, transaction.categoryId))
-			.where(
-				and(
-					eq(transaction.userId, userId),
-					gte(transaction.date, `${year}-${pad(month)}-01`),
-					lte(transaction.date, `${year}-${pad(month)}-${pad(daysInMonth)}`),
-					notTransfer,
-					ne(category.kind, "income"),
-					isNotNull(category.budgetGroup),
-				),
-			)
-			.groupBy(category.budgetGroup, transaction.isoCurrencyCode, transaction.date);
-
-		const spent = new Map<string, number>();
-		for (const row of rows) {
-			const rate =
-				(await this.fx.rateFor(row.currency, base, row.date)) ??
-				(await this.fx.rateFor(row.currency, base));
-			if (rate === null || !row.group) continue;
-			spent.set(row.group, (spent.get(row.group) ?? 0) - Math.round(Number(row.amount) * rate));
-		}
+		const result = await this.budgets.month(userId, year, month);
+		const expenseGroups = result.groups.filter(
+			(group): group is typeof group & { key: BudgetGroupKey } => group.key !== "income",
+		);
 		return {
-			hasBudget: false,
-			groups: BUDGET_GROUPS.map((key) => {
-				const value = Math.max(0, spent.get(key) ?? 0);
-				return { key, planned: 0, spent: value, remaining: 0 - value };
-			}),
+			hasBudget: result.groups.some((group) => group.categories.length > 0),
+			groups: expenseGroups.map(({ key, planned, actual, remaining }) => ({
+				key,
+				planned,
+				spent: actual,
+				remaining,
+			})),
 		};
 	}
 }

@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getDashboard } from "../api/dashboard";
-import { type SettingsPatch, updateSettings } from "../api/settings";
-import type { NetWorthRange } from "../types";
+import { getDashboard } from "@/api/dashboard";
+import { type SettingsPatch, updateSettings } from "@/api/settings";
+import type { NetWorthRange } from "@/types";
 
 export function useDashboard(netWorthRange: NetWorthRange) {
 	return useQuery({
@@ -19,6 +19,8 @@ export function useUpdateSettings() {
 		onSuccess: () => {
 			void client.invalidateQueries({ queryKey: ["settings"] });
 			void client.invalidateQueries({ queryKey: ["dashboard"] });
+			// Turning copy-forward on can fill the open month.
+			void client.invalidateQueries({ queryKey: ["budgets"] });
 		},
 	});
 }

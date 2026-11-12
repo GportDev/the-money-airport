@@ -5,7 +5,7 @@ import {
 	deleteCategory,
 	getCategories,
 	updateCategory,
-} from "../api/categories";
+} from "@/api/categories";
 
 export function useCategories() {
 	return useQuery({
@@ -24,6 +24,7 @@ function useCategoryMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>) {
 			// Renames, recolors, and deletes show up on every feed row.
 			void client.invalidateQueries({ queryKey: ["transactions"] });
 			void client.invalidateQueries({ queryKey: ["dashboard"] });
+			void client.invalidateQueries({ queryKey: ["budgets"] });
 		},
 	});
 }

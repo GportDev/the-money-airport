@@ -2,12 +2,14 @@ import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Area, AreaChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { cn } from "../../lib/cn";
-import { formatMoney, formatSignedMoney } from "../../lib/format";
-import type { Dashboard, DashboardWidgetId, NetWorthRange, TransactionListItem } from "../../types";
-import { CategoryIcon } from "../transactions/category-icon";
-import { MerchantLogo } from "../transactions/merchant-logo";
-import { Amount } from "../ui/amount";
+import { BudgetProgress } from "@/components/budget/budget-progress";
+import { CategoryIcon } from "@/components/transactions/category-icon";
+import { MerchantLogo } from "@/components/transactions/merchant-logo";
+import { Amount } from "@/components/ui/amount";
+import { BUDGET_GROUP_LABELS } from "@/lib/budget";
+import { cn } from "@/lib/cn";
+import { formatMoney, formatSignedMoney } from "@/lib/format";
+import type { Dashboard, DashboardWidgetId, NetWorthRange, TransactionListItem } from "@/types";
 
 export const WIDGET_LABELS: Record<DashboardWidgetId, string> = {
 	budget: "Budget",
@@ -24,8 +26,6 @@ const WIDGET_LINKS: Record<DashboardWidgetId, string> = {
 	transactions: "/transactions",
 	recurring: "/recurring",
 };
-
-const GROUP_LABELS = { fixed: "Fixed", flexible: "Flexible", non_monthly: "Non-Monthly" } as const;
 
 function WidgetCard({
 	id,
@@ -81,33 +81,22 @@ export function BudgetWidget({
 			<ul className="flex flex-col gap-4">
 				{budget.groups.map((group) => {
 					const over = budget.hasBudget && group.spent > group.planned;
-					const percent =
-						budget.hasBudget && group.planned > 0
-							? Math.min(100, (group.spent / group.planned) * 100)
-							: 0;
 					return (
 						<li key={group.key} className="flex flex-col gap-1.5 text-sm">
 							<div className="flex items-baseline justify-between gap-2">
-								<span>{GROUP_LABELS[group.key]}</span>
+								<span>{BUDGET_GROUP_LABELS[group.key]}</span>
 								<Amount className="text-muted-foreground">
 									{budget.hasBudget
 										? `${formatMoney(group.spent, currency)} of ${formatMoney(group.planned, currency)}`
 										: `${formatMoney(group.spent, currency)} spent`}
 								</Amount>
 							</div>
-							<div
-								role="progressbar"
-								aria-label={`${GROUP_LABELS[group.key]} budget used`}
-								aria-valuemin={0}
-								aria-valuemax={100}
-								aria-valuenow={Math.round(percent)}
-								className="h-2 overflow-hidden rounded-full bg-muted"
-							>
-								<div
-									className={cn("h-full rounded-full", over ? "bg-negative" : "bg-positive")}
-									style={{ width: `${percent}%` }}
-								/>
-							</div>
+							<BudgetProgress
+								label={`${BUDGET_GROUP_LABELS[group.key]} budget used`}
+								planned={budget.hasBudget ? group.planned : 0}
+								actual={group.spent}
+								isOver={over}
+							/>
 						</li>
 					);
 				})}

@@ -32,7 +32,7 @@ import {
 	Wifi,
 	Zap,
 } from "lucide-react";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
 	circle: Circle,

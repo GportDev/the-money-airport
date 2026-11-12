@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api } from "@/api/client";
 
 export function createLinkToken(itemId?: string) {
 	return api<{ linkToken: string }>("/plaid/create-link-token", {

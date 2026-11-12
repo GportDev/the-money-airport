@@ -1,18 +1,18 @@
 import { Plus, Search, Settings2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { ConfirmDialog } from "../components/confirm-dialog";
-import { BulkCategorizeDrawer } from "../components/drawers/bulk-categorize-drawer";
-import { CategoryManagerDrawer } from "../components/drawers/category-manager-drawer";
-import { TransactionDrawer } from "../components/drawers/transaction-drawer";
-import { PageHeader } from "../components/layout/page-header";
-import { type FeedColumns, TransactionFeed } from "../components/transactions/transaction-feed";
-import { useAccounts } from "../hooks/use-accounts";
-import { useCategories } from "../hooks/use-categories";
-import { useDeleteTransaction, useTransactionFeed } from "../hooks/use-transactions";
-import { cn } from "../lib/cn";
-import { majorUnitsToCents } from "../lib/format";
-import type { TransactionDetail, TransactionFilters } from "../types";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { BulkCategorizeDrawer } from "@/components/drawers/bulk-categorize-drawer";
+import { CategoryManagerDrawer } from "@/components/drawers/category-manager-drawer";
+import { TransactionDrawer } from "@/components/drawers/transaction-drawer";
+import { PageHeader } from "@/components/layout/page-header";
+import { type FeedColumns, TransactionFeed } from "@/components/transactions/transaction-feed";
+import { useAccounts } from "@/hooks/use-accounts";
+import { useCategories } from "@/hooks/use-categories";
+import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
+import { cn } from "@/lib/cn";
+import { majorUnitsToCents } from "@/lib/format";
+import type { TransactionDetail, TransactionFilters } from "@/types";
 
 const TABS = [
 	{ key: "all", label: "All" },

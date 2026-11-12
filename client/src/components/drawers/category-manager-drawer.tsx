@@ -1,14 +1,20 @@
 import { type FormEvent, useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { CATEGORY_ICONS, CategoryIcon } from "@/components/transactions/category-icon";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
 import {
 	useCategories,
 	useCreateCategory,
 	useDeleteCategory,
 	useUpdateCategory,
-} from "../../hooks/use-categories";
-import type { BudgetGroup, Category, CategoryKind } from "../../types";
-import { ConfirmDialog } from "../confirm-dialog";
-import { CATEGORY_ICONS, CategoryIcon } from "../transactions/category-icon";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
+} from "@/hooks/use-categories";
+import type { BudgetGroup, Category, CategoryKind } from "@/types";
 
 const fieldClass =
 	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";

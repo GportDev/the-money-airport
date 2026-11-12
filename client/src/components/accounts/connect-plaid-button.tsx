@@ -1,8 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { usePlaidLink } from "react-plaid-link";
-import { createLinkToken, exchangeToken } from "../../api/plaid";
-import { invalidateLedger } from "../../lib/invalidate";
+import { createLinkToken, exchangeToken } from "@/api/plaid";
+import { invalidateLedger } from "@/lib/invalidate";
 
 export function ConnectPlaidButton({
 	onDone,

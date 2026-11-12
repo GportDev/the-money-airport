@@ -1,13 +1,13 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowLeftRight, ChevronRight } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { cn } from "../../lib/cn";
-import { formatLongDate, formatSignedMoney } from "../../lib/format";
-import type { TransactionListItem } from "../../types";
-import { useScrollContainer } from "../layout/scroll-container";
-import { Amount } from "../ui/amount";
-import { CategorySelect } from "./category-select";
-import { MerchantLogo } from "./merchant-logo";
+import { useScrollContainer } from "@/components/layout/scroll-container";
+import { CategorySelect } from "@/components/transactions/category-select";
+import { MerchantLogo } from "@/components/transactions/merchant-logo";
+import { Amount } from "@/components/ui/amount";
+import { cn } from "@/lib/cn";
+import { formatLongDate, formatSignedMoney } from "@/lib/format";
+import type { TransactionListItem } from "@/types";
 
 type Row =
 	| { kind: "header"; key: string; date: string; net: number | null; currency: string }

@@ -1,6 +1,4 @@
 import { type FormEvent, useState } from "react";
-import { useCategories } from "../../hooks/use-categories";
-import { useBulkCategorize } from "../../hooks/use-transactions";
 import {
 	Sheet,
 	SheetContent,
@@ -8,7 +6,9 @@ import {
 	SheetHeader,
 	SheetTitle,
 	useSheetClose,
-} from "../ui/sheet";
+} from "@/components/ui/sheet";
+import { useCategories } from "@/hooks/use-categories";
+import { useBulkCategorize } from "@/hooks/use-transactions";
 
 export function BulkCategorizeDrawer({
 	transactionIds,

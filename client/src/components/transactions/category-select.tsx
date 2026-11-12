@@ -1,11 +1,11 @@
 import { Select } from "@base-ui/react/select";
 import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { useCategories } from "../../hooks/use-categories";
-import { useUpdateTransaction } from "../../hooks/use-transactions";
-import { cn } from "../../lib/cn";
-import type { Category, TransactionListItem } from "../../types";
-import { CategoryIcon } from "./category-icon";
+import { CategoryIcon } from "@/components/transactions/category-icon";
+import { useCategories } from "@/hooks/use-categories";
+import { useUpdateTransaction } from "@/hooks/use-transactions";
+import { cn } from "@/lib/cn";
+import type { Category, TransactionListItem } from "@/types";
 
 const GROUPS: { kind: Category["kind"]; label: string }[] = [
 	{ kind: "expense", label: "Expenses" },

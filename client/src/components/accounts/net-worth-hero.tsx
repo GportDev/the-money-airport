@@ -1,7 +1,7 @@
 import { Line, LineChart, ResponsiveContainer } from "recharts";
-import { formatMoney } from "../../lib/format";
-import type { NetWorth } from "../../types";
-import { Amount } from "../ui/amount";
+import { Amount } from "@/components/ui/amount";
+import { formatMoney } from "@/lib/format";
+import type { NetWorth } from "@/types";
 
 export function NetWorthHero({
 	netWorth,

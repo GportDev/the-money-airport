@@ -5,8 +5,8 @@ import {
 	getAccounts,
 	getNetWorth,
 	updateAccount,
-} from "../api/accounts";
-import { invalidateLedger } from "../lib/invalidate";
+} from "@/api/accounts";
+import { invalidateLedger } from "@/lib/invalidate";
 
 export function useAccounts() {
 	return useQuery({

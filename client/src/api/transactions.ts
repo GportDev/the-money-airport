@@ -1,5 +1,5 @@
-import type { TransactionDetail, TransactionFilters, TransactionPage, TransferTag } from "../types";
-import { api, apiUrl } from "./client";
+import { api, apiUrl } from "@/api/client";
+import type { TransactionDetail, TransactionFilters, TransactionPage, TransferTag } from "@/types";
 
 export function transactionQuery(filters: TransactionFilters, cursor?: string | null, limit = 50) {
 	const params = new URLSearchParams();

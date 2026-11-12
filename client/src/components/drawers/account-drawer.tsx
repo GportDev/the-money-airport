@@ -1,9 +1,7 @@
 import { type FormEvent, useState } from "react";
-import { reconnectItem } from "../../api/plaid";
-import { centsToMajorUnits, formatMoney, majorUnitsToCents } from "../../lib/format";
-import { type BankAccount, DISPLAY_GROUPS } from "../../types";
-import { ConnectPlaidButton } from "../accounts/connect-plaid-button";
-import { Sparkline } from "../accounts/sparkline";
+import { reconnectItem } from "@/api/plaid";
+import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
+import { Sparkline } from "@/components/accounts/sparkline";
 import {
 	Sheet,
 	SheetContent,
@@ -12,7 +10,9 @@ import {
 	SheetHeader,
 	SheetTitle,
 	useSheetClose,
-} from "../ui/sheet";
+} from "@/components/ui/sheet";
+import { centsToMajorUnits, formatMoney, majorUnitsToCents } from "@/lib/format";
+import { type BankAccount, DISPLAY_GROUPS } from "@/types";
 
 const TYPES = ["checking", "savings", "credit", "investment", "loan", "vehicle", "other"] as const;
 

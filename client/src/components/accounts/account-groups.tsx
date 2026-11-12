@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { formatMoney, formatSyncedAt } from "../../lib/format";
-import { type BankAccount, DISPLAY_GROUPS, type GroupSummary } from "../../types";
-import { Amount } from "../ui/amount";
-import { Sparkline } from "./sparkline";
+import { Sparkline } from "@/components/accounts/sparkline";
+import { Amount } from "@/components/ui/amount";
+import { formatMoney, formatSyncedAt } from "@/lib/format";
+import { type BankAccount, DISPLAY_GROUPS, type GroupSummary } from "@/types";
 
 export function AccountGroups({
 	accounts,

@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router";
-import { useSessionGate } from "./use-session";
+import { useSessionGate } from "@/auth/use-session";
 
 export function GuestOnly() {
 	const { data, loading } = useSessionGate();

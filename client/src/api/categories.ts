@@ -1,5 +1,5 @@
-import type { BudgetGroup, Category, CategoryKind } from "../types";
-import { api } from "./client";
+import { api } from "@/api/client";
+import type { BudgetGroup, Category, CategoryKind } from "@/types";
 
 export type CategoryInput = {
 	name: string;

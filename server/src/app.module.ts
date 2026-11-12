@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { AccountsModule } from "./accounts/accounts.module";
 import { AuthModule } from "./auth/auth.module";
 import { BillingModule } from "./billing/billing.module";
+import { BudgetsModule } from "./budgets/budgets.module";
 import { CashFlowModule } from "./cash-flow/cash-flow.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
@@ -30,6 +31,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		CategoriesModule,
 		TransactionsModule,
 		CashFlowModule,
+		BudgetsModule,
 		SettingsModule,
 		DashboardModule,
 	],
