@@ -449,25 +449,64 @@ The Transaction drawer's "Assign to Fund" calls `POST /goals/:id/entries` with `
 
 ## Investments — `/api/investments`
 
-Thin read over accounts in `displayGroup = investment`.
+Thin read over visible accounts in `displayGroup = investment`. Hidden ones are left out.
 
 | Method | Path | Query | Response |
 |--------|------|-------|----------|
-| GET | `/investments` | `?range=1m\|3m\|1y` | `{ data: { total: number; change: number; allocation: { accountId, name, value }[]; accounts: Account[] } }` |
+| GET | `/investments` | `?range=1m\|3m\|1y` (default `1m`; anything else → 400) | `{ data: InvestmentsResponse }` |
 
-No trade endpoints.
+```typescript
+interface InvestmentsResponse {
+  range: "1m" | "3m" | "1y";
+  baseCurrency: string;
+  total: number;          // Base cents, sum of current balances
+  change: number;         // Base cents moved since the range start
+  changePercent: number;  // change / start total (0 when the start total is 0)
+  allocation: { accountId: string; name: string; value: number }[]; // Base cents, largest first
+  accounts: (Account & {
+    value: number | null; // current balance in Base cents; null when no FX rate
+    change: number;       // native cents since the range start
+  })[];                   // largest first; `sparkline` covers the range (native, daily)
+  omittedCurrencies: string[];
+}
+```
+
+The range starts 29 / 89 / 364 days before today. An account's start balance is its last snapshot on or before that day, else its earliest snapshot in the range, else its current balance (no history = no change). No trade or holdings endpoints.
 
 ---
 
 ## Reports — `/api/reports`
 
-| Method | Path | Query | Response |
-|--------|------|-------|----------|
-| GET | `/reports/spending-by-category` | `?dateFrom&dateTo` | `{ data: { categoryName, color, icon, total }[] }` |
-| GET | `/reports/income-vs-expenses` | `?dateFrom&dateTo` | `{ data: { month, income, expenses }[] }` |
-| GET | `/reports/cash-flow-trend` | `?dateFrom&dateTo` | `{ data: { month, net }[] }` |
-| GET | `/reports/top-categories` | `?dateFrom&dateTo&limit=5` | `{ data: { categoryName, icon, total }[] }` |
-| GET | `/reports/balance-history` | `?dateFrom&dateTo&accountId?` | `{ data: { date, accountId, balance }[] }` |
+Every route takes `?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD` (required, real dates, 1970–2100, `dateFrom ≤ dateTo`, at most 5 years; otherwise 400). Totals are Base cents, converted at each day's FX rate (latest when the day has none); a currency with no rate is left out and listed in `omittedCurrencies`. Transfers are excluded, Pending counts.
+
+| Method | Path | Extra query | Response |
+|--------|------|-------------|----------|
+| GET | `/reports/spending-by-category` | — | `{ data: { baseCurrency, omittedCurrencies, categories: CategoryTotal[] } }` |
+| GET | `/reports/top-categories` | `limit=1..20` (default 5) | same shape, first `limit` rows |
+| GET | `/reports/income-vs-expenses` | — | `{ data: { baseCurrency, omittedCurrencies, months: { month, income, expenses }[] } }` |
+| GET | `/reports/cash-flow-trend` | — | `{ data: { baseCurrency, omittedCurrencies, months: { month, net }[] } }` |
+| GET | `/reports/balance-history` | `accountId?` (owned, else 404) | `{ data: BalanceHistory }` |
+
+```typescript
+interface CategoryTotal {
+  categoryId: string;
+  categoryName: string;
+  color: string;
+  icon: string;
+  total: number; // spend net of refunds, > 0
+}
+
+interface BalanceHistory {
+  baseCurrency: string;
+  omittedCurrencies: string[];
+  accounts: { accountId: string; name: string; isAsset: boolean }[];
+  points: { date: string; accountId: string; balance: number }[]; // by date
+}
+```
+
+- **Spending / top categories** follow Budget actuals: expense-kind Categories, net of refunds, Categories that net to ≤ 0 are left out, largest first.
+- **Income vs expenses / cash-flow trend** follow Cash Flow: a positive amount is income, a negative one is an expense. One row per `YYYY-MM` the range touches (zeros included); partial months count only the days in range. `net = income − expenses`.
+- **Balance history**: visible BankAccounts (or the one `accountId`, hidden or not), one point per day from `account_balance_snapshot`, carried forward from the latest snapshot on or before that day; days before an account's first snapshot are left out. Converted at the latest rate. Liabilities read as the amount owed.
 
 Click-through uses `GET /transactions` with category + date filters in a drawer — no separate modal payload.
 

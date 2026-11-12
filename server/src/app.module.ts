@@ -11,7 +11,9 @@ import { DashboardModule } from "./dashboard/dashboard.module";
 import { DbModule } from "./db/db.module";
 import { FxModule } from "./fx/fx.module";
 import { HealthModule } from "./health/health.module";
+import { InvestmentsModule } from "./investments/investments.module";
 import { PlaidModule } from "./plaid/plaid.module";
+import { ReportsModule } from "./reports/reports.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 
@@ -34,6 +36,8 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		BudgetsModule,
 		SettingsModule,
 		DashboardModule,
+		ReportsModule,
+		InvestmentsModule,
 	],
 })
 export class AppModule {}

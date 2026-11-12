@@ -193,10 +193,12 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 ### Behavior
 
-- Presets: This Month, Last 3 Months, YTD, Last Year, Custom.
+- Presets: This Month (default), Last 3 Months, YTD, Last Year, Custom (From / To date inputs). In the URL: `?range=this_month|last_3_months|ytd|last_year|custom&from=YYYY-MM-DD&to=YYYY-MM-DD`. Presets are calendar ranges from the User's local date; a custom range with bad dates falls back to This Month.
+- Cards: **Spending by category** (donut + legend with % and amount), **Income vs expenses** (grouped bars per month), **Top categories** (top 5 ranked, icon + bar), **Net cash flow** (line per month), **Account balances over time** (one line per visible BankAccount, full width).
 - Charts first. Ranked lists with category icons — no monthly comparison spreadsheet.
-- Click a segment → transaction feed in a **right drawer** (filtered).
-- Recharts; category colors; orange accent. Stack to one column on tablet.
+- Click a category (slice, legend row, or Top categories row) → right drawer titled with the Category, feed filtered to it and the range. Click a month (bar, line point, or month label) → drawer titled with the month, feed for that month's days in range. The balance chart is not clickable. A feed row opens the Transaction drawer; closing it returns to the report drawer.
+- Each card: "Loading…", its own empty line ("No spending in this range.", "No transactions in this range.", "No balance history in this range."), or "Could not load this report.". Currencies with no FX rate are listed under the card.
+- Recharts; category colors; orange accent; `--chart-1…6` series inks. Stack to one column below `lg`.
 
 ---
 
@@ -309,9 +311,13 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 ### Behavior
 
-- Read-only. No trade ticket.
-- Positions shown only if Plaid provided them; otherwise account-level value.
-- Empty state if no investment accounts: prompt to connect via Accounts.
+- Read-only. No trade ticket. Visible BankAccounts in the Investments display group only.
+- Timeframe toggle 1 month (default) / 3 months / 1 year in `?range=1m|3m|1y`.
+- **Portfolio total** card: total in Base currency, change over the timeframe with % (green up, red down).
+- **Allocation** card: donut by account with legend (name, % of total, value).
+- Account list: name, institution (or Manual) and mask, sparkline over the timeframe, % of total, value (native), change (native, signed). Rows are not clickable; edit accounts on Accounts.
+- Account-level value only; Plaid holdings/positions are not stored in V1.
+- Empty state if no investment accounts: "No investment accounts yet." with **Go to Accounts**.
 
 ---
 
@@ -442,7 +448,7 @@ Vertical stacked sections (cards), no sub-nav:
 | Forecast item | Row / + Add | Name, day of month, 12 Plan amounts, copy-to-all, pay-from account, Fund (savings) |
 | One-off | One-off row / + One-off | Name, date, amount, account, Category, Fund, status, matched Transaction |
 | Category manager | Filters gear / Settings | List with color/icon; create/edit; delete confirm |
-| Report transactions | Chart segment click | Filtered `transaction-feed` |
+| Report transactions | Report category or month click | Filtered `transaction-feed`; a row opens the Transaction drawer, closing it returns here |
 
 ## Dialog Catalog (small, confirm only)
 
