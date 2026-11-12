@@ -1,5 +1,5 @@
-import type { CashFlow } from "../types";
-import { api } from "./client";
+import { api } from "@/api/client";
+import type { CashFlow } from "@/types";
 
 export function getCashFlow(year: number, month: number, accountId?: string | null) {
 	const params = new URLSearchParams({ year: String(year), month: String(month) });

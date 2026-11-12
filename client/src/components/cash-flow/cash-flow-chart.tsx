@@ -8,8 +8,8 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
-import { formatMoney } from "../../lib/format";
-import type { CashFlowDay, RunningBalanceKind } from "../../types";
+import { formatMoney } from "@/lib/format";
+import type { CashFlowDay, RunningBalanceKind } from "@/types";
 
 export type CashFlowGranularity = "daily" | "weekly";
 

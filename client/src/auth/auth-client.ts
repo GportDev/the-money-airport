@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react";
-import { apiUrl } from "../api/client";
+import { apiUrl } from "@/api/client";
 
 export const UNREACHABLE_MESSAGE = "Could not reach the server. Try again in a moment.";
 

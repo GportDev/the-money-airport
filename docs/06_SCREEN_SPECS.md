@@ -223,13 +223,14 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 ### Behavior
 
-- Default view: Month. Year/Decade are rolled-up read-only summaries in V1; Today highlights current-day spend.
+- Default view: Month. Year/Decade are rolled-up read-only summaries in V1; Today highlights current-day spend. **Shipped so far: Month only** (`?month=YYYY-MM` in the URL); Today / Year / Decade are a follow-up.
 - Groups: Income; Expenses → Fixed, Flexible, Non-Monthly. Expand/collapse.
 - Rows: icon + name, thin progress bar (green under / red over), Planned, Actual, Remaining. Remaining red when negative.
 - Group headers roll up totals.
 - Click category → drawer to set planned amount.
 - Settings gear: copy from previous month, copy-forward preference. No rollover.
-- **Show unbudgeted** reveals spend with no plan.
+- Groups list planned Categories. **Show unbudgeted** (`?unbudgeted=show`) reveals every Category with no plan this month, ones with spend first, so any can be opened to set a first plan. Group header Actual counts unplanned spend too.
+- Saving or removing a plan, copying, and the copy-forward toggle each show a toast.
 - Right panel: large left-to-budget callout; tabs Summary / Income / Expenses; group progress bars (same as Dashboard widget).
 
 ---

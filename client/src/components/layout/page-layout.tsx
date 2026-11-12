@@ -1,10 +1,16 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { type ComponentType, useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
-import { SUMMARY_PANEL_PATHS } from "../../lib/constants";
-import { AssetsLiabilitiesPanel } from "../accounts/assets-liabilities-panel";
-import { Header } from "./header";
-import { ScrollContainerContext } from "./scroll-container";
-import { Sidebar } from "./sidebar";
+import { AssetsLiabilitiesPanel } from "@/components/accounts/assets-liabilities-panel";
+import { BudgetSummaryPanel } from "@/components/budget/budget-summary-panel";
+import { Header } from "@/components/layout/header";
+import { ScrollContainerContext } from "@/components/layout/scroll-container";
+import { Sidebar } from "@/components/layout/sidebar";
+import { SUMMARY_PANEL_PATHS } from "@/lib/constants";
+
+const SUMMARY_PANELS: Record<string, ComponentType> = {
+	"/accounts": AssetsLiabilitiesPanel,
+	"/budget": BudgetSummaryPanel,
+};
 
 export function PageLayout() {
 	const [collapsed, setCollapsed] = useState(false);
@@ -37,11 +43,7 @@ export function PageLayout() {
 								aria-label="Summary"
 								className="w-full shrink-0 border-t border-border p-4 xl:sticky xl:top-0 xl:h-full xl:w-80 xl:self-start xl:overflow-y-auto xl:border-t-0 xl:border-l"
 							>
-								{location.pathname === "/accounts" ? (
-									<AssetsLiabilitiesPanel />
-								) : (
-									<p className="text-sm text-muted-foreground">Summary</p>
-								)}
+								<SummaryPanel pathname={location.pathname} />
 							</aside>
 						) : null}
 					</div>
@@ -49,4 +51,9 @@ export function PageLayout() {
 			</div>
 		</div>
 	);
+}
+
+function SummaryPanel({ pathname }: { pathname: string }) {
+	const Panel = SUMMARY_PANELS[pathname];
+	return Panel ? <Panel /> : <p className="text-sm text-muted-foreground">Summary</p>;
 }

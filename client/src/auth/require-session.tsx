@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
-import { apiUrl } from "../api/client";
-import { useSessionGate } from "./use-session";
+import { apiUrl } from "@/api/client";
+import { useSessionGate } from "@/auth/use-session";
 
 export function RequireSession() {
 	const { data, loading } = useSessionGate();

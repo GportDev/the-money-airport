@@ -1,5 +1,5 @@
-import { PageHeader } from "./layout/page-header";
-import { Card, CardHeader, CardTitle } from "./ui/card";
+import { PageHeader } from "@/components/layout/page-header";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function PlaceholderPage({ title }: { title: string }) {
 	return (

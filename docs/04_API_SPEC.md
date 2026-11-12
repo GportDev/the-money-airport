@@ -69,7 +69,7 @@ interface DashboardPayload {
   widgets: { id: WidgetId; visible: boolean; order: number }[];
   // Each widget below is null when the User hid it; hidden widgets are not computed.
   budget: {
-    hasBudget: boolean;   // false until Budgets (Phase 6); planned is 0
+    hasBudget: boolean;   // false until the month has at least one plan; planned is then 0
     groups: { key: "fixed" | "flexible" | "non_monthly"; planned: number; spent: number; remaining: number }[];
   } | null;
   netWorth: {
@@ -322,23 +322,33 @@ Deleting a category reassigns its transactions to Uncategorized. Uncategorized c
 
 | Method | Path | Query/Body | Response |
 |--------|------|-----------|----------|
-| GET | `/budgets` | `?year&month` | `{ data: BudgetMonth }` |
-| POST | `/budgets` | `{ categoryId, month (YYYY-MM-DD), amount }` | `{ data: Budget }` |
+| GET | `/budgets` | `?year&month` (default: current UTC month) | `{ data: BudgetMonth }` |
+| POST | `/budgets` | `{ categoryId, month (YYYY-MM-01), amount }` | `{ data: Budget }` (201) |
 | PATCH | `/budgets/:id` | `{ amount }` | `{ data: Budget }` |
-| DELETE | `/budgets/:id` | — | `{ success }` |
-| POST | `/budgets/copy-previous` | `{ targetMonth (YYYY-MM-DD) }` | `{ data: Budget[] }` |
+| DELETE | `/budgets/:id` | — | `{ data: { success: true } }` |
+| POST | `/budgets/copy-previous` | `{ targetMonth (YYYY-MM-01) }` | `{ data: Budget[] }` (201) |
 
 ```typescript
+interface Budget {
+  id: string;
+  categoryId: string;
+  month: string;  // YYYY-MM-01
+  amount: number; // planned, Base currency cents
+}
+
 interface BudgetMonth {
-  leftToBudget: number; // income planned − expense planned (or leftover after assigning)
-  groups: {
+  month: string;         // YYYY-MM
+  baseCurrency: string;
+  leftToBudget: number;  // income planned − expense planned
+  groups: {              // always 4, in this order: income, fixed, flexible, non_monthly
     key: "income" | "fixed" | "flexible" | "non_monthly";
-    planned: number;
-    actual: number;
+    planned: number;     // planned Categories only
+    actual: number;      // every Category in the group, planned or not (matches the Dashboard widget)
     remaining: number;
-    categories: BudgetCategoryRow[];
-  };
-  unbudgeted: BudgetCategoryRow[]; // spend, no plan
+    categories: BudgetCategoryRow[]; // planned Categories only
+  }[];
+  unbudgeted: BudgetCategoryRow[]; // every Category with no plan this month, biggest actual first
+  omittedCurrencies: string[];     // no FX rate into Base currency; left out of actuals
 }
 
 interface BudgetCategoryRow {
@@ -347,14 +357,21 @@ interface BudgetCategoryRow {
   categoryName: string;
   categoryIcon: string;
   categoryColor: string;
+  group: "income" | "fixed" | "flexible" | "non_monthly";
   planned: number;
   actual: number;
   remaining: number;
-  percentUsed: number;
+  percentUsed: number;   // actual / planned (0-1+); 0 when nothing is planned
 }
 ```
 
-Income `remaining` = actual − planned. Expense `remaining` = planned − actual.
+- Income `remaining` = actual − planned. Expense `remaining` = planned − actual.
+- `actual` is net of refunds per Category, floored at 0, Transfers excluded, Pending counted, converted into Base currency at each day's FX rate (latest rate as fallback).
+- `amount` is an integer from 0 to 2,000,000,000 cents. `month` / `targetMonth` must be the first day of a month; anything else returns 400.
+- POST on a Category that already has a plan that month replaces its amount (upsert). A `categoryId` the User does not own returns 404; so do PATCH and DELETE on another User's Budget.
+- `copy-previous` copies the previous month's plans into Categories with no plan in the target month. Existing plans are kept. Returns only the created rows (`[]` when there was nothing to copy).
+- Copy-forward (`budgetCopyForward` in Settings): GET on the current or a later month with no plans copies the latest earlier month that has plans. Past months never auto-fill. No rollover.
+- Deleting a Category deletes its Budgets.
 
 ---
 

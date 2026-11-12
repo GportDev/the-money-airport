@@ -1,5 +1,5 @@
-import type { DashboardWidget, UserSettings } from "../types";
-import { api } from "./client";
+import { api } from "@/api/client";
+import type { DashboardWidget, UserSettings } from "@/types";
 
 export function getSettings() {
 	return api<UserSettings>("/settings");

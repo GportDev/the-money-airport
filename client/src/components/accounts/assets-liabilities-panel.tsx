@@ -1,8 +1,8 @@
 import { useSearchParams } from "react-router";
-import { useNetWorth } from "../../hooks/use-accounts";
-import { formatMoney } from "../../lib/format";
-import { DISPLAY_GROUPS } from "../../types";
-import { Amount } from "../ui/amount";
+import { Amount } from "@/components/ui/amount";
+import { useNetWorth } from "@/hooks/use-accounts";
+import { formatMoney } from "@/lib/format";
+import { DISPLAY_GROUPS } from "@/types";
 
 export function AssetsLiabilitiesPanel() {
 	const [searchParams, setSearchParams] = useSearchParams();

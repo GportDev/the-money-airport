@@ -176,3 +176,37 @@ export type Dashboard = {
 	transactions: TransactionListItem[] | null;
 	recurring: { remainingDue: number; upcoming: never[] } | null;
 };
+
+export type BudgetMonthGroupKey = "income" | BudgetGroupKey;
+
+export type Budget = { id: string; categoryId: string; month: string; amount: number };
+
+export type BudgetCategoryRow = {
+	id: string | null;
+	categoryId: string;
+	categoryName: string;
+	categoryIcon: string;
+	categoryColor: string;
+	group: BudgetMonthGroupKey;
+	planned: number;
+	actual: number;
+	remaining: number;
+	percentUsed: number;
+};
+
+export type BudgetGroupSummary = {
+	key: BudgetMonthGroupKey;
+	planned: number;
+	actual: number;
+	remaining: number;
+	categories: BudgetCategoryRow[];
+};
+
+export type BudgetMonth = {
+	month: string;
+	baseCurrency: string;
+	leftToBudget: number;
+	groups: BudgetGroupSummary[];
+	unbudgeted: BudgetCategoryRow[];
+	omittedCurrencies: string[];
+};

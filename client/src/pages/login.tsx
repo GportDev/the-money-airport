@@ -1,8 +1,8 @@
 import { type FormEvent, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { authClient } from "../auth/auth-client";
-import { safeNextPath } from "../auth/safe-next-path";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { authClient } from "@/auth/auth-client";
+import { safeNextPath } from "@/auth/safe-next-path";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function LoginPage() {
 	const location = useLocation();

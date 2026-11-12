@@ -1,23 +1,7 @@
 import { type FormEvent, useState } from "react";
-import { useAccounts } from "../../hooks/use-accounts";
-import { useCategories } from "../../hooks/use-categories";
-import {
-	useCreateTransaction,
-	useTransaction,
-	useUpdateTransaction,
-} from "../../hooks/use-transactions";
-import { cn } from "../../lib/cn";
-import {
-	centsToMajorUnits,
-	formatLongDate,
-	formatSignedMoney,
-	majorUnitsToCents,
-	todayIso,
-} from "../../lib/format";
-import type { Category, TransactionDetail } from "../../types";
-import { CategoryIcon } from "../transactions/category-icon";
-import { MerchantLogo } from "../transactions/merchant-logo";
-import { Amount } from "../ui/amount";
+import { CategoryIcon } from "@/components/transactions/category-icon";
+import { MerchantLogo } from "@/components/transactions/merchant-logo";
+import { Amount } from "@/components/ui/amount";
 import {
 	Sheet,
 	SheetContent,
@@ -26,7 +10,23 @@ import {
 	SheetHeader,
 	SheetTitle,
 	useSheetClose,
-} from "../ui/sheet";
+} from "@/components/ui/sheet";
+import { useAccounts } from "@/hooks/use-accounts";
+import { useCategories } from "@/hooks/use-categories";
+import {
+	useCreateTransaction,
+	useTransaction,
+	useUpdateTransaction,
+} from "@/hooks/use-transactions";
+import { cn } from "@/lib/cn";
+import {
+	centsToMajorUnits,
+	formatLongDate,
+	formatSignedMoney,
+	majorUnitsToCents,
+	todayIso,
+} from "@/lib/format";
+import type { Category, TransactionDetail } from "@/types";
 
 const fieldClass =
 	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";

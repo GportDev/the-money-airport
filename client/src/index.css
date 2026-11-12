@@ -58,6 +58,15 @@ body {
 	-webkit-font-smoothing: antialiased;
 }
 
+/* Sonner injects its own light palette at [data-sonner-toaster][data-sonner-theme]; the extra
+   :root raises specificity so toasts use the app tokens whatever order the styles load in. */
+:root [data-sonner-toaster][data-sonner-theme] {
+	--normal-bg: var(--card);
+	--normal-border: var(--border);
+	--normal-text: var(--card-foreground);
+	--border-radius: var(--radius);
+}
+
 ::selection {
 	background: color-mix(in srgb, var(--primary) 16%, white);
 	color: var(--foreground);

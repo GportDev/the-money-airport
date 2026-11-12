@@ -1,5 +1,5 @@
-import type { BankAccount, NetWorth } from "../types";
-import { api } from "./client";
+import { api } from "@/api/client";
+import type { BankAccount, NetWorth } from "@/types";
 
 export function getAccounts() {
 	return api<BankAccount[]>("/accounts");

@@ -1,22 +1,22 @@
 import { Landmark, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
-import { ConnectPlaidButton } from "../components/accounts/connect-plaid-button";
-import { ConfirmDialog } from "../components/confirm-dialog";
-import { CustomizeDrawer } from "../components/dashboard/customize-drawer";
+import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { CustomizeDrawer } from "@/components/dashboard/customize-drawer";
 import {
 	BudgetWidget,
 	NetWorthWidget,
 	RecurringWidget,
 	SpendingWidget,
 	TransactionsWidget,
-} from "../components/dashboard/widgets";
-import { TransactionDrawer } from "../components/drawers/transaction-drawer";
-import { PageHeader } from "../components/layout/page-header";
-import { useDashboard } from "../hooks/use-dashboard";
-import { useMediaQuery } from "../hooks/use-media-query";
-import { useDeleteTransaction } from "../hooks/use-transactions";
-import type { Dashboard, DashboardWidget, NetWorthRange, TransactionDetail } from "../types";
+} from "@/components/dashboard/widgets";
+import { TransactionDrawer } from "@/components/drawers/transaction-drawer";
+import { PageHeader } from "@/components/layout/page-header";
+import { useDashboard } from "@/hooks/use-dashboard";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useDeleteTransaction } from "@/hooks/use-transactions";
+import type { Dashboard, DashboardWidget, NetWorthRange, TransactionDetail } from "@/types";
 
 function greeting(hour: number) {
 	if (hour < 12) return "Good morning";

@@ -12,9 +12,9 @@ import {
 	Wallet,
 } from "lucide-react";
 import { NavLink } from "react-router";
-import { authClient } from "../../auth/auth-client";
-import { useSession } from "../../auth/use-session";
-import { NAV_ITEMS } from "../../lib/constants";
+import { authClient } from "@/auth/auth-client";
+import { useSession } from "@/auth/use-session";
+import { NAV_ITEMS } from "@/lib/constants";
 
 const NAV_ICONS = {
 	Dashboard: LayoutDashboard,

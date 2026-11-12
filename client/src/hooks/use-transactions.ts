@@ -8,8 +8,8 @@ import {
 	type TransactionCreateInput,
 	type TransactionUpdateInput,
 	updateTransaction,
-} from "../api/transactions";
-import type { TransactionFilters } from "../types";
+} from "@/api/transactions";
+import type { TransactionFilters } from "@/types";
 
 export function useTransactionFeed(filters: TransactionFilters) {
 	return useInfiniteQuery({
@@ -37,6 +37,7 @@ function useTransactionMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TRe
 			void client.invalidateQueries({ queryKey: ["transactions"] });
 			void client.invalidateQueries({ queryKey: ["cash-flow"] });
 			void client.invalidateQueries({ queryKey: ["dashboard"] });
+			void client.invalidateQueries({ queryKey: ["budgets"] });
 		},
 	});
 }

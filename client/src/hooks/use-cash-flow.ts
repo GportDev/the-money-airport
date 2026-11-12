@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { getCashFlow } from "../api/cash-flow";
+import { getCashFlow } from "@/api/cash-flow";
 
 export function useCashFlow(year: number, month: number, accountId?: string | null) {
 	return useQuery({

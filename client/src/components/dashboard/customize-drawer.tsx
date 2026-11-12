@@ -1,7 +1,6 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useState } from "react";
-import { useUpdateSettings } from "../../hooks/use-dashboard";
-import type { DashboardWidget } from "../../types";
+import { WIDGET_LABELS } from "@/components/dashboard/widgets";
 import {
 	Sheet,
 	SheetContent,
@@ -9,8 +8,9 @@ import {
 	SheetHeader,
 	SheetTitle,
 	useSheetClose,
-} from "../ui/sheet";
-import { WIDGET_LABELS } from "./widgets";
+} from "@/components/ui/sheet";
+import { useUpdateSettings } from "@/hooks/use-dashboard";
+import type { DashboardWidget } from "@/types";
 
 export function CustomizeDrawer({
 	widgets,
