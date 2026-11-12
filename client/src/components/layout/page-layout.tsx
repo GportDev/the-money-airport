@@ -1,37 +1,51 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { SUMMARY_PANEL_PATHS } from "../../lib/constants";
 import { AssetsLiabilitiesPanel } from "../accounts/assets-liabilities-panel";
 import { Header } from "./header";
+import { ScrollContainerContext } from "./scroll-container";
 import { Sidebar } from "./sidebar";
 
 export function PageLayout() {
 	const [collapsed, setCollapsed] = useState(false);
 	const location = useLocation();
 	const showSummary = SUMMARY_PANEL_PATHS.has(location.pathname);
+	const scrollRef = useRef<HTMLDivElement>(null);
+
+	// The content area keeps its scroll position across routes; start each page at the top.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: runs on every page change.
+	useLayoutEffect(() => {
+		scrollRef.current?.scrollTo({ top: 0 });
+	}, [location.pathname]);
 
 	return (
-		<div className="flex min-h-svh bg-background font-sans">
+		<div className="flex h-svh overflow-hidden bg-background font-sans">
 			<Sidebar collapsed={collapsed} />
 			<div className="flex min-w-0 flex-1 flex-col">
 				<Header collapsed={collapsed} onToggleSidebar={() => setCollapsed((value) => !value)} />
-				<div className="flex min-h-0 flex-1 flex-col xl:flex-row">
-					<main className="min-w-0 flex-1 p-6">
-						<Outlet />
-					</main>
-					{showSummary ? (
-						<aside
-							aria-label="Summary"
-							className="w-full shrink-0 border-t border-border p-4 xl:w-80 xl:border-t-0 xl:border-l"
-						>
-							{location.pathname === "/accounts" ? (
-								<AssetsLiabilitiesPanel />
-							) : (
-								<p className="text-sm text-muted-foreground">Summary</p>
-							)}
-						</aside>
-					) : null}
-				</div>
+				<ScrollContainerContext.Provider value={scrollRef}>
+					<div
+						ref={scrollRef}
+						data-testid="page-scroll"
+						className="relative flex min-h-0 flex-1 flex-col overflow-y-auto xl:flex-row xl:items-start"
+					>
+						<main className="min-w-0 flex-1 p-6">
+							<Outlet />
+						</main>
+						{showSummary ? (
+							<aside
+								aria-label="Summary"
+								className="w-full shrink-0 border-t border-border p-4 xl:sticky xl:top-0 xl:h-full xl:w-80 xl:self-start xl:overflow-y-auto xl:border-t-0 xl:border-l"
+							>
+								{location.pathname === "/accounts" ? (
+									<AssetsLiabilitiesPanel />
+								) : (
+									<p className="text-sm text-muted-foreground">Summary</p>
+								)}
+							</aside>
+						) : null}
+					</div>
+				</ScrollContainerContext.Provider>
 			</div>
 		</div>
 	);

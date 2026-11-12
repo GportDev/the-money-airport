@@ -40,9 +40,9 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 	return (
 		<aside
 			aria-label="Workspace"
-			className={`flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-card ${collapsed ? "w-16" : "w-16 xl:w-60"}`}
+			className={`relative flex h-full shrink-0 flex-col overflow-x-hidden overflow-y-auto border-r border-border bg-card ${collapsed ? "w-16" : "w-16 xl:w-60"}`}
 		>
-			<div className="border-b border-border px-3 py-4">
+			<div className="flex h-14 shrink-0 items-center border-b border-border px-3">
 				<p className="truncate font-semibold text-foreground">
 					<span className={collapsed ? "sr-only" : "hidden xl:inline"}>Money Airport</span>
 					<Plane aria-hidden className={`size-5 ${collapsed ? "inline" : "xl:hidden"}`} />
@@ -77,7 +77,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 				</p>
 				{name ? <p className="truncate text-sm text-foreground">{name}</p> : null}
 				<button
-					className="truncate text-sm text-muted-foreground"
+					className="truncate text-sm text-muted-foreground transition-colors hover:text-foreground"
 					type="button"
 					onClick={() => {
 						void logOut();

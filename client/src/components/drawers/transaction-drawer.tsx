@@ -25,9 +25,11 @@ import {
 	SheetFooter,
 	SheetHeader,
 	SheetTitle,
+	useSheetClose,
 } from "../ui/sheet";
 
-const fieldClass = "rounded-md border border-border bg-card px-3 py-2";
+const fieldClass =
+	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";
 
 /** `transactionId` null opens the add form; otherwise the detail/edit view. */
 export function TransactionDrawer({
@@ -43,17 +45,18 @@ export function TransactionDrawer({
 }) {
 	const detail = useTransaction(transactionId);
 	const categories = useCategories();
+	const { sheet, close } = useSheetClose(onClose);
 	return (
-		<Sheet open onOpenChange={(next) => !next && onClose()}>
-			<SheetContent side="right" className="overflow-y-auto">
+		<Sheet {...sheet}>
+			<SheetContent className="overflow-y-auto">
 				{transactionId === null ? (
-					<AddForm categories={categories.data ?? []} onDone={onClose} />
+					<AddForm categories={categories.data ?? []} onDone={() => close()} />
 				) : detail.data ? (
 					<EditForm
 						key={detail.data.id}
 						transaction={detail.data}
 						categories={categories.data ?? []}
-						onDone={onClose}
+						onDone={() => close()}
 						onDelete={onDelete}
 						onOpenSimilar={onOpenSimilar}
 					/>
@@ -272,7 +275,7 @@ function EditForm({
 					</p>
 				) : null}
 				<button
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
 					type="submit"
 					disabled={update.isPending}
 				>
@@ -289,7 +292,7 @@ function EditForm({
 							<li key={item.id}>
 								<button
 									type="button"
-									className="flex w-full items-center justify-between gap-2 border-b border-border py-2 text-left text-sm"
+									className="flex w-full items-center justify-between gap-2 border-b border-border px-1 py-2 text-left text-sm transition-colors hover:bg-foreground/5"
 									onClick={() => onOpenSimilar?.(item.id)}
 								>
 									<span className="flex min-w-0 items-center gap-2">
@@ -310,7 +313,7 @@ function EditForm({
 			{transaction.isManual && onDelete ? (
 				<SheetFooter>
 					<button
-						className="rounded-md border border-border px-3 py-2 text-sm text-negative"
+						className="rounded-md border border-border px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/10"
 						type="button"
 						onClick={() => onDelete(transaction)}
 					>
@@ -460,7 +463,7 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 					</p>
 				) : null}
 				<button
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
 					type="submit"
 					disabled={create.isPending}
 				>

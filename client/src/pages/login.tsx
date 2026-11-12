@@ -35,7 +35,7 @@ export function LoginPage() {
 							Email
 							<input
 								id="email"
-								className="rounded-md border border-border bg-card px-3 py-2"
+								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 								type="email"
 								autoComplete="email"
 								value={email}
@@ -47,7 +47,7 @@ export function LoginPage() {
 							Password
 							<input
 								id="password"
-								className="rounded-md border border-border bg-card px-3 py-2"
+								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 								type="password"
 								autoComplete="current-password"
 								value={password}
@@ -61,14 +61,14 @@ export function LoginPage() {
 							</p>
 						) : null}
 						<button
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 							type="submit"
 						>
 							Log in
 						</button>
 					</form>
 					<button
-						className="mt-3 w-full rounded-md border border-border px-3 py-2 text-sm"
+						className="mt-3 w-full rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 						type="button"
 						onClick={() => {
 							void authClient.signIn.social({ provider: "google" });
@@ -77,11 +77,11 @@ export function LoginPage() {
 						Continue with Google
 					</button>
 					<p className="mt-4 text-sm text-muted-foreground">
-						<Link className="text-foreground underline" to="/signup">
+						<Link className="text-foreground underline hover:text-primary" to="/signup">
 							Sign up
 						</Link>
 						{" · "}
-						<Link className="text-foreground underline" to="/forgot-password">
+						<Link className="text-foreground underline hover:text-primary" to="/forgot-password">
 							Forgot password
 						</Link>
 					</p>

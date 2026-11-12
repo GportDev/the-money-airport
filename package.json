@@ -7,8 +7,9 @@
 		"db:up": "docker compose up -d",
 		"db:down": "docker compose down",
 		"db:push": "pnpm --filter server exec drizzle-kit push --config drizzle.config.ts --force",
+		"db:seed-demo": "pnpm --filter server exec tsx scripts/seed-demo.ts",
 		"test": "playwright test",
-		"check": "biome check e2e client/src server/src playwright.config.ts biome.json",
+		"check": "biome check e2e client/src server/src server/scripts playwright.config.ts biome.json",
 		"typecheck": "pnpm -r typecheck"
 	},
 	"devDependencies": {

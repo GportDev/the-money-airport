@@ -84,7 +84,7 @@ export function CashFlowPage() {
 					<span className="sr-only">Account scope</span>
 					<select
 						id="cash-flow-account"
-						className="rounded-md border border-border bg-card px-3 py-2"
+						className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 						value={accountId ?? ""}
 						onChange={(event) =>
 							patchParams((next) => {
@@ -105,7 +105,7 @@ export function CashFlowPage() {
 				<div className="flex items-center gap-1">
 					<button
 						type="button"
-						className="rounded-md p-2 hover:bg-muted"
+						className="rounded-md p-2 hover:bg-foreground/5"
 						aria-label="Previous month"
 						onClick={() => patchParams((next) => next.set("month", shiftMonth(year, month, -1)))}
 					>
@@ -116,7 +116,7 @@ export function CashFlowPage() {
 					</p>
 					<button
 						type="button"
-						className="rounded-md p-2 hover:bg-muted"
+						className="rounded-md p-2 hover:bg-foreground/5"
 						aria-label="Next month"
 						onClick={() => patchParams((next) => next.set("month", shiftMonth(year, month, 1)))}
 					>
@@ -124,7 +124,7 @@ export function CashFlowPage() {
 					</button>
 				</div>
 				<button
-					className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+					className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 					type="button"
 					onClick={() => setDrawer("add")}
 				>
@@ -176,7 +176,7 @@ export function CashFlowPage() {
 									type="button"
 									aria-pressed={granularity === option}
 									className={cn(
-										"rounded px-2 py-1 capitalize",
+										"rounded px-2 py-1 capitalize transition-colors hover:bg-foreground/5 hover:text-foreground",
 										granularity === option ? "bg-muted font-medium" : "text-muted-foreground",
 									)}
 									onClick={() =>

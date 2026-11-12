@@ -29,7 +29,7 @@ export function NetWorthHero({
 						Timeframe
 						<select
 							id="net-worth-range"
-							className="ml-2 rounded-md border border-border bg-card px-2 py-1"
+							className="ml-2 rounded-md border border-border bg-card px-2 py-1 transition-colors hover:border-foreground/30"
 							value={range}
 							onChange={(event) => onRangeChange(event.target.value)}
 						>

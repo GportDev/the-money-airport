@@ -39,7 +39,7 @@ export function DashboardPage() {
 			<PageHeader title="Dashboard">
 				<button
 					type="button"
-					className="flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm"
+					className="flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 					disabled={!data}
 					onClick={() => setCustomizing(true)}
 				>
@@ -178,7 +178,7 @@ function EmptyState() {
 				</p>
 			</div>
 			<ConnectPlaidButton onDone={() => undefined} label="Connect an account" />
-			<Link to="/accounts" className="text-sm underline">
+			<Link to="/accounts" className="text-sm underline hover:text-primary">
 				Or add a manual account
 			</Link>
 		</section>

@@ -1,7 +1,14 @@
 import { type FormEvent, useState } from "react";
 import { useCategories } from "../../hooks/use-categories";
 import { useBulkCategorize } from "../../hooks/use-transactions";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+	useSheetClose,
+} from "../ui/sheet";
 
 export function BulkCategorizeDrawer({
 	transactionIds,
@@ -14,6 +21,7 @@ export function BulkCategorizeDrawer({
 }) {
 	const categories = useCategories();
 	const bulk = useBulkCategorize();
+	const { sheet, close } = useSheetClose(onClose);
 	const [categoryId, setCategoryId] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const count = transactionIds.length;
@@ -26,15 +34,15 @@ export function BulkCategorizeDrawer({
 		}
 		try {
 			await bulk.mutateAsync({ ids: transactionIds, categoryId });
-			onDone();
+			close(onDone);
 		} catch {
 			setError("Could not update. Try again.");
 		}
 	}
 
 	return (
-		<Sheet open onOpenChange={(next) => !next && onClose()}>
-			<SheetContent side="right">
+		<Sheet {...sheet}>
+			<SheetContent>
 				<SheetHeader>
 					<SheetTitle>Edit {count === 1 ? "1 transaction" : `${count} transactions`}</SheetTitle>
 					<SheetDescription>Assign one Category to every selected transaction.</SheetDescription>
@@ -44,7 +52,7 @@ export function BulkCategorizeDrawer({
 						Category
 						<select
 							id="bulk-category"
-							className="rounded-md border border-border bg-card px-3 py-2"
+							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={categoryId}
 							onChange={(event) => setCategoryId(event.target.value)}
 						>
@@ -62,7 +70,7 @@ export function BulkCategorizeDrawer({
 						</p>
 					) : null}
 					<button
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
 						type="submit"
 						disabled={bulk.isPending}
 					>

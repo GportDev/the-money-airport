@@ -115,7 +115,7 @@ export function BudgetWidget({
 			{budget.hasBudget ? null : (
 				<p className="text-sm text-muted-foreground">
 					No budget yet.{" "}
-					<Link to="/budget" className="text-foreground underline">
+					<Link to="/budget" className="text-foreground underline hover:text-primary">
 						Set up a budget
 					</Link>{" "}
 					to see what is left.
@@ -161,7 +161,7 @@ export function NetWorthWidget({
 					<span className="sr-only">Net worth timeframe</span>
 					<select
 						id="dashboard-net-worth-range"
-						className="rounded-md border border-border bg-card px-2 py-1"
+						className="rounded-md border border-border bg-card px-2 py-1 transition-colors hover:border-foreground/30"
 						value={netWorth.range}
 						onChange={(event) => onRangeChange(event.target.value as NetWorthRange)}
 					>
@@ -294,7 +294,7 @@ export function TransactionsWidget({
 								<button
 									type="button"
 									onClick={() => onOpen(item.id)}
-									className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border py-2 text-left text-sm last:border-b-0 hover:bg-muted/50"
+									className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border py-2 text-left text-sm last:border-b-0 hover:bg-foreground/5"
 								>
 									<MerchantLogo name={title} url={item.merchantLogoUrl} />
 									<span className="min-w-0">

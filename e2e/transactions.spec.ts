@@ -286,16 +286,16 @@ test("Transactions page: date-grouped feed, drawer edit, filters, and Edit multi
 	await signedExpect(feed.getByText("+$3,500.00").first()).toBeVisible();
 	await signedExpect(page.getByRole("grid")).toHaveCount(0);
 
-	await feed.getByRole("button", { name: /Joe Coffee/ }).click();
+	await feed.getByRole("button", { name: /Joe Coffee/ }).click({ position: { x: 60, y: 12 } });
 	const drawer = page.getByRole("dialog");
 	await signedExpect(drawer.getByRole("heading", { name: "Joe Coffee" })).toBeVisible();
 	await drawer.getByLabel("Category").selectOption({ label: "Entertainment" });
 	await drawer.getByLabel("Notes").fill("Team coffee");
 	await drawer.getByRole("button", { name: "Save" }).click();
 	await signedExpect(drawer).toHaveCount(0);
-	await signedExpect(
-		feed.getByRole("button", { name: /Joe Coffee/ }).getByText("Entertainment"),
-	).toBeVisible();
+	await signedExpect(feed.getByRole("combobox", { name: "Category for Joe Coffee" })).toHaveText(
+		"Entertainment",
+	);
 
 	await page.getByLabel("Search transactions").fill("whole");
 	await signedExpect(page).toHaveURL(/search=whole/);
@@ -304,14 +304,14 @@ test("Transactions page: date-grouped feed, drawer edit, filters, and Edit multi
 	await signedExpect(page).not.toHaveURL(/search=/);
 
 	await page.getByRole("button", { name: "Edit multiple" }).click();
-	await feed.getByRole("button", { name: /Uber/ }).click();
-	await feed.getByRole("button", { name: /ACH DEBIT 0042/ }).click();
+	await feed.getByRole("button", { name: /Uber/ }).click({ position: { x: 60, y: 12 } });
+	await feed.getByRole("button", { name: /ACH DEBIT 0042/ }).click({ position: { x: 60, y: 12 } });
 	await page.getByRole("button", { name: "Edit 2" }).click();
 	await page.getByRole("dialog").getByLabel("Category").selectOption({ label: "Transport" });
 	await page.getByRole("dialog").getByRole("button", { name: "Apply" }).click();
 	await signedExpect(
-		feed.getByRole("button", { name: /ACH DEBIT 0042/ }).getByText("Transport"),
-	).toBeVisible();
+		feed.getByRole("combobox", { name: /Category for .*ACH DEBIT 0042/ }),
+	).toHaveText("Transport");
 
 	await page.getByRole("button", { name: "Filters" }).click();
 	await page.getByRole("dialog", { name: "Filters" }).getByLabel("Transport").check();

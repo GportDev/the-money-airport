@@ -30,7 +30,7 @@ export function AssetsLiabilitiesPanel() {
 			<fieldset className="border-0 p-0">
 				<legend className="sr-only">Panel unit</legend>
 				<button
-					className={`mr-2 text-sm ${unit === "totals" ? "font-semibold" : "text-muted-foreground"}`}
+					className={`mr-2 text-sm transition-colors hover:text-foreground ${unit === "totals" ? "font-semibold" : "text-muted-foreground"}`}
 					type="button"
 					aria-pressed={unit === "totals"}
 					onClick={() => setUnit("totals")}
@@ -38,7 +38,7 @@ export function AssetsLiabilitiesPanel() {
 					Totals
 				</button>
 				<button
-					className={`text-sm ${unit === "percent" ? "font-semibold" : "text-muted-foreground"}`}
+					className={`text-sm transition-colors hover:text-foreground ${unit === "percent" ? "font-semibold" : "text-muted-foreground"}`}
 					type="button"
 					aria-pressed={unit === "percent"}
 					onClick={() => setUnit("percent")}

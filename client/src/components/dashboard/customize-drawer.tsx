@@ -2,7 +2,14 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { useState } from "react";
 import { useUpdateSettings } from "../../hooks/use-dashboard";
 import type { DashboardWidget } from "../../types";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+	useSheetClose,
+} from "../ui/sheet";
 import { WIDGET_LABELS } from "./widgets";
 
 export function CustomizeDrawer({
@@ -13,6 +20,7 @@ export function CustomizeDrawer({
 	onClose: () => void;
 }) {
 	const update = useUpdateSettings();
+	const { sheet, close } = useSheetClose(onClose);
 	const [draft, setDraft] = useState(() => [...widgets].sort((a, b) => a.order - b.order));
 	const [error, setError] = useState<string | null>(null);
 
@@ -35,15 +43,15 @@ export function CustomizeDrawer({
 			await update.mutateAsync({
 				dashboardWidgets: draft.map((widget, order) => ({ ...widget, order })),
 			});
-			onClose();
+			close();
 		} catch {
 			setError("Could not save. Try again.");
 		}
 	}
 
 	return (
-		<Sheet open onOpenChange={(next) => !next && onClose()}>
-			<SheetContent side="right">
+		<Sheet {...sheet}>
+			<SheetContent>
 				<SheetHeader>
 					<SheetTitle>Customize dashboard</SheetTitle>
 					<SheetDescription>Choose which widgets show and in what order.</SheetDescription>
@@ -73,7 +81,7 @@ export function CustomizeDrawer({
 								<span className="flex gap-1">
 									<button
 										type="button"
-										className="rounded p-1 hover:bg-muted disabled:opacity-30"
+										className="rounded p-1 hover:bg-foreground/5 disabled:opacity-30"
 										aria-label={`Move ${label} up`}
 										disabled={index === 0}
 										onClick={() => move(index, -1)}
@@ -82,7 +90,7 @@ export function CustomizeDrawer({
 									</button>
 									<button
 										type="button"
-										className="rounded p-1 hover:bg-muted disabled:opacity-30"
+										className="rounded p-1 hover:bg-foreground/5 disabled:opacity-30"
 										aria-label={`Move ${label} down`}
 										disabled={index === draft.length - 1}
 										onClick={() => move(index, 1)}
@@ -102,14 +110,14 @@ export function CustomizeDrawer({
 				<div className="flex gap-2 px-4">
 					<button
 						type="button"
-						className="flex-1 rounded-md border border-border px-3 py-2 text-sm"
-						onClick={onClose}
+						className="flex-1 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+						onClick={() => close()}
 					>
 						Cancel
 					</button>
 					<button
 						type="button"
-						className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+						className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
 						disabled={update.isPending}
 						onClick={() => void save()}
 					>

@@ -36,7 +36,7 @@ export function ForgotPasswordPage() {
 								Email
 								<input
 									id="email"
-									className="rounded-md border border-border bg-card px-3 py-2"
+									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									type="email"
 									autoComplete="email"
 									value={email}
@@ -50,7 +50,7 @@ export function ForgotPasswordPage() {
 								</p>
 							) : null}
 							<button
-								className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+								className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 								type="submit"
 							>
 								Send reset link
@@ -58,7 +58,7 @@ export function ForgotPasswordPage() {
 						</form>
 					)}
 					<p className="mt-4 text-sm text-muted-foreground">
-						<Link className="text-foreground underline" to="/login">
+						<Link className="text-foreground underline hover:text-primary" to="/login">
 							Log in
 						</Link>
 					</p>

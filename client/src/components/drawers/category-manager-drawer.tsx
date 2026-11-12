@@ -10,7 +10,8 @@ import { ConfirmDialog } from "../confirm-dialog";
 import { CATEGORY_ICONS, CategoryIcon } from "../transactions/category-icon";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
 
-const fieldClass = "rounded-md border border-border bg-card px-3 py-2";
+const fieldClass =
+	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";
 const BUDGET_GROUPS: { key: BudgetGroup; label: string }[] = [
 	{ key: "fixed", label: "Fixed" },
 	{ key: "flexible", label: "Flexible" },
@@ -28,7 +29,7 @@ export function CategoryManagerDrawer({ onClose }: { onClose: () => void }) {
 		<>
 			{/* The Sheet is modal, so it steps aside while the confirm is up. */}
 			<Sheet open={!pendingDelete} onOpenChange={(next) => !next && !pendingDelete && onClose()}>
-				<SheetContent side="right" className="overflow-y-auto">
+				<SheetContent className="overflow-y-auto">
 					<SheetHeader>
 						<SheetTitle>Categories</SheetTitle>
 						<SheetDescription>
@@ -44,7 +45,7 @@ export function CategoryManagerDrawer({ onClose }: { onClose: () => void }) {
 							/>
 						) : (
 							<button
-								className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+								className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 								type="button"
 								onClick={() => setEditing("new")}
 							>
@@ -66,7 +67,7 @@ export function CategoryManagerDrawer({ onClose }: { onClose: () => void }) {
 											>
 												<button
 													type="button"
-													className="flex min-w-0 flex-1 items-center gap-2 text-left"
+													className="flex min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:text-primary"
 													onClick={() => setEditing(row)}
 												>
 													<CategoryIcon icon={row.icon} color={row.color} />
@@ -77,7 +78,7 @@ export function CategoryManagerDrawer({ onClose }: { onClose: () => void }) {
 												) : (
 													<button
 														type="button"
-														className="text-xs text-negative"
+														className="text-xs text-negative underline-offset-4 hover:underline"
 														aria-label={`Delete ${row.name}`}
 														onClick={() => setPendingDelete(row)}
 													>
@@ -217,13 +218,13 @@ function CategoryForm({ category, onDone }: { category: Category | null; onDone:
 			) : null}
 			<div className="flex gap-2">
 				<button
-					className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+					className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 					type="submit"
 				>
 					{category ? "Save category" : "Create category"}
 				</button>
 				<button
-					className="rounded-md border border-border px-3 py-2 text-sm"
+					className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 					type="button"
 					onClick={onDone}
 				>

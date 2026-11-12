@@ -37,7 +37,7 @@ export function ConnectPlaidButton({
 	return (
 		<div className="flex flex-col gap-2">
 			<button
-				className="rounded-md border border-border px-3 py-2 text-sm"
+				className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 				type="button"
 				onClick={() => {
 					setError(null);

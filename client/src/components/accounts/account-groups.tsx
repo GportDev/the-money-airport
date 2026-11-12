@@ -29,11 +29,11 @@ export function AccountGroups({
 				const change = summary?.change ?? 0;
 				return (
 					<section key={group.key} aria-labelledby={headingId}>
-						<div className="flex items-center justify-between gap-2">
+						<div className="flex items-center justify-between gap-2 px-3">
 							<h2 id={headingId} className="text-sm font-semibold">
 								<button
 									type="button"
-									className="text-left"
+									className="text-left underline-offset-4 hover:underline"
 									aria-expanded={expanded}
 									onClick={() => setOpen((current) => ({ ...current, [group.key]: !expanded }))}
 								>
@@ -58,7 +58,7 @@ export function AccountGroups({
 									{rows.map((account) => (
 										<li key={account.id}>
 											<button
-												className="flex w-full items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2 text-left"
+												className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-foreground/5 sm:grid-cols-[minmax(0,1fr)_3rem_4rem_8rem]"
 												type="button"
 												onClick={() => onOpen(account)}
 											>
@@ -85,10 +85,13 @@ export function AccountGroups({
 														) : null}
 													</span>
 												</span>
-												<span className="flex items-center gap-2">
+												{/* Trend and credit use, in fixed columns from sm up so rows line up. */}
+												<span className="hidden sm:block">
 													<Sparkline points={account.sparkline} />
+												</span>
+												<span className="hidden sm:block">
 													{account.creditLimit ? (
-														<span className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
+														<span className="block h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
 															<span
 																className="block h-full bg-primary"
 																style={{
@@ -97,10 +100,10 @@ export function AccountGroups({
 															/>
 														</span>
 													) : null}
-													<Amount>
-														{formatMoney(account.currentBalance, account.isoCurrencyCode)}
-													</Amount>
 												</span>
+												<Amount className="text-right">
+													{formatMoney(account.currentBalance, account.isoCurrencyCode)}
+												</Amount>
 											</button>
 										</li>
 									))}

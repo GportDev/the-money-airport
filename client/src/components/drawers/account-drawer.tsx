@@ -11,6 +11,7 @@ import {
 	SheetFooter,
 	SheetHeader,
 	SheetTitle,
+	useSheetClose,
 } from "../ui/sheet";
 
 const TYPES = ["checking", "savings", "credit", "investment", "loan", "vehicle", "other"] as const;
@@ -41,6 +42,7 @@ export function AccountDrawer({
 	onReconnected?: () => void;
 }) {
 	const isEdit = Boolean(account);
+	const { sheet, close } = useSheetClose(onClose);
 	const [name, setName] = useState(account?.name ?? "");
 	const [type, setType] = useState(account?.type ?? "other");
 	const [displayGroup, setDisplayGroup] = useState<BankAccount["displayGroup"]>(
@@ -66,11 +68,12 @@ export function AccountDrawer({
 			creditLimit: creditLimit === "" ? null : majorUnitsToCents(creditLimit),
 			isHidden: hidden,
 		});
+		close();
 	}
 
 	return (
-		<Sheet open={open} onOpenChange={(next) => !next && onClose()}>
-			<SheetContent side="right" className="overflow-y-auto">
+		<Sheet open={open && sheet.open} onOpenChange={sheet.onOpenChange}>
+			<SheetContent className="overflow-y-auto">
 				<SheetHeader>
 					<SheetTitle>{isEdit ? account?.name : "Add account"}</SheetTitle>
 					<SheetDescription>
@@ -87,7 +90,7 @@ export function AccountDrawer({
 						Name
 						<input
 							id="account-name"
-							className="rounded-md border border-border bg-card px-3 py-2"
+							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={name}
 							onChange={(event) => setName(event.target.value)}
 							required
@@ -99,7 +102,7 @@ export function AccountDrawer({
 								Display group
 								<select
 									id="account-group"
-									className="rounded-md border border-border bg-card px-3 py-2"
+									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									value={displayGroup}
 									onChange={(event) =>
 										setDisplayGroup(event.target.value as BankAccount["displayGroup"])
@@ -116,7 +119,7 @@ export function AccountDrawer({
 								Type
 								<select
 									id="account-type"
-									className="rounded-md border border-border bg-card px-3 py-2"
+									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									value={type}
 									onChange={(event) => setType(event.target.value)}
 								>
@@ -131,7 +134,7 @@ export function AccountDrawer({
 								Currency
 								<input
 									id="account-currency"
-									className="rounded-md border border-border bg-card px-3 py-2"
+									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									value={currency}
 									onChange={(event) => setCurrency(event.target.value)}
 									required
@@ -143,7 +146,7 @@ export function AccountDrawer({
 						Balance
 						<input
 							id="account-balance"
-							className="rounded-md border border-border bg-card px-3 py-2"
+							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={balance}
 							onChange={(event) => setBalance(event.target.value)}
 							required
@@ -158,7 +161,7 @@ export function AccountDrawer({
 						Credit limit
 						<input
 							id="account-limit"
-							className="rounded-md border border-border bg-card px-3 py-2"
+							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={creditLimit}
 							onChange={(event) => setCreditLimit(event.target.value)}
 						/>
@@ -176,14 +179,14 @@ export function AccountDrawer({
 					) : null}
 					<SheetFooter>
 						<button
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 							type="submit"
 						>
 							Save
 						</button>
 						{isEdit && account?.source === "manual" && onDelete ? (
 							<button
-								className="rounded-md border border-negative px-3 py-2 text-sm text-negative"
+								className="rounded-md border border-negative px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/10"
 								type="button"
 								onClick={onDelete}
 							>
@@ -192,7 +195,7 @@ export function AccountDrawer({
 						) : null}
 						{isEdit && account?.source === "plaid" && onDisconnect ? (
 							<button
-								className="rounded-md border border-negative px-3 py-2 text-sm text-negative"
+								className="rounded-md border border-negative px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/10"
 								type="button"
 								onClick={onDisconnect}
 							>
@@ -204,7 +207,7 @@ export function AccountDrawer({
 						account.plaidItemStatus === "disconnected" &&
 						onReconnected ? (
 							<button
-								className="rounded-md border border-border px-3 py-2 text-sm"
+								className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 								type="button"
 								onClick={() => {
 									if (!account.plaidItemId) {

@@ -243,6 +243,6 @@ test("Cash Flow page: KPI cards, month navigator, scope, chart interval, and fee
 	await page.goBack();
 	await signedExpect(page.getByText("March 2025")).toBeVisible();
 
-	await feed.getByRole("button", { name: /Groceries/ }).click();
+	await feed.getByRole("button", { name: /Groceries/ }).click({ position: { x: 60, y: 12 } });
 	await signedExpect(page.getByRole("dialog")).toBeVisible();
 });

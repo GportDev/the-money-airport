@@ -59,14 +59,14 @@ export function AccountsPage() {
 		<>
 			<PageHeader title="Accounts">
 				<button
-					className="rounded-md border border-border px-3 py-2 text-sm"
+					className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 					type="button"
 					onClick={() => setFiltersOpen(true)}
 				>
 					Filters
 				</button>
 				<button
-					className="rounded-md border border-border px-3 py-2 text-sm"
+					className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 					type="button"
 					onClick={() => {
 						void syncAll().then(() => invalidateLedger(queryClient));
@@ -75,7 +75,7 @@ export function AccountsPage() {
 					Refresh all
 				</button>
 				<button
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 					type="button"
 					onClick={() => setChooser(true)}
 				>
@@ -84,7 +84,7 @@ export function AccountsPage() {
 			</PageHeader>
 			<div className="flex flex-col gap-6">
 				{omitted ? (
-					<output className="rounded-md border border-border bg-card px-3 py-2 text-sm">
+					<output className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30">
 						Unofficial currencies are omitted from net worth.
 					</output>
 				) : null}
@@ -128,7 +128,7 @@ export function AccountsPage() {
 						<label className="flex flex-col gap-1 text-sm">
 							Group
 							<select
-								className="rounded-md border border-border bg-card px-3 py-2"
+								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 								value={groupFilter ?? "all"}
 								onChange={(event) => {
 									patchParams((params) => {
@@ -149,7 +149,7 @@ export function AccountsPage() {
 							</select>
 						</label>
 						<button
-							className="rounded-md border border-border px-3 py-2 text-sm"
+							className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 							type="button"
 							onClick={() => setFiltersOpen(false)}
 						>
@@ -167,7 +167,7 @@ export function AccountsPage() {
 					<div className="flex w-72 flex-col gap-2 rounded-xl border border-border bg-card p-4">
 						<ConnectPlaidButton onDone={() => setChooser(false)} />
 						<button
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 							type="button"
 							onClick={() => {
 								setChooser(false);
@@ -197,7 +197,6 @@ export function AccountsPage() {
 								isHidden: input.isHidden,
 							});
 						}
-						setDrawer("closed");
 					}}
 					onDelete={
 						drawer === "create"

@@ -20,8 +20,10 @@ const TABS = [
 	{ key: "retail", label: "Retail Sync" },
 ] as const;
 
-const buttonClass = "rounded-md border border-border px-3 py-2 text-sm";
-const fieldClass = "rounded-md border border-border bg-card px-3 py-2";
+const buttonClass =
+	"rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5";
+const fieldClass =
+	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";
 
 function filtersFromParams(params: URLSearchParams): TransactionFilters {
 	const pending = params.get("pending");
@@ -100,7 +102,7 @@ export function TransactionsPage() {
 		<>
 			<PageHeader title="Transactions">
 				<button
-					className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+					className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 					type="button"
 					onClick={() => setDrawer("add")}
 				>
@@ -115,7 +117,7 @@ export function TransactionsPage() {
 						type="button"
 						aria-current={tab === item.key ? "page" : undefined}
 						className={cn(
-							"-mb-px border-b-2 px-3 py-2 text-sm",
+							"-mb-px border-b-2 px-3 py-2 text-sm transition-colors hover:text-foreground",
 							tab === item.key
 								? "border-primary font-medium"
 								: "border-transparent text-muted-foreground",
@@ -158,7 +160,7 @@ export function TransactionsPage() {
 						{selecting ? (
 							<>
 								<button
-									className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+									className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
 									type="button"
 									disabled={selected.size === 0}
 									onClick={() => setBulkOpen(true)}
@@ -375,7 +377,7 @@ function FiltersPanel({
 					))}
 					<button
 						type="button"
-						className="mt-1 flex items-center gap-1 self-start text-sm text-muted-foreground underline"
+						className="mt-1 flex items-center gap-1 self-start text-sm text-muted-foreground underline hover:text-primary"
 						onClick={onManageCategories}
 					>
 						<Settings2 aria-hidden className="size-4" />
@@ -452,7 +454,7 @@ function FiltersPanel({
 						Clear
 					</button>
 					<button
-						className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+						className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 						type="button"
 						onClick={onClose}
 					>

@@ -91,6 +91,8 @@ async function addManual(
 		await page.getByLabel("Credit limit").fill(fields.creditLimit);
 	}
 	await page.getByRole("button", { name: "Save" }).click();
+	// Drawers slide out before unmounting.
+	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 }
 
 test("manual BankAccount appears in its group and moves net worth", async ({ page }) => {
@@ -121,6 +123,8 @@ test("hide omits a BankAccount from net worth and delete removes it", async ({ p
 	await page.getByRole("button", { name: "Hidden cash" }).click();
 	await page.getByRole("checkbox", { name: "Hidden" }).check();
 	await page.getByRole("button", { name: "Save" }).click();
+	// Drawers slide out before unmounting.
+	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await signedExpect(
 		page.getByRole("region", { name: "Net worth" }).getByText("$0.00"),
 	).toBeVisible();
@@ -137,18 +141,24 @@ test("edit and unhide move net worth, and Filters stay in the URL", async ({ pag
 	await page.getByRole("button", { name: "Editable cash" }).click();
 	await page.getByLabel("Balance").fill("80.00");
 	await page.getByRole("button", { name: "Save" }).click();
+	// Drawers slide out before unmounting.
+	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await signedExpect(
 		page.getByRole("region", { name: "Net worth" }).getByText("$80.00"),
 	).toBeVisible();
 	await page.getByRole("button", { name: "Editable cash" }).click();
 	await page.getByRole("checkbox", { name: "Hidden" }).check();
 	await page.getByRole("button", { name: "Save" }).click();
+	// Drawers slide out before unmounting.
+	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await signedExpect(
 		page.getByRole("region", { name: "Net worth" }).getByText("$0.00"),
 	).toBeVisible();
 	await page.getByRole("button", { name: "Editable cash" }).click();
 	await page.getByRole("checkbox", { name: "Hidden" }).uncheck();
 	await page.getByRole("button", { name: "Save" }).click();
+	// Drawers slide out before unmounting.
+	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await signedExpect(
 		page.getByRole("region", { name: "Net worth" }).getByText("$80.00"),
 	).toBeVisible();

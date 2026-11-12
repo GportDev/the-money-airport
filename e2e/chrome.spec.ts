@@ -58,3 +58,27 @@ test("narrow viewport uses a 64px sidebar", async ({ page }) => {
 	await page.goto("/");
 	await expect(page.getByRole("complementary", { name: "Workspace" })).toHaveCSS("width", "64px");
 });
+
+test("sidebar and header stay put while only the page content scrolls", async ({ page }) => {
+	for (const viewport of [
+		{ width: 1280, height: 600 },
+		{ width: 390, height: 600 },
+	]) {
+		await page.setViewportSize(viewport);
+		await page.goto("/accounts");
+		const content = page.getByTestId("page-scroll");
+		// Make sure there is something to scroll, whatever the page holds.
+		await content.evaluate((element) => {
+			const spacer = document.createElement("div");
+			spacer.style.height = "2000px";
+			element.querySelector("main")?.append(spacer);
+		});
+		await page.mouse.move(viewport.width - 40, viewport.height / 2);
+		await page.mouse.wheel(0, 1200);
+		await expect.poll(() => content.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+		const sidebar = await page.getByRole("complementary", { name: "Workspace" }).boundingBox();
+		expect(sidebar).toMatchObject({ y: 0, height: viewport.height });
+		expect((await page.locator("header").boundingBox())?.y).toBe(0);
+	}
+});

@@ -22,14 +22,14 @@ export function ConfirmDialog({
 				</h2>
 				<div className="mt-4 flex justify-end gap-2">
 					<button
-						className="rounded-md border border-border px-3 py-2 text-sm"
+						className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 						type="button"
 						onClick={onCancel}
 					>
 						Cancel
 					</button>
 					<button
-						className="rounded-md bg-negative px-3 py-2 text-sm font-medium text-white"
+						className="rounded-md bg-negative px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-negative/85"
 						type="button"
 						onClick={onConfirm}
 					>

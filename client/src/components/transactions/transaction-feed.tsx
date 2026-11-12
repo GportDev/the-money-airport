@@ -1,11 +1,12 @@
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowLeftRight, ChevronRight } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 import { formatLongDate, formatSignedMoney } from "../../lib/format";
 import type { TransactionListItem } from "../../types";
+import { useScrollContainer } from "../layout/scroll-container";
 import { Amount } from "../ui/amount";
-import { CategoryIcon } from "./category-icon";
+import { CategorySelect } from "./category-select";
 import { MerchantLogo } from "./merchant-logo";
 
 type Row =
@@ -13,6 +14,12 @@ type Row =
 	| { kind: "item"; key: string; item: TransactionListItem };
 
 export type FeedColumns = { category: boolean; account: boolean };
+
+// Fixed trailing columns so every row and date header lines up: text columns read left to
+// right, and the amount column has a fixed width with its numbers right-aligned.
+const ROW_GRID =
+	"grid-cols-[auto_minmax(0,1fr)_8rem_1rem] md:grid-cols-[auto_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_8rem_1rem]";
+const HEADER_GRID = "grid-cols-[minmax(0,1fr)_8rem_1rem]";
 
 function isTransfer(item: TransactionListItem) {
 	return item.tags.includes("transfer") || item.tags.includes("savings_transfer");
@@ -74,17 +81,25 @@ export function TransactionFeed({
 }) {
 	const rows = useMemo(() => groupByDate(items), [items]);
 	const listRef = useRef<HTMLDivElement>(null);
+	const scrollRef = useScrollContainer();
 	const [scrollMargin, setScrollMargin] = useState(0);
 
 	useLayoutEffect(() => {
 		const element = listRef.current;
-		if (element) {
-			setScrollMargin(element.getBoundingClientRect().top + window.scrollY);
+		const container = scrollRef.current;
+		if (element && container) {
+			// Offset of the list inside the scrolling content area, not the window.
+			setScrollMargin(
+				element.getBoundingClientRect().top -
+					container.getBoundingClientRect().top +
+					container.scrollTop,
+			);
 		}
-	}, []);
+	}, [scrollRef]);
 
-	const virtualizer = useWindowVirtualizer({
+	const virtualizer = useVirtualizer({
 		count: rows.length,
+		getScrollElement: () => scrollRef.current,
 		estimateSize: (index) => (rows[index]?.kind === "header" ? 40 : 60),
 		overscan: 8,
 		scrollMargin,
@@ -122,10 +137,15 @@ export function TransactionFeed({
 							style={{ transform: `translateY(${virtual.start - scrollMargin}px)` }}
 						>
 							{row.kind === "header" ? (
-								<div className="flex items-center justify-between border-b border-border pt-4 pb-2 text-sm">
+								<div
+									className={cn(
+										"grid items-center gap-3 border-b border-border px-1 pt-4 pb-2 text-sm",
+										HEADER_GRID,
+									)}
+								>
 									<h2 className="font-medium">{formatLongDate(row.date)}</h2>
 									{row.net !== null ? (
-										<Amount className="text-muted-foreground">
+										<Amount className="text-right text-muted-foreground">
 											{formatSignedMoney(row.net, row.currency)}
 										</Amount>
 									) : null}
@@ -164,17 +184,38 @@ function FeedRow({
 	onClick: () => void;
 }) {
 	const title = item.merchantName ?? item.name;
+	const accountLabel = item.account
+		? `${item.account.name}${item.account.mask ? ` …${item.account.mask}` : ""}`
+		: "Manual";
+	const amount = formatSignedMoney(item.amount, item.isoCurrencyCode);
+	// The row is one big button laid under the cells, so the Category picker can sit on top
+	// of it without nesting interactive elements. Its name reads the row like the old button.
+	const rowLabel = [
+		title,
+		item.pending ? "Pending" : null,
+		isTransfer(item) ? "Transfer" : null,
+		item.category?.name,
+		accountLabel,
+		amount,
+	]
+		.filter(Boolean)
+		.join(", ");
 	return (
-		<button
-			type="button"
-			onClick={onClick}
-			aria-pressed={selecting ? checked : undefined}
+		<div
 			className={cn(
-				"grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-border px-1 py-3 text-left text-sm hover:bg-muted/50 md:grid-cols-[auto_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto]",
+				"relative grid w-full items-center gap-3 border-b border-border px-1 py-3 text-left text-sm transition-colors hover:bg-foreground/5",
+				ROW_GRID,
 				checked ? "bg-muted" : isTransfer(item) && "bg-muted/40",
 			)}
 		>
-			<span className="flex items-center gap-2">
+			<button
+				type="button"
+				onClick={onClick}
+				aria-pressed={selecting ? checked : undefined}
+				aria-label={rowLabel}
+				className="absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+			/>
+			<span className="pointer-events-none flex items-center gap-2">
 				{selecting ? (
 					<input
 						type="checkbox"
@@ -186,7 +227,7 @@ function FeedRow({
 				) : null}
 				<MerchantLogo name={title} url={item.merchantLogoUrl} />
 			</span>
-			<span className="flex min-w-0 items-center gap-2">
+			<span className="pointer-events-none flex min-w-0 items-center gap-2">
 				<span className="truncate">{title}</span>
 				{item.pending ? (
 					<span className="shrink-0 rounded-sm border border-border px-1.5 text-xs text-muted-foreground">
@@ -200,22 +241,16 @@ function FeedRow({
 					/>
 				) : null}
 			</span>
-			<span
-				className={cn(
-					"hidden min-w-0 items-center gap-2 md:flex",
-					!columns.category && "invisible",
-				)}
-			>
-				{item.category ? (
-					<>
-						<CategoryIcon icon={item.category.icon} color={item.category.color} />
-						<span className="truncate">{item.category.name}</span>
-					</>
-				) : null}
+			<span className={cn("relative hidden min-w-0 md:flex", !columns.category && "invisible")}>
+				<CategorySelect
+					transactionId={item.id}
+					category={item.category}
+					label={`Category for ${title}`}
+				/>
 			</span>
 			<span
 				className={cn(
-					"hidden min-w-0 items-center gap-2 text-muted-foreground md:flex",
+					"pointer-events-none hidden min-w-0 items-center gap-2 text-muted-foreground md:flex",
 					!columns.account && "invisible",
 				)}
 			>
@@ -237,10 +272,10 @@ function FeedRow({
 					<span>Manual</span>
 				)}
 			</span>
-			<Amount className={cn("text-right", item.amount > 0 && "text-positive")}>
-				{formatSignedMoney(item.amount, item.isoCurrencyCode)}
+			<Amount className={cn("pointer-events-none text-right", item.amount > 0 && "text-positive")}>
+				{amount}
 			</Amount>
-			<ChevronRight aria-hidden className="size-4 text-muted-foreground" />
-		</button>
+			<ChevronRight aria-hidden className="pointer-events-none size-4 text-muted-foreground" />
+		</div>
 	);
 }
