@@ -8,5 +8,6 @@ export function invalidateLedger(client: QueryClient) {
 		client.invalidateQueries({ queryKey: ["cash-flow"] }),
 		client.invalidateQueries({ queryKey: ["dashboard"] }),
 		client.invalidateQueries({ queryKey: ["budgets"] }),
+		client.invalidateQueries({ queryKey: ["goals"] }),
 	]);
 }

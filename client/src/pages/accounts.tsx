@@ -195,6 +195,7 @@ export function AccountsPage() {
 								currentBalance: input.currentBalance,
 								creditLimit: input.creditLimit,
 								isHidden: input.isHidden,
+								apyBps: input.apyBps,
 							});
 						}
 					}}

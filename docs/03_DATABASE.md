@@ -245,6 +245,7 @@ All transactions from all accounts + manual entries.
 | `pending` | `boolean` | default `false` |
 | `plaid_category` | `text[]` | Plaid legacy category array |
 | `plaid_pfc_primary` | `text` | Plaid personal_finance_category.primary |
+| `plaid_pfc_detailed` | `text` | Plaid personal_finance_category.detailed; `INCOME_INTEREST_EARNED` drives the Fund interest split |
 | `notes` | `text` | |
 | `tags` | `text[]` | `transfer` \| `savings_transfer` for internal pairs |
 | `is_manual` | `boolean` | default `false` |
@@ -328,8 +329,10 @@ Save-up and pay-down Goals. Progress is **not** stored.
 | `name` | `text` | NOT NULL |
 | `type` | `text` | `save_up` \| `pay_down`, NOT NULL |
 | `funding` | `text` | `accounts` \| `fund`, NOT NULL, default `accounts`. `fund` only with `save_up` |
-| `host_bank_account_id` | `uuid` | FK → bank_account.id, nullable — required when `funding = fund`; must be a visible asset |
-| `thumbnail_url` | `text` | |
+| `host_bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE CASCADE, nullable — required when `funding = fund`; must be a visible asset |
+| `icon` | `text` | NOT NULL, default `piggy-bank` — a Category icon key; shown instead of a thumbnail in V1 |
+| `color` | `text` | NOT NULL, default `#10B981` |
+| `thumbnail_url` | `text` | nullable; unused in V1 (no uploads) |
 | `target_amount` | `integer` | Base cents, NOT NULL |
 | `target_date` | `date` | nullable |
 | `sort_order` | `integer` | default `0` |
@@ -342,7 +345,7 @@ Save-up and pay-down Goals. Progress is **not** stored.
 
 **Unassigned** for a host = host `current_balance` − sum of its Funds (native). Negative → warning only.
 
-**Status** is computed at read time: `at_risk` if projected monthly contribution (remaining / months left) exceeds a simple affordability heuristic; otherwise `on_track`. No stored status column.
+**Status** is computed at read time. No target date or nothing left to do → `on_track`. Target date in the past with money left → `at_risk`. Otherwise `at_risk` when remaining ÷ months left (at least 1) is more than the User's average monthly net cash flow (income − expenses, Transfers excluded, Base at the latest rate) over the last 3 full months. No stored status column.
 
 ---
 
@@ -376,13 +379,15 @@ Dated movements on a Fund (CONTEXT: Fund entry).
 | `date` | `date` | NOT NULL |
 | `amount` | `integer` | Native host cents, signed: + deposit / interest, − withdrawal |
 | `kind` | `text` | `deposit` \| `withdrawal` \| `interest`, NOT NULL |
-| `transaction_id` | `uuid` | FK → transaction.id, ON DELETE SET NULL, nullable, UNIQUE |
+| `transaction_id` | `uuid` | FK → transaction.id, ON DELETE CASCADE, nullable |
 | `note` | `text` | nullable |
 | `created_at` | `timestamptz` | default `now()` |
 
-**Index:** `(goal_id, date)`
+**Index:** `(goal_id, date)`. **Unique index:** `(goal_id, transaction_id)` (a unique index, not a constraint, so `drizzle-kit push` never prompts).
 
-Interest split: when an interest Transaction lands on a host, insert one `interest` row per Fund on that host, pro rata by Fund balance at the start of that month; rounding cents go to the largest Fund. Re-running is idempotent per `(transaction, goal)`. Deleting the Transaction deletes its interest rows.
+**App rules:** a Transaction backs at most one deposit or withdrawal entry, and only when it is on the Fund's host; its date and amount become the entry's. Deleting the Transaction deletes every entry made from it.
+
+Interest split (after each Plaid sync): each posted Transaction on a host with `plaid_pfc_detailed = INCOME_INTEREST_EARNED` and amount > 0 that has no entries yet is split across that host's Funds pro rata by Fund balance at the start of the Transaction's month. Funds at 0 or below get nothing; if none is positive the interest stays Unassigned. Each share is floored to the cent and the leftover cents go to the largest Fund, so the parts add up exactly. A split Transaction is never split again.
 
 ---
 

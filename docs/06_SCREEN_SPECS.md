@@ -291,6 +291,14 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 - Right panel: associated BankAccount balances; for each Fund host, its Funds and **Unassigned** (warning if negative). **Edit accounts** primary CTA. No Allocate funds.
 - Pay down tab: each card shows the payoff month from the Debt plan and a link **See debt plan** → `/forecast?tab=debt`.
 
+**Shipped in 7a:**
+- The tab lives in the URL (`?tab=pay_down`); **Edit accounts** opens with `?edit=accounts` from the header or the right panel.
+- Cards show a Category-style icon and color instead of a thumbnail. Status shows only when a target date is set.
+- **Edit accounts** drawer: pick a Goal of the current tab, then tick its BankAccounts (pay-down keeps one). Hidden accounts and Fund hosts are not offered. Moving an account shows "Moved {account} off {goal}".
+- Fund drawer: balance, progress, **Add entry** (Deposit / Withdrawal / Interest, amount, date, note), date-grouped entries with the balance after each date, delete per entry, **Edit goal**.
+- **Manage** (reorder) is not built yet; the Debt plan payoff month shows a placeholder until Phase 10.
+- Toasts: Goal created / saved / deleted, Accounts saved, Entry added / deleted, Assigned to {Fund}.
+
 ---
 
 ## S9 — Investments
@@ -432,7 +440,7 @@ Vertical stacked sections (cards), no sub-nav:
 
 | Drawer | Trigger | Contents |
 |--------|---------|----------|
-| Transaction | Row click / + Add | Merchant, date, native amount, category, account, notes, similar, transfer toggle, **Assign to Fund** (savings transfers on a host); or add form |
+| Transaction | Row click / + Add | Merchant, date, native amount, category, account, notes, similar, transfer toggle, **Assign to Fund** (any Transaction on a Fund host; shows "In {Fund}" once assigned); or add form |
 | Account | Account row / + Add (manual) | History sparkline, recent tx, in cash plan / in debt plan toggles; credit: Card terms, Statement, Statement periods; loan: Loan terms; savings: APY, Funds + Unassigned; or manual account fields including currency |
 | Loan payoff | Debt tab loan / account drawer **View payoff** | Payment, total interest, payoff date, extra-payment scenarios, balance chart, amortization by year |
 | Budget category | Budget row | Planned amount for category+month |

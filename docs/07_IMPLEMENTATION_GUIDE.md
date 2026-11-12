@@ -193,6 +193,9 @@ GROUP BY b.id, c.id;
 
 ### Phase 7 — Recurring + Goals (Days 19-21)
 
+Split in two. **7a Goals** (steps 1 without `recurring_item`, 3, 4, 5, and the Goals half of 7) ships
+first. **7b Recurring** (`recurring_item`, steps 2 and 6) follows.
+
 ```
 1. recurring_item + goal + goal_account + goal_fund_entry tables; goal.funding + host_bank_account_id
 2. Recurring list, detect-from-history, mark paid / skip (no Transaction insert), drawer

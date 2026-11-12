@@ -14,6 +14,8 @@ import { CurrentUser } from "../auth/current-user.decorator";
 import { AccountsService } from "./accounts.service";
 import { DISPLAY_GROUPS, type NetWorthRange } from "./accounts.types";
 
+const MAX_APY_BPS = 100_000;
+
 const types = ["checking", "savings", "credit", "investment", "loan", "vehicle", "other"] as const;
 
 const createBody = z.object({
@@ -30,6 +32,7 @@ const updateBody = z.object({
 	currentBalance: z.number().int().optional(),
 	creditLimit: z.number().int().nullable().optional(),
 	isHidden: z.boolean().optional(),
+	apyBps: z.number().int().min(0).max(MAX_APY_BPS).nullable().optional(),
 });
 
 @Controller("accounts")

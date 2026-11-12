@@ -7,6 +7,7 @@ import { bankAccount } from "../db/schema/bank-account";
 import { plaidItem } from "../db/schema/plaid-item";
 import { userSettings } from "../db/schema/user-settings";
 import { FxService } from "../fx/fx.service";
+import { fundsByHost, unassignedOf } from "../goals/fund-balances";
 import {
 	type BankAccountDto,
 	DISPLAY_GROUPS,
@@ -45,6 +46,7 @@ export class AccountsService {
 				and(eq(accountBalanceSnapshot.userId, userId), gte(accountBalanceSnapshot.date, from)),
 			);
 
+		const funds = await fundsByHost(this.db, userId);
 		const byAccount = new Map<string, { date: string; value: number }[]>();
 		for (const snap of snapshots) {
 			const list = byAccount.get(snap.bankAccountId) ?? [];
@@ -60,6 +62,7 @@ export class AccountsService {
 				row.plaidItemStatus,
 				row.errorCode,
 				byAccount.get(row.account.id) ?? [],
+				funds.get(row.account.id) ?? [],
 			),
 		);
 	}
@@ -105,6 +108,7 @@ export class AccountsService {
 			currentBalance?: number;
 			creditLimit?: number | null;
 			isHidden?: boolean;
+			apyBps?: number | null;
 		},
 	) {
 		const existing = await this.ownedBankAccount(userId, id);
@@ -115,6 +119,7 @@ export class AccountsService {
 				currentBalance: input.currentBalance ?? existing.currentBalance,
 				creditLimit: input.creditLimit === undefined ? existing.creditLimit : input.creditLimit,
 				isHidden: input.isHidden ?? existing.isHidden,
+				apyBps: input.apyBps === undefined ? existing.apyBps : input.apyBps,
 				updatedAt: new Date(),
 			})
 			.where(and(eq(bankAccount.id, id), eq(bankAccount.userId, userId)))
@@ -306,6 +311,7 @@ function toDto(
 	plaidItemStatus: string | null,
 	errorCode: string | null,
 	sparkline: { date: string; value: number }[],
+	funds: { goalId: string; name: string; balance: number }[],
 ): BankAccountDto {
 	return {
 		id: account.id,
@@ -324,6 +330,9 @@ function toDto(
 		source: account.source as "plaid" | "manual",
 		isoCurrencyCode: account.isoCurrencyCode,
 		isHidden: account.isHidden,
+		apyBps: account.apyBps,
+		funds,
+		unassigned: funds.length > 0 ? unassignedOf(account.currentBalance, funds) : null,
 		plaidItemId: account.plaidItemId,
 		plaidItemStatus,
 		errorCode,

@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { reconnectItem } from "@/api/plaid";
+import { AccountFunds } from "@/components/accounts/account-funds";
+import { ApyField } from "@/components/accounts/apy-field";
 import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
 import { Sparkline } from "@/components/accounts/sparkline";
 import {
@@ -11,6 +13,7 @@ import {
 	SheetTitle,
 	useSheetClose,
 } from "@/components/ui/sheet";
+import { bpsToPercent, earnsApy, percentToBps } from "@/lib/apy";
 import { centsToMajorUnits, formatMoney, majorUnitsToCents } from "@/lib/format";
 import { type BankAccount, DISPLAY_GROUPS } from "@/types";
 
@@ -36,6 +39,7 @@ export function AccountDrawer({
 		isoCurrencyCode: string;
 		creditLimit: number | null;
 		isHidden: boolean;
+		apyBps: number | null;
 	}) => Promise<void>;
 	onDelete?: () => void;
 	onDisconnect?: () => void;
@@ -56,6 +60,8 @@ export function AccountDrawer({
 		account?.creditLimit != null ? centsToMajorUnits(account.creditLimit) : "",
 	);
 	const [hidden, setHidden] = useState(account?.isHidden ?? false);
+	const [apy, setApy] = useState(account?.apyBps != null ? bpsToPercent(account.apyBps) : "");
+	const isApyShown = isEdit && account !== null && earnsApy(account);
 
 	async function onSubmit(event: FormEvent) {
 		event.preventDefault();
@@ -67,6 +73,7 @@ export function AccountDrawer({
 			isoCurrencyCode: currency.toUpperCase(),
 			creditLimit: creditLimit === "" ? null : majorUnitsToCents(creditLimit),
 			isHidden: hidden,
+			apyBps: apy.trim() === "" ? null : percentToBps(apy),
 		});
 		close();
 	}
@@ -166,6 +173,7 @@ export function AccountDrawer({
 							onChange={(event) => setCreditLimit(event.target.value)}
 						/>
 					</label>
+					{isApyShown ? <ApyField value={apy} onChange={setApy} /> : null}
 					{isEdit ? (
 						<label className="flex items-center gap-2 text-sm" htmlFor="account-hidden">
 							<input
@@ -228,6 +236,7 @@ export function AccountDrawer({
 						) : null}
 					</SheetFooter>
 				</form>
+				{account && account.funds.length > 0 ? <AccountFunds account={account} /> : null}
 			</SheetContent>
 		</Sheet>
 	);
