@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signUp } from "./helpers/auth";
+import { logOut, signUp } from "./helpers/auth";
 
 test("forgot password shows a confirmation after submit", async ({ page }) => {
 	await page.goto("/login");
@@ -19,7 +19,7 @@ test("signed-in User can change password and log in with the new one", async ({ 
 	await page.getByLabel("New password").fill(nextPassword);
 	await page.getByRole("button", { name: "Change password" }).click();
 	await expect(page.getByText("Password changed.")).toBeVisible();
-	await page.getByRole("button", { name: "Profile" }).click();
+	await logOut(page);
 	await page.getByLabel("Email").fill(email);
 	await page.getByLabel("Password").fill(password);
 	await page.getByRole("button", { name: "Log in" }).click();

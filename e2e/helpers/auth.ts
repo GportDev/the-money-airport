@@ -16,3 +16,10 @@ export async function signUp(
 	await expect(page).toHaveURL("/");
 	return { email, password, name };
 }
+
+/** Profile signs out and then reloads on /login; wait for that page before acting. */
+export async function logOut(page: Page) {
+	await page.getByRole("button", { name: "Profile" }).click();
+	await expect(page).toHaveURL(/\/login$/);
+	await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
+}

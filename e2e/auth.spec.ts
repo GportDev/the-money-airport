@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signUp } from "./helpers/auth";
+import { logOut, signUp } from "./helpers/auth";
 
 test("visitor at home sees login, not the shell", async ({ page }) => {
 	await page.goto("/");
@@ -47,7 +47,7 @@ test("login and signup bounce to Dashboard when already signed in", async ({ pag
 
 test("logout from Profile returns to login", async ({ page }) => {
 	await signUp(page);
-	await page.getByRole("button", { name: "Profile" }).click();
+	await logOut(page);
 	await expect(page).toHaveURL(/\/login/);
 	await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
 	await page.goto("/budget");
@@ -56,7 +56,7 @@ test("logout from Profile returns to login", async ({ page }) => {
 
 test("login with the same credentials reaches Dashboard", async ({ page }) => {
 	const { email, password } = await signUp(page);
-	await page.getByRole("button", { name: "Profile" }).click();
+	await logOut(page);
 	await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
 	await page.getByLabel("Email").fill(email);
 	await page.getByLabel("Password").fill(password);
@@ -67,7 +67,7 @@ test("login with the same credentials reaches Dashboard", async ({ page }) => {
 
 test("wrong password stays on login with an error", async ({ page }) => {
 	const { email } = await signUp(page);
-	await page.getByRole("button", { name: "Profile" }).click();
+	await logOut(page);
 	await page.getByLabel("Email").fill(email);
 	await page.getByLabel("Password").fill("wrong-password");
 	await page.getByRole("button", { name: "Log in" }).click();
@@ -77,7 +77,7 @@ test("wrong password stays on login with an error", async ({ page }) => {
 
 test("duplicate signup email fails with a visible error", async ({ page }) => {
 	const { email } = await signUp(page);
-	await page.getByRole("button", { name: "Profile" }).click();
+	await logOut(page);
 	await page.goto("/signup");
 	await page.getByLabel("Name").fill("Other");
 	await page.getByLabel("Email").fill(email);
@@ -99,7 +99,7 @@ test("short password is rejected with a visible error", async ({ page }) => {
 
 test("login after a bounce returns to the requested path", async ({ page }) => {
 	const { email, password } = await signUp(page);
-	await page.getByRole("button", { name: "Profile" }).click();
+	await logOut(page);
 	await page.goto("/budget");
 	await expect(page).toHaveURL(/\/login/);
 	await page.getByLabel("Email").fill(email);
@@ -118,4 +118,42 @@ test("Continue with Google is visible on login and signup", async ({ page }) => 
 test("health stays public", async ({ request }) => {
 	const response = await request.get("http://localhost:3000/api/health");
 	expect(response.status()).toBe(200);
+});
+
+test("log in form keeps typed values when the tab regains focus", async ({ page }) => {
+	await page.goto("/login");
+	const email = page.getByRole("textbox", { name: "Email" });
+	await email.fill("keep@example.test");
+	// better-auth refetches the session on focus; the guard must not unmount the form.
+	const refetch = page.waitForResponse((res) => res.url().includes("/api/auth/get-session"));
+	await page.evaluate(() => {
+		Object.defineProperty(document, "visibilityState", {
+			configurable: true,
+			get: () => "visible",
+		});
+		document.dispatchEvent(new Event("visibilitychange"));
+		window.dispatchEvent(new Event("focus"));
+	});
+	await refetch;
+	await expect(email).toHaveValue("keep@example.test");
+});
+
+test("log in and sign up show a message when the API is unreachable", async ({ page }) => {
+	await page.goto("/login");
+	await page.route("**/api/auth/**", (route) => route.abort("connectionrefused"));
+	await page.getByRole("textbox", { name: "Email" }).fill("nobody@example.test");
+	await page.getByLabel("Password").fill("whatever-123");
+	await page.getByRole("button", { name: "Log in" }).click();
+	await expect(page.getByRole("alert")).toHaveText(
+		"Could not reach the server. Try again in a moment.",
+	);
+
+	await page.getByRole("link", { name: "Sign up" }).click();
+	await page.getByRole("textbox", { name: "Name" }).fill("Nobody");
+	await page.getByRole("textbox", { name: "Email" }).fill("nobody@example.test");
+	await page.getByLabel("Password").fill("whatever-123");
+	await page.getByRole("button", { name: "Sign up" }).click();
+	await expect(page.getByRole("alert")).toHaveText(
+		"Could not reach the server. Try again in a moment.",
+	);
 });

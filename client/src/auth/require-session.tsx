@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { apiUrl } from "../api/client";
-import { useSession } from "./use-session";
+import { useSessionGate } from "./use-session";
 
 export function RequireSession() {
-	const { data, isPending } = useSession();
+	const { data, loading } = useSessionGate();
 	const location = useLocation();
 
 	useEffect(() => {
@@ -14,7 +14,7 @@ export function RequireSession() {
 		void fetch(`${apiUrl}/billing`, { credentials: "include" });
 	}, [data]);
 
-	if (isPending) {
+	if (loading) {
 		return null;
 	}
 

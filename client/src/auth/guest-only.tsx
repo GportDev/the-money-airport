@@ -1,10 +1,10 @@
 import { Navigate, Outlet } from "react-router";
-import { useSession } from "./use-session";
+import { useSessionGate } from "./use-session";
 
 export function GuestOnly() {
-	const { data, isPending } = useSession();
+	const { data, loading } = useSessionGate();
 
-	if (isPending) {
+	if (loading) {
 		return null;
 	}
 
