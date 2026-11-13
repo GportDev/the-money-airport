@@ -2,6 +2,7 @@ import { type ComponentType, useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { AssetsLiabilitiesPanel } from "@/components/accounts/assets-liabilities-panel";
 import { BudgetSummaryPanel } from "@/components/budget/budget-summary-panel";
+import { GoalsSummaryPanel } from "@/components/goals/goals-summary-panel";
 import { Header } from "@/components/layout/header";
 import { ScrollContainerContext } from "@/components/layout/scroll-container";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -10,6 +11,7 @@ import { SUMMARY_PANEL_PATHS } from "@/lib/constants";
 const SUMMARY_PANELS: Record<string, ComponentType> = {
 	"/accounts": AssetsLiabilitiesPanel,
 	"/budget": BudgetSummaryPanel,
+	"/goals": GoalsSummaryPanel,
 };
 
 export function PageLayout() {

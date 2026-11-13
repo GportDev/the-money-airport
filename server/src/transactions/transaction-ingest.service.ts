@@ -88,6 +88,7 @@ export class TransactionIngestService {
 					pending: item.pending,
 					plaidCategory: item.legacyCategory,
 					plaidPfcPrimary: item.pfcPrimary,
+					plaidPfcDetailed: item.pfcDetailed,
 					updatedAt: new Date(),
 				};
 				if (current) {

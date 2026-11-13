@@ -26,6 +26,9 @@ export type BankAccount = {
 	source: "plaid" | "manual";
 	isoCurrencyCode: string;
 	isHidden: boolean;
+	apyBps: number | null;
+	funds: FundSummary[];
+	unassigned: number | null;
 	plaidItemId?: string | null;
 	plaidItemStatus: string | null;
 	errorCode: string | null;
@@ -88,6 +91,7 @@ export type TransactionListItem = {
 export type TransactionDetail = TransactionListItem & {
 	notes: string | null;
 	plaidPfcPrimary: string | null;
+	fundEntry: { id: string; goalId: string; goalName: string } | null;
 	similar: TransactionListItem[];
 };
 
@@ -249,4 +253,64 @@ export type Investments = {
 	allocation: { accountId: string; name: string; value: number }[];
 	accounts: InvestmentAccount[];
 	omittedCurrencies: string[];
+};
+
+export type GoalType = "save_up" | "pay_down";
+export type GoalFunding = "accounts" | "fund";
+export type FundEntryKind = "deposit" | "withdrawal" | "interest";
+
+export type FundSummary = { goalId: string; name: string; balance: number };
+
+export type GoalAccount = {
+	id: string;
+	name: string;
+	mask: string | null;
+	currentBalance: number;
+	isoCurrencyCode: string;
+};
+
+export type FundHost = {
+	id: string;
+	name: string;
+	isoCurrencyCode: string;
+	balance: number;
+	unassigned: number;
+	funds: FundSummary[];
+};
+
+export type Goal = {
+	id: string;
+	name: string;
+	type: GoalType;
+	funding: GoalFunding;
+	icon: string;
+	color: string;
+	thumbnailUrl: string | null;
+	targetAmount: number;
+	currentAmount: number;
+	targetDate: string | null;
+	sortOrder: number;
+	status: "on_track" | "at_risk";
+	percentComplete: number;
+	accounts: GoalAccount[];
+	host: { id: string; name: string; isoCurrencyCode: string; unassigned: number } | null;
+	fundBalance: number | null;
+	payoffMonth: string | null;
+};
+
+export type GoalsList = {
+	totalCurrent: number;
+	baseCurrency: string;
+	goals: Goal[];
+	hosts: FundHost[];
+};
+
+export type FundEntry = {
+	id: string;
+	date: string;
+	amount: number;
+	kind: FundEntryKind;
+	transactionId: string | null;
+	note: string | null;
+	balanceAfter: number;
 };

@@ -10,5 +10,6 @@ export function invalidateLedger(client: QueryClient) {
 		client.invalidateQueries({ queryKey: ["budgets"] }),
 		client.invalidateQueries({ queryKey: ["reports"] }),
 		client.invalidateQueries({ queryKey: ["investments"] }),
+		client.invalidateQueries({ queryKey: ["goals"] }),
 	]);
 }

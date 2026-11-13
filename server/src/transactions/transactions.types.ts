@@ -24,6 +24,8 @@ export type TransactionListItem = {
 export type TransactionDetail = TransactionListItem & {
 	notes: string | null;
 	plaidPfcPrimary: string | null;
+	/** The Fund this Transaction was assigned to. */
+	fundEntry: { id: string; goalId: string; goalName: string } | null;
 	similar: TransactionListItem[];
 };
 

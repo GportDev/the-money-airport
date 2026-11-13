@@ -10,6 +10,7 @@ import { CategoriesModule } from "./categories/categories.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { DbModule } from "./db/db.module";
 import { FxModule } from "./fx/fx.module";
+import { GoalsModule } from "./goals/goals.module";
 import { HealthModule } from "./health/health.module";
 import { InvestmentsModule } from "./investments/investments.module";
 import { PlaidModule } from "./plaid/plaid.module";
@@ -34,6 +35,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		TransactionsModule,
 		CashFlowModule,
 		BudgetsModule,
+		GoalsModule,
 		SettingsModule,
 		DashboardModule,
 		ReportsModule,
