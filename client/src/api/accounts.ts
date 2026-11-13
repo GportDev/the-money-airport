@@ -28,6 +28,7 @@ export function updateAccount(
 		creditLimit?: number | null;
 		isHidden?: boolean;
 		apyBps?: number | null;
+		inCashPlan?: boolean;
 	},
 ) {
 	return api<BankAccount>(`/accounts/${id}`, { method: "PATCH", body: JSON.stringify(body) });

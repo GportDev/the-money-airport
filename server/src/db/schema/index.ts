@@ -4,6 +4,7 @@ export * from "./bank-account";
 export * from "./billing";
 export * from "./budget";
 export * from "./category";
+export * from "./forecast";
 export * from "./fx-rate";
 export * from "./goal";
 export * from "./plaid-item";

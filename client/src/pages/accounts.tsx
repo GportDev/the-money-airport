@@ -196,6 +196,7 @@ export function AccountsPage() {
 								creditLimit: input.creditLimit,
 								isHidden: input.isHidden,
 								apyBps: input.apyBps,
+								inCashPlan: input.inCashPlan,
 							});
 						}
 					}}

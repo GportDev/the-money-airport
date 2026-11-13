@@ -35,6 +35,8 @@ export const bankAccount = pgTable(
 		isHidden: boolean("is_hidden").notNull().default(false),
 		// User-entered yearly rate in basis points (Plaid does not provide it).
 		apyBps: integer("apy_bps"),
+		// Operating cash. Null = the default for the type (checking only); see isInCashPlan.
+		inCashPlan: boolean("in_cash_plan"),
 		lastSyncedAt: timestamp("last_synced_at"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),

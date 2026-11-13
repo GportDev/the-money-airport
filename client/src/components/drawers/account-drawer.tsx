@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { reconnectItem } from "@/api/plaid";
 import { AccountFunds } from "@/components/accounts/account-funds";
 import { ApyField } from "@/components/accounts/apy-field";
+import { CashPlanToggle } from "@/components/accounts/cash-plan-toggle";
 import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
 import { Sparkline } from "@/components/accounts/sparkline";
 import {
@@ -40,6 +41,8 @@ export function AccountDrawer({
 		creditLimit: number | null;
 		isHidden: boolean;
 		apyBps: number | null;
+		/** Cash BankAccounts only; undefined leaves it unchanged. */
+		inCashPlan?: boolean;
 	}) => Promise<void>;
 	onDelete?: () => void;
 	onDisconnect?: () => void;
@@ -62,6 +65,8 @@ export function AccountDrawer({
 	const [hidden, setHidden] = useState(account?.isHidden ?? false);
 	const [apy, setApy] = useState(account?.apyBps != null ? bpsToPercent(account.apyBps) : "");
 	const isApyShown = isEdit && account !== null && earnsApy(account);
+	const isCashPlanShown = isEdit && account?.displayGroup === "cash";
+	const [inCashPlan, setInCashPlan] = useState(account?.inCashPlan ?? false);
 
 	async function onSubmit(event: FormEvent) {
 		event.preventDefault();
@@ -74,6 +79,7 @@ export function AccountDrawer({
 			creditLimit: creditLimit === "" ? null : majorUnitsToCents(creditLimit),
 			isHidden: hidden,
 			apyBps: apy.trim() === "" ? null : percentToBps(apy),
+			inCashPlan: isCashPlanShown ? inCashPlan : undefined,
 		});
 		close();
 	}
@@ -174,6 +180,9 @@ export function AccountDrawer({
 						/>
 					</label>
 					{isApyShown ? <ApyField value={apy} onChange={setApy} /> : null}
+					{isCashPlanShown ? (
+						<CashPlanToggle checked={inCashPlan} onCheckedChange={setInCashPlan} />
+					) : null}
 					{isEdit ? (
 						<label className="flex items-center gap-2 text-sm" htmlFor="account-hidden">
 							<input

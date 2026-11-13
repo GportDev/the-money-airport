@@ -33,6 +33,7 @@ const updateBody = z.object({
 	creditLimit: z.number().int().nullable().optional(),
 	isHidden: z.boolean().optional(),
 	apyBps: z.number().int().min(0).max(MAX_APY_BPS).nullable().optional(),
+	inCashPlan: z.boolean().optional(),
 });
 
 @Controller("accounts")
