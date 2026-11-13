@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { AccountsModule } from "../accounts/accounts.module";
 import { ForecastModule } from "../forecast/forecast.module";
 import { GoalsModule } from "../goals/goals.module";
+import { LiabilitiesModule } from "../liabilities/liabilities.module";
 import { TransactionsModule } from "../transactions/transactions.module";
 import { FakePlaid } from "./fake-plaid";
 import { PlaidController } from "./plaid.controller";
@@ -11,7 +12,7 @@ import { PlaidService } from "./plaid.service";
 import { RealPlaid, UnconfiguredPlaid } from "./real-plaid";
 
 @Module({
-	imports: [AccountsModule, ForecastModule, GoalsModule, TransactionsModule],
+	imports: [AccountsModule, ForecastModule, GoalsModule, LiabilitiesModule, TransactionsModule],
 	controllers: [PlaidController],
 	providers: [
 		{

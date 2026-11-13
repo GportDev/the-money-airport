@@ -15,6 +15,8 @@ import { AccountsService } from "./accounts.service";
 import { DISPLAY_GROUPS, type NetWorthRange } from "./accounts.types";
 
 const MAX_APY_BPS = 100_000;
+const MAX_APR_BPS = 100_000;
+const dayOfMonth = z.number().int().min(1).max(31);
 
 const types = ["checking", "savings", "credit", "investment", "loan", "vehicle", "other"] as const;
 
@@ -34,6 +36,13 @@ const updateBody = z.object({
 	isHidden: z.boolean().optional(),
 	apyBps: z.number().int().min(0).max(MAX_APY_BPS).nullable().optional(),
 	inCashPlan: z.boolean().optional(),
+	inDebtPlan: z.boolean().optional(),
+	debtPriority: z.number().int().min(0).nullable().optional(),
+	aprBps: z.number().int().min(0).max(MAX_APR_BPS).nullable().optional(),
+	statementCloseDay: dayOfMonth.nullable().optional(),
+	paymentDueDay: dayOfMonth.nullable().optional(),
+	paymentRule: z.enum(["statement_balance", "new_charges", "minimum", "fixed"]).optional(),
+	fixedPayment: z.number().int().min(0).nullable().optional(),
 });
 
 @Controller("accounts")

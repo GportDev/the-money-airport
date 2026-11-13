@@ -1,3 +1,4 @@
+import { DebtSectionCard } from "@/components/forecast/debt-section-card";
 import { ForecastSectionCard } from "@/components/forecast/forecast-section-card";
 import { ForecastSummaryCards } from "@/components/forecast/forecast-summary-cards";
 import { ProjectedBalanceChart } from "@/components/forecast/projected-balance-chart";
@@ -15,6 +16,7 @@ type Props = {
 	onAddOneOff: (section: ForecastSection) => void;
 	onOpenOneOff: (section: ForecastSection, oneOff: OneOff) => void;
 	onSelectShortfall: (date: string) => void;
+	onOpenDebt: () => void;
 };
 
 function useLinkNames() {
@@ -36,6 +38,7 @@ export function YearView({
 	onAddOneOff,
 	onOpenOneOff,
 	onSelectShortfall,
+	onOpenDebt,
 }: Props) {
 	const summary = useForecastSummary(year);
 	const sections = useForecastSections(year);
@@ -78,6 +81,7 @@ export function YearView({
 					onOpenOneOff={(oneOff) => onOpenOneOff(section, oneOff)}
 				/>
 			))}
+			<DebtSectionCard year={year} currency={currency} onOpenDebt={onOpenDebt} />
 		</div>
 	);
 }

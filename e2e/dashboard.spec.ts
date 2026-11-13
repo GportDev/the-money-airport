@@ -112,7 +112,7 @@ test("settings default to five visible widgets and normalize what is saved", asy
 		{ dashboardWidgets: [{ id: "advice", visible: true, order: 0 }] },
 		{ currency: "BTC" },
 		{ currency: "usd" },
-		{ safetyBuffer: 100 },
+		{ rollover: true },
 	]) {
 		signedExpect((await page.request.patch(`${API}/settings`, { data })).status()).toBe(400);
 	}

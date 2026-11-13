@@ -41,6 +41,10 @@ export const amountsBody = z.object({
 	copyToAll: z.boolean().optional(),
 });
 
+export const debtQuery = z.object({ months: z.coerce.number().int().min(1).max(120).optional() });
+
+export const debtOrderBody = z.object({ bankAccountIds: z.array(uuid).min(1).max(100) }).strict();
+
 export const fromCategoriesBody = z.object({ year: yearQuery.shape.year });
 
 const oneOffLinks = {

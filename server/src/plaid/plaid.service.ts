@@ -9,6 +9,7 @@ import { bankAccount } from "../db/schema/bank-account";
 import { plaidItem } from "../db/schema/plaid-item";
 import { OneOffsService } from "../forecast/one-offs.service";
 import { FundInterestService } from "../goals/fund-interest.service";
+import { LiabilitiesSyncService } from "../liabilities/liabilities-sync.service";
 import {
 	type IngestResult,
 	TransactionIngestService,
@@ -34,6 +35,7 @@ export class PlaidService {
 		private readonly ingest: TransactionIngestService,
 		private readonly fundInterest: FundInterestService,
 		private readonly oneOffs: OneOffsService,
+		private readonly liabilities: LiabilitiesSyncService,
 	) {}
 
 	async createLinkToken(userId: string, itemId?: string) {
@@ -106,6 +108,7 @@ export class PlaidService {
 		for (const account of details.accounts) {
 			await this.upsertAccount(userId, item.id, account);
 		}
+		await this.syncLiabilities(userId, accessToken);
 		// First pull. Plaid may still be preparing history; the webhook or Refresh all fills the rest.
 		try {
 			await this.syncTransactions(item);
@@ -215,6 +218,7 @@ export class PlaidService {
 			for (const account of details.accounts) {
 				await this.upsertAccount(item.userId, item.id, account);
 			}
+			await this.syncLiabilities(item.userId, accessToken);
 			const result = await this.syncTransactions(item, accessToken);
 			await this.db
 				.update(plaidItem)
@@ -236,6 +240,15 @@ export class PlaidService {
 				throw error;
 			}
 			return { added: 0, modified: 0, removed: 0 };
+		}
+	}
+
+	/** Card and loan terms are optional: an Item without Liabilities still syncs. */
+	private async syncLiabilities(userId: string, accessToken: string) {
+		try {
+			await this.liabilities.apply(userId, await this.plaid.getLiabilities(accessToken));
+		} catch (error) {
+			this.logger.warn(`Liabilities sync failed: ${plaidErrorCode(error)}`);
 		}
 	}
 
@@ -324,7 +337,9 @@ export class PlaidService {
 					officialName: account.officialName,
 					currentBalance: account.currentBalance,
 					availableBalance: account.availableBalance,
-					creditLimit: account.creditLimit,
+					creditLimit: existing.overriddenFields.includes("creditLimit")
+						? existing.creditLimit
+						: account.creditLimit,
 					isoCurrencyCode: account.isoCurrencyCode,
 					lastSyncedAt: new Date(),
 					updatedAt: new Date(),

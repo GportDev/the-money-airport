@@ -212,6 +212,11 @@ test("a row paid from a card adds to the card total, not Operating cash", async 
 		displayGroup: "credit",
 		currentBalance: 20_000,
 	});
+	// Out of the debt plan so Payback (Phase 10) leaves the card total alone.
+	const outOfPlan = await page.request.patch(`${API}/accounts/${card}`, {
+		data: { inDebtPlan: false },
+	});
+	signedExpect(outOfPlan.status()).toBe(200);
 	await nextMonthRow(page, "variable_expense", {
 		name: "Dining",
 		dayOfMonth: 10,

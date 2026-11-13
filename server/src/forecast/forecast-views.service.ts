@@ -8,7 +8,7 @@ import type {
 	ForecastSummary,
 } from "./forecast.types";
 import { ForecastYearService } from "./forecast-year.service";
-import type { SectionType } from "./projection";
+import type { PlanItem, SectionType } from "./projection";
 import { type PlanRun, ProjectionService } from "./projection.service";
 
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
@@ -46,8 +46,9 @@ export class ForecastViewsService {
 			summary.cashFlow[month] = plan.cashFlow(month);
 			summary.fixedExpensesTotal[month] = plan.total("fixed_expense", month);
 			summary.variableExpensesTotal[month] = plan.total("variable_expense", month);
-			summary.debtPaymentsTotal[month] = 0;
-			summary.paybackTotal[month] = 0;
+			const debt = debtPaymentsIn(run, monthKey(year, month));
+			summary.debtPaymentsTotal[month] = debt.scheduled + debt.payback;
+			summary.paybackTotal[month] = debt.payback;
 			const low = lowPointIn(run, monthKey(year, month));
 			if (low) summary.lowPoint[month] = low;
 			const balances = monthEndBalances(run, year, month);
@@ -108,7 +109,7 @@ function monthEndBalances(run: PlanRun, year: number, month: number): Balances |
 	if (end < run.today) return fromRoles(run.historyOn(end));
 	const projected = run.projection.monthEnds.find((entry) => entry.month === monthKey(year, month));
 	if (projected) {
-		return { ...projected, loans: run.current.loan };
+		return projected;
 	}
 	return end === run.today ? fromRoles(run.current) : null;
 }
@@ -129,19 +130,47 @@ function lowPointIn(run: PlanRun, month: string) {
 	return low;
 }
 
+function debtPaymentsIn(run: PlanRun, month: string) {
+	let scheduled = 0;
+	let payback = 0;
+	for (const entry of run.projection.liabilityMonths) {
+		if (entry.month !== month) continue;
+		scheduled += entry.scheduled;
+		payback += entry.payback;
+	}
+	return { scheduled, payback };
+}
+
+/** Card and loan payments read as "<BankAccount> payment"; Payback lists its split by name. */
+function monthItem(item: PlanItem, names: Map<string, string>): ForecastMonthItem {
+	const accountName = item.sourceId ? names.get(item.sourceId) : undefined;
+	const isDebtPayment = item.kind === "card_payment" || item.kind === "loan_payment";
+	return {
+		kind: item.kind,
+		name: isDebtPayment && accountName ? `${accountName} payment` : item.name,
+		amount: item.amount,
+		sourceId: item.sourceId,
+		...(item.split
+			? {
+					split: item.split.map((part) => ({
+						bankAccountId: part.id,
+						name: names.get(part.id) ?? "",
+						amount: part.amount,
+					})),
+				}
+			: {}),
+	};
+}
+
 /** Projected days in the month with Money in or out of Operating cash; card spend is left out. */
 function cashDays(run: PlanRun, month: string): ForecastMonth["days"] {
+	const names = new Map(run.liabilities.map((entry) => [entry.account.id, entry.account.name]));
 	const days: ForecastMonth["days"] = [];
 	for (const day of run.projection.days) {
 		if (!day.date.startsWith(month)) continue;
 		const items: ForecastMonthItem[] = day.items
 			.filter((item) => !item.cardId)
-			.map((item) => ({
-				kind: item.kind,
-				name: item.name,
-				amount: item.amount,
-				sourceId: item.sourceId,
-			}));
+			.map((item) => monthItem(item, names));
 		if (items.length === 0) continue;
 		const net = items.reduce((sum, item) => sum + item.amount, 0);
 		days.push({ date: day.date, net, balanceAfter: day.cash, items });

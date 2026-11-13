@@ -14,6 +14,7 @@ import { FxModule } from "./fx/fx.module";
 import { GoalsModule } from "./goals/goals.module";
 import { HealthModule } from "./health/health.module";
 import { InvestmentsModule } from "./investments/investments.module";
+import { LiabilitiesModule } from "./liabilities/liabilities.module";
 import { PlaidModule } from "./plaid/plaid.module";
 import { ReportsModule } from "./reports/reports.module";
 import { SettingsModule } from "./settings/settings.module";
@@ -42,6 +43,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		ReportsModule,
 		InvestmentsModule,
 		ForecastModule,
+		LiabilitiesModule,
 	],
 })
 export class AppModule {}

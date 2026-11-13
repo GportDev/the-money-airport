@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { BankAccount, NetWorth } from "@/types";
+import type { BankAccount, NetWorth, PaymentRule } from "@/types";
 
 export function getAccounts() {
 	return api<BankAccount[]>("/accounts");
@@ -29,6 +29,12 @@ export function updateAccount(
 		isHidden?: boolean;
 		apyBps?: number | null;
 		inCashPlan?: boolean;
+		inDebtPlan?: boolean;
+		aprBps?: number | null;
+		statementCloseDay?: number | null;
+		paymentDueDay?: number | null;
+		paymentRule?: PaymentRule;
+		fixedPayment?: number | null;
 	},
 ) {
 	return api<BankAccount>(`/accounts/${id}`, { method: "PATCH", body: JSON.stringify(body) });

@@ -7,11 +7,17 @@ import { accountBalanceSnapshot } from "../db/schema/account-balance-snapshot";
 import { bankAccount } from "../db/schema/bank-account";
 import { forecastCell, forecastOneOff, forecastRow, forecastSection } from "../db/schema/forecast";
 import { goal } from "../db/schema/goal";
+import { loanTerms } from "../db/schema/loan-terms";
+import type { PaymentRule } from "../debt/card-payment";
+import { type DebtStrategy, debtOrder } from "../debt/debt-order";
 import { FxService } from "../fx/fx.service";
+import { latestStatement, loanTermsDto, spendSince } from "../liabilities/liability-details";
 import { SettingsService } from "../settings/settings.service";
 import { type AccountRole, historyReader, type RoleTotals } from "./balance-history";
 import { monthKey, todayIso } from "./dates";
 import {
+	type CardInput,
+	type LoanInput,
 	type PlanItem,
 	type PlanRow,
 	type Projection,
@@ -24,12 +30,25 @@ type Account = typeof bankAccount.$inferSelect;
 
 type RatedAccount = { account: Account; role: AccountRole; rate: number };
 
+/** A card or loan as the plan sees it, in Base cents. */
+export type PlanLiability = {
+	account: Account;
+	kind: "card" | "loan";
+	balance: number;
+	inDebtPlan: boolean;
+};
+
 export type PlanRun = {
 	today: string;
 	baseCurrency: string;
 	safetyBuffer: number;
+	paybackDay: number | null;
+	strategy: DebtStrategy;
 	/** Today's balances in Base, by role. */
 	current: RoleTotals;
+	liabilities: PlanLiability[];
+	/** In-plan liability ids, Payback order. */
+	debtOrder: string[];
 	projection: Projection;
 	/** Past balances by role, from snapshots. */
 	historyOn: (date: string) => RoleTotals | null;
@@ -50,36 +69,46 @@ export class ProjectionService {
 		const accounts = await this.ratedAccounts(userId, settings.currency);
 		const current = currentTotals(accounts);
 		const fundHosts = await this.fundHosts(userId);
-		const cardIds = new Set(accounts.filter((a) => a.role === "card").map((a) => a.account.id));
+		const cards = await this.cards(userId, accounts);
+		const loans = await this.loans(userId, accounts);
+		const cardIds = new Set(cards.map((card) => card.id));
 		const end = through > today ? through : today;
 		const items = [
 			...planItemsFor(await this.planRows(userId, today, end, cardIds, fundHosts), today, end),
 			...(await this.oneOffItems(userId, today, end, cardIds, fundHosts)),
 		].sort((a, b) => a.date.localeCompare(b.date));
+		const liabilities = liabilitiesOf(accounts);
+		const order = orderOf(liabilities, settings.debtStrategy);
 
 		const projection = project({
 			today,
 			through: end,
 			openingCash: current.cash,
 			safetyBuffer: settings.safetyBuffer,
-			cards: byRole(accounts, "card").map((a) => ({ id: a.account.id, balance: baseOf(a) })),
+			cards,
+			loans,
 			savings: byRole(accounts, "savings").map((a) => ({
 				id: a.account.id,
 				balance: baseOf(a),
 				apyBps: a.account.apyBps,
 			})),
+			debtOrder: order,
+			paybackDay: settings.paybackDay,
 			items,
 		});
-		const snapshots = await this.snapshots(userId, today);
 		const historyOn = historyReader(
-			snapshots,
+			await this.snapshots(userId, today),
 			accounts.map((a) => ({ id: a.account.id, role: a.role, rate: a.rate })),
 		);
 		return {
 			today,
 			baseCurrency: settings.currency,
 			safetyBuffer: settings.safetyBuffer,
+			paybackDay: settings.paybackDay,
+			strategy: settings.debtStrategy,
 			current,
+			liabilities,
+			debtOrder: order,
 			projection,
 			historyOn,
 		};
@@ -95,6 +124,62 @@ export class ProjectionService {
 			if (role && rate !== null) rated.push({ account, role, rate });
 		}
 		return rated;
+	}
+
+	/** Card terms and the latest Statement, converted to Base at the latest rate. */
+	private async cards(userId: string, accounts: RatedAccount[]): Promise<CardInput[]> {
+		const cards: CardInput[] = [];
+		for (const rated of byRole(accounts, "card")) {
+			const { account, rate } = rated;
+			const latest = await latestStatement(this.db, userId, account.id);
+			const toBase = (cents: number) => Math.round(cents * rate);
+			cards.push({
+				id: account.id,
+				balance: baseOf(rated),
+				aprBps: account.aprBps,
+				closeDay: account.statementCloseDay,
+				dueDay: account.paymentDueDay,
+				// Narrowed on write by the accounts controller's enum.
+				rule: account.paymentRule as PaymentRule,
+				fixedPayment: account.fixedPayment === null ? null : toBase(account.fixedPayment),
+				latestStatement: latest
+					? {
+							periodEnd: latest.periodEnd,
+							balance: toBase(latest.statementBalance),
+							minimum: latest.minimumPayment === null ? null : toBase(latest.minimumPayment),
+							dueDate: latest.dueDate,
+						}
+					: null,
+				currentPeriodSpend: latest
+					? toBase(await spendSince(this.db, userId, account.id, latest.periodEnd))
+					: 0,
+				inDebtPlan: account.inDebtPlan,
+			});
+		}
+		return cards;
+	}
+
+	/** Loans pay on schedule from Operating cash; a loan without terms is balance-only. */
+	private async loans(userId: string, accounts: RatedAccount[]): Promise<LoanInput[]> {
+		const terms = await this.db.select().from(loanTerms).where(eq(loanTerms.userId, userId));
+		return byRole(accounts, "loan").map((rated) => {
+			const { account, rate } = rated;
+			const row = terms.find((entry) => entry.bankAccountId === account.id);
+			const dto = row ? loanTermsDto(row, account) : null;
+			const paymentDay =
+				dto?.paymentDay ??
+				(dto?.firstPaymentDate ? Number(dto.firstPaymentDate.slice(8, 10)) : null);
+			return {
+				id: account.id,
+				balance: baseOf(rated),
+				aprBps: account.aprBps,
+				paymentDay,
+				payment: dto?.scheduledPayment ? Math.round(dto.scheduledPayment * rate) : null,
+				extra: Math.round((dto?.extraPayment ?? 0) * rate),
+				firstPaymentDate: dto?.firstPaymentDate ?? null,
+				inDebtPlan: account.inDebtPlan,
+			};
+		});
 	}
 
 	private async planRows(
@@ -212,6 +297,36 @@ function baseOf(rated: RatedAccount) {
 
 function byRole(accounts: RatedAccount[], role: AccountRole) {
 	return accounts.filter((rated) => rated.role === role);
+}
+
+function liabilitiesOf(accounts: RatedAccount[]): PlanLiability[] {
+	return accounts.flatMap((rated) =>
+		rated.role === "card" || rated.role === "loan"
+			? [
+					{
+						account: rated.account,
+						kind: rated.role,
+						balance: baseOf(rated),
+						inDebtPlan: rated.account.inDebtPlan,
+					},
+				]
+			: [],
+	);
+}
+
+/** In-plan liability ids in the strategy's Payback order. */
+function orderOf(liabilities: PlanLiability[], strategy: DebtStrategy) {
+	return debtOrder(
+		liabilities
+			.filter((liability) => liability.inDebtPlan)
+			.map((liability) => ({
+				id: liability.account.id,
+				balance: liability.balance,
+				aprBps: liability.account.aprBps,
+				priority: liability.account.debtPriority,
+			})),
+		strategy,
+	);
 }
 
 function currentTotals(accounts: RatedAccount[]): RoleTotals {

@@ -1,7 +1,9 @@
 import { Module } from "@nestjs/common";
+import { AccountsModule } from "../accounts/accounts.module";
 import { CategoriesModule } from "../categories/categories.module";
 import { FxModule } from "../fx/fx.module";
 import { SettingsModule } from "../settings/settings.module";
+import { DebtPlanService } from "./debt-plan.service";
 import { ForecastController } from "./forecast.controller";
 import { ForecastRowsService } from "./forecast-rows.service";
 import { ForecastSectionsService } from "./forecast-sections.service";
@@ -11,7 +13,7 @@ import { OneOffsService } from "./one-offs.service";
 import { ProjectionService } from "./projection.service";
 
 @Module({
-	imports: [CategoriesModule, FxModule, SettingsModule],
+	imports: [AccountsModule, CategoriesModule, FxModule, SettingsModule],
 	controllers: [ForecastController],
 	providers: [
 		ForecastSectionsService,
@@ -20,7 +22,8 @@ import { ProjectionService } from "./projection.service";
 		ForecastYearService,
 		ProjectionService,
 		ForecastViewsService,
+		DebtPlanService,
 	],
-	exports: [OneOffsService, ProjectionService],
+	exports: [OneOffsService, ProjectionService, DebtPlanService],
 })
 export class ForecastModule {}

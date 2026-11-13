@@ -1,5 +1,6 @@
 import type {
 	PlaidAccountSnapshot,
+	PlaidLiabilities,
 	PlaidPort,
 	PlaidTransactionSnapshot,
 	PlaidTransactionsPage,
@@ -249,6 +250,25 @@ export class FakePlaid implements PlaidPort {
 			return { accessToken: SAVINGS_ACCESS_TOKEN, itemId: "item-fake-savings" };
 		}
 		return { accessToken: "access-sandbox-fake", itemId: "item-fake-1" };
+	}
+
+	async getLiabilities(accessToken: string): Promise<PlaidLiabilities> {
+		if (accessToken === SAVINGS_ACCESS_TOKEN) {
+			return { cards: [], loans: [] };
+		}
+		return {
+			cards: [
+				{
+					plaidAccountId: "fake-credit",
+					aprBps: 1250,
+					lastStatementBalance: 41000,
+					minimumPayment: 2000,
+					lastStatementIssueDate: daysAgo(15),
+					nextPaymentDueDate: daysAgo(-15),
+				},
+			],
+			loans: [],
+		};
 	}
 
 	async getAccounts(accessToken: string) {

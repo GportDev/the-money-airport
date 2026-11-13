@@ -130,7 +130,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 - Row: institution logo, name + last 4, type, sparkline, balance (native), last updated. Credit rows include a utilization bar.
 - Click row → account drawer (balance history sparkline, recent transactions). The drawer adds a section by type:
   - **Credit:** limit / available / utilization bar; last Statement card (balance, minimum, due date countdown); current period spend; APR and Projected interest; Payment rule select; **Statement periods** list with `◀ Dec 12 – Jan 11 · due Feb 5 ▶` navigator, period total, date-grouped charges. Card terms edit inline in the drawer form; Plaid-filled fields show a "from bank" hint until overridden. **+ Statement** for manual entry.
-  - **Loan:** Loan terms form; base payment, payoff date, total interest; **View payoff** opens the loan payoff drawer (S10 Debt).
+  - **Loan:** Loan terms form; base payment, payoff date, total interest; **View payoff** goes to the Debt tab, where the loan card opens the loan payoff drawer (S10 Debt).
   - **Savings / investment:** APY field. Fund hosts list Funds + Unassigned (warning style if negative).
   - **All cash:** "In cash plan" toggle. **All liabilities:** "In debt plan" toggle.
 - **+ Add account:** Plaid Link or manual account form in a drawer.
@@ -411,7 +411,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 - Strategy, Safety buffer, payback day edit inline and recompute (same values as Settings → Plan).
 - Liability cards in Debt plan order; drag handle (≡) reorders and switches to Custom. Out-of-plan liabilities sit in a collapsed "Not in plan" group.
-- Card click → account drawer (credit section). Loan click → **Loan payoff drawer**: summary (payment, total interest, payoff date), extra-payment compare cards (+$0 … +$300, custom), balance chart, year-grouped amortization list. **Use this** on a scenario saves `extra_payment`.
+- Card click → Accounts, where the card's drawer has the credit section. Move up / Move down buttons reorder by keyboard alongside the drag handle. Loan click → **Loan payoff drawer**: summary (payment, total interest, payoff date), extra-payment compare cards (+$0 … +$300, custom), balance chart, year-grouped amortization list. **Use this** on a scenario saves `extra_payment`.
 - Text summary under the chart for screen readers (debt-free month, total interest).
 
 ---

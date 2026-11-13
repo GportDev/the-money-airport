@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { authClient } from "@/auth/auth-client";
 import { PageHeader } from "@/components/layout/page-header";
+import { PlanSettingsCard } from "@/components/settings/plan-settings-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const SETTINGS_SECTIONS = [
@@ -91,6 +92,7 @@ export function SettingsPage() {
 						</CardHeader>
 					</Card>
 				))}
+				<PlanSettingsCard />
 			</div>
 		</>
 	);

@@ -4,6 +4,7 @@ import type { ForecastSectionType, OneOffStatus } from "@/types";
 export const FORECAST_TABS = [
 	{ value: "year", label: "Year" },
 	{ value: "month", label: "Month" },
+	{ value: "debt", label: "Debt" },
 ] as const;
 
 export type ForecastTab = (typeof FORECAST_TABS)[number]["value"];
@@ -22,7 +23,7 @@ export function isInflowSection(type: ForecastSectionType) {
 }
 
 export function parseForecastTab(value: string | null): ForecastTab {
-	return value === "month" ? "month" : "year";
+	return value === "month" || value === "debt" ? value : "year";
 }
 
 /** `?year=YYYY`, falling back to the current year. */
