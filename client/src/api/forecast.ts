@@ -1,5 +1,7 @@
 import { api } from "@/api/client";
 import type {
+	DebtPlan,
+	ForecastDebtSection,
 	ForecastMonth,
 	ForecastRow,
 	ForecastSection,
@@ -81,4 +83,19 @@ export function updateOneOff({
 
 export function deleteOneOff(id: string) {
 	return api<{ success: true }>(`/forecast/one-offs/${id}`, { method: "DELETE" });
+}
+
+export function getDebtPlan() {
+	return api<DebtPlan>("/forecast/debt");
+}
+
+export function getDebtSection(year: number) {
+	return api<ForecastDebtSection>(`/forecast/debt/section?year=${year}`);
+}
+
+export function reorderDebt(bankAccountIds: string[]) {
+	return api<DebtPlan>("/forecast/debt/order", {
+		method: "PUT",
+		body: JSON.stringify({ bankAccountIds }),
+	});
 }

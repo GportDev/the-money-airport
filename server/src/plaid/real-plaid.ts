@@ -11,10 +11,12 @@ import {
 } from "plaid";
 import type {
 	PlaidAccountSnapshot,
+	PlaidLiabilities,
 	PlaidPort,
 	PlaidTransactionSnapshot,
 	PlaidTransactionsPage,
 } from "./plaid.port";
+import { mapLiabilities, NO_LIABILITIES } from "./plaid-liabilities";
 
 /** Plaid keeps up to 24 months of history; ask for all of it at first Link. */
 const DAYS_REQUESTED = 730;
@@ -63,6 +65,7 @@ export class RealPlaid implements PlaidPort {
 				? { access_token: accessToken }
 				: {
 						products: [Products.Transactions],
+						optional_products: [Products.Liabilities],
 						transactions: { days_requested: DAYS_REQUESTED },
 					}),
 		});
@@ -75,6 +78,18 @@ export class RealPlaid implements PlaidPort {
 			accessToken: response.data.access_token,
 			itemId: response.data.item_id,
 		};
+	}
+
+	async getLiabilities(accessToken: string): Promise<PlaidLiabilities> {
+		try {
+			const response = await this.client.liabilitiesGet({ access_token: accessToken });
+			return mapLiabilities(response.data.liabilities);
+		} catch (error) {
+			if (NO_LIABILITIES.has(plaidErrorCodeOf(error) ?? "")) {
+				return { cards: [], loans: [] };
+			}
+			throw error;
+		}
 	}
 
 	async getAccounts(accessToken: string) {
@@ -333,6 +348,10 @@ function classify(type: string, subtype: string | null) {
 
 export class UnconfiguredPlaid implements PlaidPort {
 	configured = false;
+
+	async getLiabilities(_accessToken: string): Promise<PlaidLiabilities> {
+		throw new Error("Plaid is not configured");
+	}
 
 	async createLinkToken(_userId?: string, _accessToken?: string): Promise<string> {
 		throw new Error("Plaid is not configured");

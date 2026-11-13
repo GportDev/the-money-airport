@@ -29,6 +29,13 @@ export type BankAccount = {
 	apyBps: number | null;
 	/** Operating cash: the Forecast plans bills and income through it. */
 	inCashPlan: boolean;
+	/** Liabilities: whether Payback pays it down. */
+	inDebtPlan: boolean;
+	debtPriority: number | null;
+	/** Cards and loans: yearly rate in basis points. */
+	aprBps: number | null;
+	card: CardSummary | null;
+	loan: LoanTerms | null;
 	funds: FundSummary[];
 	unassigned: number | null;
 	plaidItemId?: string | null;
@@ -324,7 +331,15 @@ export type FundEntry = {
 
 export type ForecastSectionType = "revenue" | "savings" | "fixed_expense" | "variable_expense";
 export type OneOffStatus = "expected" | "done" | "cancelled";
-export type ForecastItemKind = "revenue" | "fixed" | "variable" | "savings" | "one_off";
+export type ForecastItemKind =
+	| "revenue"
+	| "fixed"
+	| "variable"
+	| "savings"
+	| "one_off"
+	| "card_payment"
+	| "loan_payment"
+	| "payback";
 
 export type OneOff = {
 	id: string;
@@ -388,6 +403,7 @@ export type ForecastMonthItem = {
 	name: string;
 	amount: number;
 	sourceId: string | null;
+	split?: { bankAccountId: string; name: string; amount: number }[];
 };
 
 export type ForecastMonth = {
@@ -399,4 +415,110 @@ export type ForecastMonth = {
 	lowPoint: { date: string; value: number };
 	shortfalls: Shortfall[];
 	days: { date: string; net: number; balanceAfter: number; items: ForecastMonthItem[] }[];
+};
+
+export type PaymentRule = "statement_balance" | "new_charges" | "minimum" | "fixed";
+
+export type CardStatement = {
+	id: string;
+	periodStart: string;
+	periodEnd: string;
+	statementBalance: number;
+	minimumPayment: number | null;
+	dueDate: string | null;
+	source: "plaid" | "manual";
+};
+
+export type CardSummary = {
+	statementCloseDay: number | null;
+	paymentDueDay: number | null;
+	paymentRule: PaymentRule;
+	fixedPayment: number | null;
+	latestStatement: CardStatement | null;
+	currentPeriodSpend: number;
+	projectedInterest: number;
+	utilization: number | null;
+	overriddenFields: string[];
+};
+
+export type LoanTerms = {
+	principal: number | null;
+	termMonths: number | null;
+	firstPaymentDate: string | null;
+	paymentDay: number | null;
+	scheduledPayment: number | null;
+	extraPayment: number;
+	source: "plaid" | "manual";
+};
+
+export type StatementPeriod = {
+	statement: CardStatement | null;
+	periodStart: string;
+	periodEnd: string;
+	total: number;
+	previousPeriodEnd: string | null;
+	nextPeriodEnd: string | null;
+	transactions: TransactionListItem[];
+};
+
+export type AmortizationRow = {
+	period: number;
+	date: string;
+	beginningBalance: number;
+	payment: number;
+	interest: number;
+	principal: number;
+	extra: number;
+	endingBalance: number;
+};
+
+export type AmortizationScenario = {
+	extra: number;
+	payment: number;
+	payoffMonths: number;
+	monthsSaved: number;
+	totalInterest: number;
+	interestSaved: number;
+};
+
+export type Amortization = {
+	basePayment: number;
+	baseTotalInterest: number;
+	basePayoffDate: string;
+	scenarios: AmortizationScenario[];
+	schedule: AmortizationRow[];
+};
+
+export type DebtLiability = {
+	account: BankAccount;
+	share: number;
+	scheduledPayment: number;
+	payback: number;
+	projectedInterest: number;
+	payoffMonth: string | null;
+};
+
+export type DebtPlan = {
+	baseCurrency: string;
+	strategy: DebtStrategy;
+	safetyBuffer: number;
+	paybackDay: number | null;
+	totalDebt: number;
+	debtFreeMonth: string | null;
+	projectedInterest12m: number;
+	utilization: number | null;
+	liabilities: DebtLiability[];
+	notInPlan: { account: BankAccount }[];
+	series: { month: string; balances: Record<string, number>; payback: number }[];
+};
+
+export type ForecastDebtSection = {
+	type: "debt";
+	rows: {
+		bankAccountId: string;
+		name: string;
+		kind: "card_payment" | "loan_payment";
+		cells: Record<number, { scheduled: number; payback: number; actual: number | null }>;
+	}[];
+	totals: Record<number, number>;
 };

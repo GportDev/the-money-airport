@@ -13,8 +13,11 @@ import {
 } from "@nestjs/common";
 import type { z } from "zod";
 import { CurrentUser } from "../auth/current-user.decorator";
+import { DebtPlanService } from "./debt-plan.service";
 import {
 	amountsBody,
+	debtOrderBody,
+	debtQuery,
 	fromCategoriesBody,
 	monthQuery,
 	oneOffBody,
@@ -50,6 +53,7 @@ export class ForecastController {
 		private readonly oneOffs: OneOffsService,
 		private readonly year: ForecastYearService,
 		private readonly views: ForecastViewsService,
+		private readonly debt: DebtPlanService,
 	) {}
 
 	@Get("sections")
@@ -144,6 +148,24 @@ export class ForecastController {
 	async summary(@CurrentUser() user: User, @Query() query: unknown) {
 		const { year } = parse(yearQuery, query);
 		return { data: await this.views.summary(user.id, year) };
+	}
+
+	@Get("debt")
+	async debtPlan(@CurrentUser() user: User, @Query() query: unknown) {
+		const { months } = parse(debtQuery, query);
+		return { data: await this.debt.plan(user.id, months) };
+	}
+
+	@Get("debt/section")
+	async debtSection(@CurrentUser() user: User, @Query() query: unknown) {
+		const { year } = parse(yearQuery, query);
+		return { data: await this.debt.section(user.id, year) };
+	}
+
+	@Put("debt/order")
+	async debtOrder(@CurrentUser() user: User, @Body() body: unknown) {
+		const { bankAccountIds } = parse(debtOrderBody, body);
+		return { data: await this.debt.order(user.id, bankAccountIds) };
 	}
 
 	@Get("month")

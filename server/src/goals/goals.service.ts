@@ -6,6 +6,7 @@ import { DATABASE } from "../db/db.module";
 import { bankAccount } from "../db/schema/bank-account";
 import { goal, goalAccount } from "../db/schema/goal";
 import { transaction } from "../db/schema/transaction";
+import { DebtPlanService } from "../forecast/debt-plan.service";
 import { FxService } from "../fx/fx.service";
 import { fundsByHost, unassignedOf } from "./fund-balances";
 import { goalStatus, percentComplete, remainingFor } from "./goal-progress";
@@ -32,6 +33,7 @@ export class GoalsService {
 		@Inject(DATABASE) private readonly db: PostgresJsDatabase,
 		private readonly accounts: AccountsService,
 		private readonly fx: FxService,
+		private readonly debtPlan: DebtPlanService,
 	) {}
 
 	async list(userId: string, type?: GoalType): Promise<GoalsList> {
@@ -67,9 +69,20 @@ export class GoalsService {
 		return {
 			totalCurrent: dtos.reduce((sum, row) => sum + row.currentAmount, 0),
 			baseCurrency: base,
-			goals: dtos,
+			goals: await this.withPayoffMonths(userId, dtos),
 			hosts,
 		};
+	}
+
+	/** Pay-down Goals read their liability's payoff month from the Debt plan (PRD F10.10). */
+	private async withPayoffMonths(userId: string, dtos: GoalDto[]) {
+		const hasLiability = dtos.some((dto) => dto.type === "pay_down" && dto.accounts.length > 0);
+		if (!hasLiability) return dtos;
+		const payoffs = await this.debtPlan.payoffMonths(userId);
+		return dtos.map((dto) => {
+			const liability = dto.type === "pay_down" ? dto.accounts[0] : undefined;
+			return liability ? { ...dto, payoffMonth: payoffs.get(liability.id) ?? null } : dto;
+		});
 	}
 
 	async create(userId: string, input: CreateGoalInput) {

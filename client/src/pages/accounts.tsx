@@ -197,6 +197,7 @@ export function AccountsPage() {
 								isHidden: input.isHidden,
 								apyBps: input.apyBps,
 								inCashPlan: input.inCashPlan,
+								inDebtPlan: input.inDebtPlan,
 							});
 						}
 					}}

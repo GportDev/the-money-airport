@@ -458,7 +458,7 @@ interface FundEntry {
 
 The Transaction drawer's "Assign to Fund" calls `POST /goals/:id/entries` with `transactionId`. `GET /transactions/:id` returns `fundEntry: { id, goalId, goalName } | null` for the deposit or withdrawal made from it.
 
-Errors: 400 for invalid bodies, a Fund with no host, `fund` on a pay-down Goal, associating a hidden, wrong-side, or host BankAccount, a second pay-down liability, entries on an accounts Goal, and a Transaction off the host or already used. 404 for another User's Goal, BankAccount, or Transaction. `payoffMonth` stays null until the Debt plan (Phase 10).
+Errors: 400 for invalid bodies, a Fund with no host, `fund` on a pay-down Goal, associating a hidden, wrong-side, or host BankAccount, a second pay-down liability, entries on an accounts Goal, and a Transaction off the host or already used. 404 for another User's Goal, BankAccount, or Transaction. `payoffMonth` (pay-down) is the associated liability's payoff month from the Debt plan (24-month horizon); null when it is not paid off within it.
 
 ---
 
@@ -691,6 +691,17 @@ interface DebtPlan {
 }
 ```
 
+| GET | `/forecast/debt/section` | `?year` | `{ data: ForecastDebtSection }` | The Year tab's read-only Debt section, kept apart from `/forecast/sections` so that list stays the stored sections |
+
+`DebtPlan` also returns `notInPlan: { account }[]` (liabilities with "in debt plan" off) and `baseCurrency`.
+
+Projection assumptions the engine makes where Plaid gives nothing:
+- A card with no due day (and no Statement due date) has no scheduled payment; it only grows and takes Payback.
+- With only a due day known, the Statement closes 25 days before it.
+- A future Statement's minimum is 1% of the balance plus that period's interest, at least $25, never more than the balance. The latest Statement uses its real minimum.
+- For the latest Statement, `new_charges` pays the full Statement (its period spend is unknown).
+- Payback's window ends the day before the next revenue item or positive One-off; with none in range, it runs to the end of the range.
+
 Engine rules are PRD F12.14–F12.19. One service (`ProjectionService`) computes the day-by-day run; `summary`, `month`, `sections` (Debt section), and `debt` all read it, so numbers always agree.
 
 ---
@@ -702,7 +713,7 @@ Engine rules are PRD F12.14–F12.19. One service (`ProjectionService`) computes
 | GET | `/settings` | — | `{ data: UserSettings }` |
 | PATCH | `/settings` | `{ currency?, dashboardWidgets?, budgetCopyForward?, safetyBuffer?, paybackDay?, debtStrategy? }` | `{ data: UserSettings }` |
 
-- Implemented now: `currency` (official ISO code, uppercase), `dashboardWidgets`, `budgetCopyForward`. The Forecasting fields arrive with Phase 9; unknown keys return 400.
+- `currency` (official ISO code, uppercase), `dashboardWidgets`, `budgetCopyForward`, `safetyBuffer` (Base cents, 0 or more), `paybackDay` (1-31, null = last day), `debtStrategy`. Unknown keys return 400.
 - `dashboardWidgets` is normalized on save and read: unknown ids and duplicates are rejected or dropped, missing widgets are appended visible, and `order` is renumbered from 0.
 
 ---

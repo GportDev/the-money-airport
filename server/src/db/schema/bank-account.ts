@@ -37,6 +37,18 @@ export const bankAccount = pgTable(
 		apyBps: integer("apy_bps"),
 		// Operating cash. Null = the default for the type (checking only); see isInCashPlan.
 		inCashPlan: boolean("in_cash_plan"),
+		// Liabilities only: whether Payback pays this one down, and its place under `custom`.
+		inDebtPlan: boolean("in_debt_plan").notNull().default(true),
+		debtPriority: integer("debt_priority"),
+		// Card terms (credit) and loan rate (loan). APR in basis points: 2900 = 29.00%.
+		aprBps: integer("apr_bps"),
+		statementCloseDay: integer("statement_close_day"),
+		paymentDueDay: integer("payment_due_day"),
+		// statement_balance | new_charges | minimum | fixed
+		paymentRule: text("payment_rule").notNull().default("statement_balance"),
+		fixedPayment: integer("fixed_payment"),
+		// Card-term fields the User set by hand; Plaid Liabilities sync leaves them alone.
+		overriddenFields: text("overridden_fields").array().notNull().default([]),
 		lastSyncedAt: timestamp("last_synced_at"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),

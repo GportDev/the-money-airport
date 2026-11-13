@@ -29,7 +29,19 @@ export function MonthDayGroup({ day, currency, isShort }: Props) {
 						key={`${item.kind}-${item.sourceId ?? item.name}`}
 						className="flex items-center justify-between px-3 py-2 text-sm"
 					>
-						<span>{item.name}</span>
+						<span>
+							{item.name}
+							{item.split && item.split.length > 0 ? (
+								<span className="text-muted-foreground">
+									{" "}
+									(
+									{item.split
+										.map((part) => `${part.name} ${formatMoney(part.amount, currency)}`)
+										.join(" · ")}
+									)
+								</span>
+							) : null}
+						</span>
 						<Amount>{formatSignedMoney(item.amount, currency)}</Amount>
 					</li>
 				))}

@@ -5,9 +5,12 @@ import {
 	createOneOff,
 	deleteForecastRow,
 	deleteOneOff,
+	getDebtPlan,
+	getDebtSection,
 	getForecastMonth,
 	getForecastSections,
 	getForecastSummary,
+	reorderDebt,
 	setForecastAmounts,
 	updateForecastRow,
 	updateOneOff,
@@ -78,4 +81,33 @@ export function useUpdateOneOff() {
 
 export function useDeleteOneOff() {
 	return useForecastMutation(deleteOneOff);
+}
+
+export function useDebtPlan() {
+	return useQuery({
+		queryKey: ["forecast", "debt"],
+		queryFn: getDebtPlan,
+		staleTime: STALE_TIME,
+	});
+}
+
+export function useDebtSection(year: number) {
+	return useQuery({
+		queryKey: ["forecast", "debt-section", year],
+		queryFn: () => getDebtSection(year),
+		staleTime: STALE_TIME,
+	});
+}
+
+/** A custom order also changes Goals' payoff months. */
+export function useReorderDebt() {
+	const client = useQueryClient();
+	return useMutation({
+		mutationFn: reorderDebt,
+		onSuccess: () => {
+			void client.invalidateQueries({ queryKey: ["forecast"] });
+			void client.invalidateQueries({ queryKey: ["settings"] });
+			void client.invalidateQueries({ queryKey: ["goals"] });
+		},
+	});
 }

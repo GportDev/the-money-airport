@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { ForecastRowDrawer } from "@/components/drawers/forecast-row-drawer";
 import { OneOffDrawer } from "@/components/drawers/one-off-drawer";
+import { DebtView } from "@/components/forecast/debt-view";
 import { MonthView } from "@/components/forecast/month-view";
 import { YearView } from "@/components/forecast/year-view";
 import { MonthNavigator } from "@/components/layout/month-navigator";
@@ -73,7 +74,7 @@ export function ForecastPage() {
 							Add from categories
 						</button>
 					</>
-				) : (
+				) : tab === "month" ? (
 					<MonthNavigator
 						year={month.year}
 						month={month.month}
@@ -81,7 +82,7 @@ export function ForecastPage() {
 							patchParams((next) => next.set("month", shiftMonth(month.year, month.month, delta)))
 						}
 					/>
-				)}
+				) : null}
 			</PageHeader>
 
 			<Tabs.Root
@@ -115,10 +116,14 @@ export function ForecastPage() {
 						onAddOneOff={(section) => setOneOffDrawer({ section, oneOff: null })}
 						onOpenOneOff={(section, oneOff) => setOneOffDrawer({ section, oneOff })}
 						onSelectShortfall={openMonthOf}
+						onOpenDebt={() => patchParams((next) => next.set("tab", "debt"))}
 					/>
 				</Tabs.Content>
 				<Tabs.Content value="month">
 					<MonthView year={month.year} month={month.month} />
+				</Tabs.Content>
+				<Tabs.Content value="debt">
+					<DebtView />
 				</Tabs.Content>
 			</Tabs.Root>
 

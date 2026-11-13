@@ -4,6 +4,9 @@ import { AccountFunds } from "@/components/accounts/account-funds";
 import { ApyField } from "@/components/accounts/apy-field";
 import { CashPlanToggle } from "@/components/accounts/cash-plan-toggle";
 import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
+import { CreditSection } from "@/components/accounts/credit-section";
+import { DebtPlanToggle } from "@/components/accounts/debt-plan-toggle";
+import { LoanSection } from "@/components/accounts/loan-section";
 import { Sparkline } from "@/components/accounts/sparkline";
 import {
 	Sheet,
@@ -43,6 +46,8 @@ export function AccountDrawer({
 		apyBps: number | null;
 		/** Cash BankAccounts only; undefined leaves it unchanged. */
 		inCashPlan?: boolean;
+		/** Liabilities only; undefined leaves it unchanged. */
+		inDebtPlan?: boolean;
 	}) => Promise<void>;
 	onDelete?: () => void;
 	onDisconnect?: () => void;
@@ -67,6 +72,9 @@ export function AccountDrawer({
 	const isApyShown = isEdit && account !== null && earnsApy(account);
 	const isCashPlanShown = isEdit && account?.displayGroup === "cash";
 	const [inCashPlan, setInCashPlan] = useState(account?.inCashPlan ?? false);
+	const isDebtPlanShown =
+		isEdit && (account?.displayGroup === "credit" || account?.displayGroup === "loan");
+	const [inDebtPlan, setInDebtPlan] = useState(account?.inDebtPlan ?? true);
 
 	async function onSubmit(event: FormEvent) {
 		event.preventDefault();
@@ -80,6 +88,7 @@ export function AccountDrawer({
 			isHidden: hidden,
 			apyBps: apy.trim() === "" ? null : percentToBps(apy),
 			inCashPlan: isCashPlanShown ? inCashPlan : undefined,
+			inDebtPlan: isDebtPlanShown ? inDebtPlan : undefined,
 		});
 		close();
 	}
@@ -183,6 +192,9 @@ export function AccountDrawer({
 					{isCashPlanShown ? (
 						<CashPlanToggle checked={inCashPlan} onCheckedChange={setInCashPlan} />
 					) : null}
+					{isDebtPlanShown ? (
+						<DebtPlanToggle checked={inDebtPlan} onCheckedChange={setInDebtPlan} />
+					) : null}
 					{isEdit ? (
 						<label className="flex items-center gap-2 text-sm" htmlFor="account-hidden">
 							<input
@@ -246,6 +258,8 @@ export function AccountDrawer({
 					</SheetFooter>
 				</form>
 				{account && account.funds.length > 0 ? <AccountFunds account={account} /> : null}
+				{account?.card ? <CreditSection account={account} card={account.card} /> : null}
+				{account?.displayGroup === "loan" ? <LoanSection account={account} /> : null}
 			</SheetContent>
 		</Sheet>
 	);

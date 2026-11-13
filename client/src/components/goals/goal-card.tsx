@@ -3,6 +3,7 @@ import { GoalStatusBadge } from "@/components/goals/goal-status-badge";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { Amount } from "@/components/ui/amount";
 import { Progress } from "@/components/ui/progress";
+import { monthName } from "@/lib/debt";
 import { formatMoney } from "@/lib/format";
 import { formatPercent } from "@/lib/goals";
 import { monthLabel } from "@/lib/month";
@@ -48,7 +49,7 @@ export function GoalCard({ goal, currency, onOpen }: Props) {
 			{goal.type === "pay_down" ? (
 				<p className="flex justify-between border-t border-border px-4 py-2 text-xs text-muted-foreground">
 					<span>
-						{goal.payoffMonth ? `Payoff ${goal.payoffMonth}` : "Payoff month after the Debt plan"}
+						{goal.payoffMonth ? `Payoff ${monthName(goal.payoffMonth)}` : "Not paid off in 2 years"}
 					</span>
 					<Link
 						to="/forecast?tab=debt"

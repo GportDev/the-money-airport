@@ -21,6 +21,9 @@ export function useUpdateSettings() {
 			void client.invalidateQueries({ queryKey: ["dashboard"] });
 			// Turning copy-forward on can fill the open month.
 			void client.invalidateQueries({ queryKey: ["budgets"] });
+			// Safety buffer, payback day, and strategy move the projection and payoff months.
+			void client.invalidateQueries({ queryKey: ["forecast"] });
+			void client.invalidateQueries({ queryKey: ["goals"] });
 		},
 	});
 }

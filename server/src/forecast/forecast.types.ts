@@ -1,3 +1,5 @@
+import type { BankAccountDto } from "../accounts/accounts.types";
+import type { DebtStrategy } from "../debt/debt-order";
 import type { PlanItemKind, SectionType } from "./projection";
 
 export type OneOffStatus = "expected" | "done" | "cancelled";
@@ -71,7 +73,10 @@ export type ForecastMonthItem = {
 	kind: PlanItemKind;
 	name: string;
 	amount: number;
+	/** forecast_row, One-off, or BankAccount id (card and loan payments). */
 	sourceId: string | null;
+	/** Payback only: what each liability took. */
+	split?: { bankAccountId: string; name: string; amount: number }[];
 };
 
 export type ForecastMonth = {
@@ -110,4 +115,43 @@ export type OneOffInput = {
 
 export type OneOffPatch = Partial<Omit<OneOffInput, "sectionId">> & {
 	status?: OneOffStatus;
+};
+
+export type DebtLiability = {
+	account: BankAccountDto;
+	/** Balance ÷ total debt. */
+	share: number;
+	/** This month, Base cents. */
+	scheduledPayment: number;
+	payback: number;
+	/** Next period, Base cents. */
+	projectedInterest: number;
+	/** `YYYY-MM`, null when not paid off within the range. */
+	payoffMonth: string | null;
+};
+
+export type DebtPlan = {
+	baseCurrency: string;
+	strategy: DebtStrategy;
+	safetyBuffer: number;
+	paybackDay: number | null;
+	totalDebt: number;
+	debtFreeMonth: string | null;
+	projectedInterest12m: number;
+	utilization: number | null;
+	liabilities: DebtLiability[];
+	notInPlan: { account: BankAccountDto }[];
+	series: { month: string; balances: Record<string, number>; payback: number }[];
+};
+
+/** The read-only Debt section of the Year plan: computed per liability, never stored. */
+export type ForecastDebtSection = {
+	type: "debt";
+	rows: {
+		bankAccountId: string;
+		name: string;
+		kind: "card_payment" | "loan_payment";
+		cells: Record<number, { scheduled: number; payback: number; actual: number | null }>;
+	}[];
+	totals: Record<number, number>;
 };

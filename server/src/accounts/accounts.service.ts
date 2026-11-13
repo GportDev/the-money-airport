@@ -1,10 +1,4 @@
-import {
-	BadRequestException,
-	ForbiddenException,
-	Inject,
-	Injectable,
-	NotFoundException,
-} from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, gte, lte } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { DATABASE } from "../db/db.module";
@@ -14,6 +8,9 @@ import { plaidItem } from "../db/schema/plaid-item";
 import { userSettings } from "../db/schema/user-settings";
 import { FxService } from "../fx/fx.service";
 import { fundsByHost, unassignedOf } from "../goals/fund-balances";
+import type { CardSummary, LoanTermsDto } from "../liabilities/liabilities.types";
+import { liabilityDetails } from "../liabilities/liability-details";
+import { type AccountPatchInput, accountPatch } from "./account-patch";
 import {
 	type BankAccountDto,
 	DISPLAY_GROUPS,
@@ -54,6 +51,11 @@ export class AccountsService {
 			);
 
 		const funds = await fundsByHost(this.db, userId);
+		const liabilities = await liabilityDetails(
+			this.db,
+			userId,
+			rows.map((row) => row.account),
+		);
 		const byAccount = new Map<string, { date: string; value: number }[]>();
 		for (const snap of snapshots) {
 			const list = byAccount.get(snap.bankAccountId) ?? [];
@@ -70,6 +72,10 @@ export class AccountsService {
 				row.errorCode,
 				byAccount.get(row.account.id) ?? [],
 				funds.get(row.account.id) ?? [],
+				{
+					card: liabilities.cards.get(row.account.id) ?? null,
+					loan: liabilities.loans.get(row.account.id) ?? null,
+				},
 			),
 		);
 	}
@@ -107,33 +113,11 @@ export class AccountsService {
 		return this.get(userId, row.id);
 	}
 
-	async update(
-		userId: string,
-		id: string,
-		input: {
-			name?: string;
-			currentBalance?: number;
-			creditLimit?: number | null;
-			isHidden?: boolean;
-			apyBps?: number | null;
-			inCashPlan?: boolean;
-		},
-	) {
+	async update(userId: string, id: string, input: AccountPatchInput) {
 		const existing = await this.ownedBankAccount(userId, id);
-		if (input.inCashPlan !== undefined && existing.displayGroup !== "cash") {
-			throw new BadRequestException("Only cash accounts can be in the cash plan");
-		}
 		const [row] = await this.db
 			.update(bankAccount)
-			.set({
-				name: input.name ?? existing.name,
-				currentBalance: input.currentBalance ?? existing.currentBalance,
-				creditLimit: input.creditLimit === undefined ? existing.creditLimit : input.creditLimit,
-				isHidden: input.isHidden ?? existing.isHidden,
-				apyBps: input.apyBps === undefined ? existing.apyBps : input.apyBps,
-				inCashPlan: input.inCashPlan ?? existing.inCashPlan,
-				updatedAt: new Date(),
-			})
+			.set(accountPatch(existing, input))
 			.where(and(eq(bankAccount.id, id), eq(bankAccount.userId, userId)))
 			.returning();
 		if (!row) {
@@ -324,6 +308,7 @@ function toDto(
 	errorCode: string | null,
 	sparkline: { date: string; value: number }[],
 	funds: { goalId: string; name: string; balance: number }[],
+	details: { card: CardSummary | null; loan: LoanTermsDto | null },
 ): BankAccountDto {
 	return {
 		id: account.id,
@@ -344,6 +329,11 @@ function toDto(
 		isHidden: account.isHidden,
 		apyBps: account.apyBps,
 		inCashPlan: isInCashPlan(account),
+		inDebtPlan: account.inDebtPlan,
+		debtPriority: account.debtPriority,
+		aprBps: account.aprBps,
+		card: details.card,
+		loan: details.loan,
 		funds,
 		unassigned: funds.length > 0 ? unassignedOf(account.currentBalance, funds) : null,
 		plaidItemId: account.plaidItemId,

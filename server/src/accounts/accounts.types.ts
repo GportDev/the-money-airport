@@ -1,3 +1,5 @@
+import type { CardSummary, LoanTermsDto } from "../liabilities/liabilities.types";
+
 export const DISPLAY_GROUPS = ["cash", "credit", "investment", "loan", "vehicle", "other"] as const;
 
 export type DisplayGroup = (typeof DISPLAY_GROUPS)[number];
@@ -42,6 +44,14 @@ export type BankAccountDto = {
 	apyBps: number | null;
 	/** Operating cash; only cash BankAccounts can be in it. */
 	inCashPlan: boolean;
+	/** Liabilities only: whether Payback pays it down. */
+	inDebtPlan: boolean;
+	/** Order under the custom debt strategy. */
+	debtPriority: number | null;
+	/** Cards and loans: yearly rate in basis points. */
+	aprBps: number | null;
+	card: CardSummary | null;
+	loan: LoanTermsDto | null;
 	/** Funds hosted in this BankAccount; empty unless it is a Fund host. */
 	funds: { goalId: string; name: string; balance: number }[];
 	/** Host only: balance − sum of its Funds, native. */

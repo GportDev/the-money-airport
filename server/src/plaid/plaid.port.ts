@@ -37,6 +37,28 @@ export type PlaidTransactionsPage = {
 	nextCursor: string;
 };
 
+/** Plaid Liabilities in cents, basis points, and ISO dates. */
+export type PlaidCardLiability = {
+	plaidAccountId: string;
+	aprBps: number | null;
+	lastStatementBalance: number | null;
+	minimumPayment: number | null;
+	lastStatementIssueDate: string | null;
+	nextPaymentDueDate: string | null;
+};
+
+export type PlaidLoanLiability = {
+	plaidAccountId: string;
+	aprBps: number | null;
+	principal: number | null;
+	termMonths: number | null;
+	firstPaymentDate: string | null;
+	nextPaymentDueDate: string | null;
+	scheduledPayment: number | null;
+};
+
+export type PlaidLiabilities = { cards: PlaidCardLiability[]; loans: PlaidLoanLiability[] };
+
 export type PlaidPort = {
 	configured: boolean;
 	createLinkToken: (userId: string, accessToken?: string) => Promise<string>;
@@ -49,6 +71,8 @@ export type PlaidPort = {
 	}>;
 	/** Pulls every page after `cursor` and returns the merged changes plus the cursor to store. */
 	syncTransactions: (accessToken: string, cursor: string | null) => Promise<PlaidTransactionsPage>;
+	/** Card and loan terms from /liabilities/get; empty when the Item has none. */
+	getLiabilities: (accessToken: string) => Promise<PlaidLiabilities>;
 	/** Checks the `Plaid-Verification` JWT against the exact raw request body. */
 	verifyWebhook: (verification: string, rawBody: Buffer) => Promise<boolean>;
 };
