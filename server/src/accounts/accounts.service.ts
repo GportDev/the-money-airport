@@ -1,4 +1,10 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+	BadRequestException,
+	ForbiddenException,
+	Inject,
+	Injectable,
+	NotFoundException,
+} from "@nestjs/common";
 import { and, eq, gte, lte } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { DATABASE } from "../db/db.module";
@@ -14,6 +20,7 @@ import {
 	type DisplayGroup,
 	type GroupSummary,
 	isAssetType,
+	isInCashPlan,
 	type NetWorthRange,
 	type NetWorthResponse,
 } from "./accounts.types";
@@ -109,9 +116,13 @@ export class AccountsService {
 			creditLimit?: number | null;
 			isHidden?: boolean;
 			apyBps?: number | null;
+			inCashPlan?: boolean;
 		},
 	) {
 		const existing = await this.ownedBankAccount(userId, id);
+		if (input.inCashPlan !== undefined && existing.displayGroup !== "cash") {
+			throw new BadRequestException("Only cash accounts can be in the cash plan");
+		}
 		const [row] = await this.db
 			.update(bankAccount)
 			.set({
@@ -120,6 +131,7 @@ export class AccountsService {
 				creditLimit: input.creditLimit === undefined ? existing.creditLimit : input.creditLimit,
 				isHidden: input.isHidden ?? existing.isHidden,
 				apyBps: input.apyBps === undefined ? existing.apyBps : input.apyBps,
+				inCashPlan: input.inCashPlan ?? existing.inCashPlan,
 				updatedAt: new Date(),
 			})
 			.where(and(eq(bankAccount.id, id), eq(bankAccount.userId, userId)))
@@ -331,6 +343,7 @@ function toDto(
 		isoCurrencyCode: account.isoCurrencyCode,
 		isHidden: account.isHidden,
 		apyBps: account.apyBps,
+		inCashPlan: isInCashPlan(account),
 		funds,
 		unassigned: funds.length > 0 ? unassignedOf(account.currentBalance, funds) : null,
 		plaidItemId: account.plaidItemId,

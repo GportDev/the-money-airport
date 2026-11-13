@@ -27,6 +27,8 @@ export type BankAccount = {
 	isoCurrencyCode: string;
 	isHidden: boolean;
 	apyBps: number | null;
+	/** Operating cash: the Forecast plans bills and income through it. */
+	inCashPlan: boolean;
 	funds: FundSummary[];
 	unassigned: number | null;
 	plaidItemId?: string | null;
@@ -145,10 +147,15 @@ export type DashboardWidgetId = (typeof DASHBOARD_WIDGET_IDS)[number];
 
 export type DashboardWidget = { id: DashboardWidgetId; visible: boolean; order: number };
 
+export type DebtStrategy = "avalanche" | "snowball" | "custom";
+
 export type UserSettings = {
 	currency: string;
 	dashboardWidgets: DashboardWidget[];
 	budgetCopyForward: boolean;
+	safetyBuffer: number;
+	paybackDay: number | null;
+	debtStrategy: DebtStrategy;
 };
 
 export type BudgetGroupKey = "fixed" | "flexible" | "non_monthly";
@@ -313,4 +320,83 @@ export type FundEntry = {
 	transactionId: string | null;
 	note: string | null;
 	balanceAfter: number;
+};
+
+export type ForecastSectionType = "revenue" | "savings" | "fixed_expense" | "variable_expense";
+export type OneOffStatus = "expected" | "done" | "cancelled";
+export type ForecastItemKind = "revenue" | "fixed" | "variable" | "savings" | "one_off";
+
+export type OneOff = {
+	id: string;
+	sectionId: string;
+	name: string;
+	date: string;
+	/** Base cents, signed: + inflow, − outflow. */
+	amount: number;
+	bankAccountId: string | null;
+	categoryId: string | null;
+	goalId: string | null;
+	status: OneOffStatus;
+	matchedTransactionId: string | null;
+};
+
+export type ForecastRow = {
+	id: string;
+	sectionId: string;
+	name: string;
+	dayOfMonth: number | null;
+	categoryId: string | null;
+	bankAccountId: string | null;
+	goalId: string | null;
+	sortOrder: number;
+	typicalMonthly: number;
+	sparkline: number[];
+	cells: Record<number, { plan: number; actual: number | null }>;
+};
+
+export type ForecastSection = {
+	id: string;
+	name: string;
+	type: ForecastSectionType;
+	sortOrder: number;
+	rows: ForecastRow[];
+	oneOffs: OneOff[];
+	totals: Record<number, number>;
+};
+
+export type Shortfall = { date: string; short: number };
+
+export type ForecastSummary = {
+	baseCurrency: string;
+	safetyBuffer: number;
+	cashFlow: Record<number, number>;
+	operatingCash: Record<number, number>;
+	lowPoint: Record<number, { date: string; value: number }>;
+	shortfalls: Shortfall[];
+	creditCardTotal: Record<number, number>;
+	savingsTotal: Record<number, number>;
+	fixedExpensesTotal: Record<number, number>;
+	variableExpensesTotal: Record<number, number>;
+	debtPaymentsTotal: Record<number, number>;
+	paybackTotal: Record<number, number>;
+	debtTotal: Record<number, number>;
+	projectedBalanceSeries: { month: number; value: number; projected: boolean }[];
+};
+
+export type ForecastMonthItem = {
+	kind: ForecastItemKind;
+	name: string;
+	amount: number;
+	sourceId: string | null;
+};
+
+export type ForecastMonth = {
+	baseCurrency: string;
+	safetyBuffer: number;
+	openingBalance: number;
+	closingBalance: number;
+	series: { date: string; value: number; projected: boolean }[];
+	lowPoint: { date: string; value: number };
+	shortfalls: Shortfall[];
+	days: { date: string; net: number; balanceAfter: number; items: ForecastMonthItem[] }[];
 };

@@ -8,6 +8,19 @@ export function isAssetType(type: string) {
 	return type !== "credit" && type !== "loan";
 }
 
+/** Operating cash: an explicit toggle on cash BankAccounts, else visible checking accounts. */
+export function isInCashPlan(account: {
+	inCashPlan: boolean | null;
+	displayGroup: string;
+	type: string;
+	isHidden: boolean;
+}) {
+	if (account.displayGroup !== "cash") {
+		return false;
+	}
+	return account.inCashPlan ?? (account.type === "checking" && !account.isHidden);
+}
+
 export type BankAccountDto = {
 	id: string;
 	name: string;
@@ -27,6 +40,8 @@ export type BankAccountDto = {
 	isHidden: boolean;
 	/** Yearly rate in basis points, entered by the User. */
 	apyBps: number | null;
+	/** Operating cash; only cash BankAccounts can be in it. */
+	inCashPlan: boolean;
 	/** Funds hosted in this BankAccount; empty unless it is a Fund host. */
 	funds: { goalId: string; name: string; balance: number }[];
 	/** Host only: balance − sum of its Funds, native. */

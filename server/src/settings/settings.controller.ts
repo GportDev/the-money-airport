@@ -4,6 +4,8 @@ import { CurrentUser } from "../auth/current-user.decorator";
 import { DASHBOARD_WIDGET_IDS } from "./dashboard-widgets";
 import { SettingsService } from "./settings.service";
 
+const MAX_SAFETY_BUFFER = 100_000_000;
+
 const UNOFFICIAL = new Set(["BTC", "ETH", "USDT", "USDC", "XBT", "DOGE", "SOL", "XXX", "XTS"]);
 
 const patchBody = z
@@ -24,6 +26,9 @@ const patchBody = z
 			.max(DASHBOARD_WIDGET_IDS.length)
 			.optional(),
 		budgetCopyForward: z.boolean().optional(),
+		safetyBuffer: z.number().int().min(0).max(MAX_SAFETY_BUFFER).optional(),
+		paybackDay: z.number().int().min(1).max(31).nullable().optional(),
+		debtStrategy: z.enum(["avalanche", "snowball", "custom"]).optional(),
 	})
 	.strict();
 

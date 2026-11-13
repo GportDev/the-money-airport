@@ -7,6 +7,7 @@ import { decryptToken, encryptToken } from "../crypto/token-crypto";
 import { DATABASE } from "../db/db.module";
 import { bankAccount } from "../db/schema/bank-account";
 import { plaidItem } from "../db/schema/plaid-item";
+import { OneOffsService } from "../forecast/one-offs.service";
 import { FundInterestService } from "../goals/fund-interest.service";
 import {
 	type IngestResult,
@@ -32,6 +33,7 @@ export class PlaidService {
 		private readonly accounts: AccountsService,
 		private readonly ingest: TransactionIngestService,
 		private readonly fundInterest: FundInterestService,
+		private readonly oneOffs: OneOffsService,
 	) {}
 
 	async createLinkToken(userId: string, itemId?: string) {
@@ -251,6 +253,7 @@ export class PlaidService {
 		);
 		const result = await this.ingest.apply(item.userId, item.id, page);
 		await this.fundInterest.split(item.userId);
+		await this.oneOffs.matchAfterSync(item.userId);
 		await this.db
 			.update(plaidItem)
 			.set({ cursor: page.nextCursor || cursor, updatedAt: new Date() })
