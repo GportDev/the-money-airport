@@ -215,6 +215,46 @@ export type BudgetMonth = {
 	omittedCurrencies: string[];
 };
 
+export type ReportRange = { dateFrom: string; dateTo: string };
+
+type ReportEnvelope = { baseCurrency: string; omittedCurrencies: string[] };
+
+export type CategoryTotal = {
+	categoryId: string;
+	categoryName: string;
+	color: string;
+	icon: string;
+	total: number;
+};
+
+export type SpendingReport = ReportEnvelope & { categories: CategoryTotal[] };
+
+export type IncomeVsExpensesReport = ReportEnvelope & {
+	months: { month: string; income: number; expenses: number }[];
+};
+
+export type CashFlowTrendReport = ReportEnvelope & { months: { month: string; net: number }[] };
+
+export type BalanceHistoryReport = ReportEnvelope & {
+	accounts: { accountId: string; name: string; isAsset: boolean }[];
+	points: { date: string; accountId: string; balance: number }[];
+};
+
+export type InvestmentRange = "1m" | "3m" | "1y";
+
+export type InvestmentAccount = BankAccount & { value: number | null; change: number };
+
+export type Investments = {
+	range: InvestmentRange;
+	baseCurrency: string;
+	total: number;
+	change: number;
+	changePercent: number;
+	allocation: { accountId: string; name: string; value: number }[];
+	accounts: InvestmentAccount[];
+	omittedCurrencies: string[];
+};
+
 export type GoalType = "save_up" | "pay_down";
 export type GoalFunding = "accounts" | "fund";
 export type FundEntryKind = "deposit" | "withdrawal" | "interest";

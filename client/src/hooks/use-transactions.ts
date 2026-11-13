@@ -38,6 +38,7 @@ function useTransactionMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TRe
 			void client.invalidateQueries({ queryKey: ["cash-flow"] });
 			void client.invalidateQueries({ queryKey: ["dashboard"] });
 			void client.invalidateQueries({ queryKey: ["budgets"] });
+			void client.invalidateQueries({ queryKey: ["reports"] });
 		},
 	});
 }
