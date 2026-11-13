@@ -33,6 +33,8 @@ export const bankAccount = pgTable(
 		isoCurrencyCode: text("iso_currency_code").notNull().default("USD"),
 		isAsset: boolean("is_asset").notNull().default(true),
 		isHidden: boolean("is_hidden").notNull().default(false),
+		// User-entered yearly rate in basis points (Plaid does not provide it).
+		apyBps: integer("apy_bps"),
 		lastSyncedAt: timestamp("last_synced_at"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -105,7 +105,7 @@ interface DashboardPayload {
 | GET | `/accounts/net-worth` | `?range=1m\|3m\|1y\|ytd` | `{ data: NetWorthResponse }` |
 | GET | `/accounts/:id` | — | `{ data: AccountDetail }` |
 | POST | `/accounts` | `{ name, type, displayGroup, currentBalance, creditLimit? }` | `{ data: Account }` | Manual account |
-| PATCH | `/accounts/:id` | `{ name?, currentBalance?, creditLimit?, isHidden?, inCashPlan?, inDebtPlan?, debtPriority?, aprBps?, apyBps?, statementCloseDay?, paymentDueDay?, paymentRule?, fixedPayment? }` | `{ data: Account }` | Card-term fields set here are added to `overriddenFields` |
+| PATCH | `/accounts/:id` | `{ name?, currentBalance?, creditLimit?, isHidden?, apyBps? (0–100000, null clears), inCashPlan?, inDebtPlan?, debtPriority?, aprBps?, apyBps?, statementCloseDay?, paymentDueDay?, paymentRule?, fixedPayment? }` | `{ data: Account }` | Card-term fields set here are added to `overriddenFields` |
 | DELETE | `/accounts/:id` | — | `{ success }` | Manual accounts only |
 | GET | `/accounts/:id/statements` | `?periodEnd?` (default latest) | `{ data: StatementPeriod }` | Credit only. Transactions grouped by Statement period |
 | POST | `/accounts/:id/statements` | `{ periodStart, periodEnd, statementBalance, minimumPayment?, dueDate? }` | `{ data: CardStatement }` | Manual Statement |
@@ -406,12 +406,12 @@ interface RecurringListItem {
 
 | Method | Path | Query/Body | Response |
 |--------|------|-----------|----------|
-| GET | `/goals` | `?type=save_up\|pay_down` | `{ data: { totalCurrent: number; goals: Goal[] } }` |
-| POST | `/goals` | `{ name, type, targetAmount, targetDate?, thumbnailUrl?, funding?, hostBankAccountId? }` | `{ data: Goal }` | `funding: "fund"` requires `hostBankAccountId` (visible asset, not in a Goal association) |
-| PATCH | `/goals/:id` | `{ name?, targetAmount?, targetDate?, thumbnailUrl?, sortOrder? }` | `{ data: Goal }` |
+| GET | `/goals` | `?type=save_up\|pay_down` | `{ data: { totalCurrent: number; baseCurrency: string; goals: Goal[]; hosts: FundHost[] } }` | `hosts` lists every Fund host regardless of `type` |
+| POST | `/goals` | `{ name, type, targetAmount, targetDate?, icon?, color?, funding?, hostBankAccountId? }` | `{ data: Goal }` | `funding: "fund"` requires `hostBankAccountId` (visible asset, not in a Goal association) |
+| PATCH | `/goals/:id` | `{ name?, targetAmount?, targetDate?, icon?, color?, sortOrder? }` | `{ data: Goal }` |
 | PUT | `/goals/:id/accounts` | `{ bankAccountIds: string[] }` | `{ data: Goal }` | Accounts funding only. Save-up: many assets. Pay-down: 0–1 liability. Move if exclusive conflict. Refuse Fund hosts. |
 | GET | `/goals/:id/entries` | `?cursor` | `{ data: FundEntry[]; nextCursor }` | Fund only, newest first |
-| POST | `/goals/:id/entries` | `{ date, amount, kind, transactionId?, note? }` | `{ data: FundEntry }` | `transactionId` must be on the host and not already used |
+| POST | `/goals/:id/entries` | `{ date, amount, kind, note? }` or `{ transactionId, note? }` | `{ data: FundEntry }` | Manual: deposit/interest > 0, withdrawal < 0. From a Transaction: it must be on the host and in no other entry; date, amount, and kind (by sign) come from it |
 | DELETE | `/goals/:id/entries/:entryId` | — | `{ success }` | |
 | DELETE | `/goals/:id` | — | `{ success }` |
 
@@ -421,15 +421,28 @@ interface Goal {
   name: string;
   type: "save_up" | "pay_down";
   funding: "accounts" | "fund";
+  icon: string;
+  color: string;
   thumbnailUrl: string | null;
   targetAmount: number;
   currentAmount: number; // computed
   targetDate: string | null;
   status: "on_track" | "at_risk";
   percentComplete: number;
-  accounts: Account[];               // accounts funding
-  host: { id: string; name: string; unassigned: number } | null; // fund funding
+  sortOrder: number;
+  accounts: { id: string; name: string; mask: string | null; currentBalance: number; isoCurrencyCode: string }[]; // accounts funding, visible only
+  host: { id: string; name: string; isoCurrencyCode: string; unassigned: number } | null; // fund funding
+  fundBalance: number | null;        // fund funding: native host cents
   payoffMonth: string | null;        // pay-down: from the Debt plan
+}
+
+interface FundHost {
+  id: string;
+  name: string;
+  isoCurrencyCode: string;
+  balance: number;                   // native
+  unassigned: number;                // balance − sum(funds), native
+  funds: { goalId: string; name: string; balance: number }[];
 }
 
 interface FundEntry {
@@ -443,7 +456,9 @@ interface FundEntry {
 }
 ```
 
-The Transaction drawer's "Assign to Fund" calls `POST /goals/:id/entries` with `transactionId`.
+The Transaction drawer's "Assign to Fund" calls `POST /goals/:id/entries` with `transactionId`. `GET /transactions/:id` returns `fundEntry: { id, goalId, goalName } | null` for the deposit or withdrawal made from it.
+
+Errors: 400 for invalid bodies, a Fund with no host, `fund` on a pay-down Goal, associating a hidden, wrong-side, or host BankAccount, a second pay-down liability, entries on an accounts Goal, and a Transaction off the host or already used. 404 for another User's Goal, BankAccount, or Transaction. `payoffMonth` stays null until the Debt plan (Phase 10).
 
 ---
 

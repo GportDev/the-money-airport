@@ -5,6 +5,7 @@ export * from "./billing";
 export * from "./budget";
 export * from "./category";
 export * from "./fx-rate";
+export * from "./goal";
 export * from "./plaid-item";
 export * from "./transaction";
 export * from "./user-settings";

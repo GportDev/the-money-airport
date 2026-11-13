@@ -38,6 +38,7 @@ export const transaction = pgTable(
 		pending: boolean("pending").notNull().default(false),
 		plaidCategory: text("plaid_category").array(),
 		plaidPfcPrimary: text("plaid_pfc_primary"),
+		plaidPfcDetailed: text("plaid_pfc_detailed"),
 		notes: text("notes"),
 		tags: text("tags").array().notNull().default([]),
 		// True once the User picks a Category; sync never overwrites it after that.

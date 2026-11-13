@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from "react";
+import { AssignToFund } from "@/components/transactions/assign-to-fund";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
@@ -282,6 +283,7 @@ function EditForm({
 					Save
 				</button>
 			</form>
+			<AssignToFund transaction={transaction} />
 			{transaction.similar.length > 0 ? (
 				<section aria-labelledby="similar-heading" className="flex flex-col gap-2 px-4">
 					<h3 id="similar-heading" className="text-sm font-medium">

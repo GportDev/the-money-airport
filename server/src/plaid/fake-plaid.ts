@@ -36,6 +36,27 @@ const FAKE_ACCOUNTS: PlaidAccountSnapshot[] = [
 	},
 ];
 
+/** A second Item, reached with SAVINGS_PUBLIC_TOKEN, for Fund interest tests. */
+const SAVINGS_PUBLIC_TOKEN = "public-sandbox-fake-savings";
+const SAVINGS_ACCESS_TOKEN = "access-sandbox-fake-savings";
+
+const FAKE_SAVINGS_ACCOUNTS: PlaidAccountSnapshot[] = [
+	{
+		plaidAccountId: "fake-savings",
+		name: "Plaid Saving",
+		officialName: "Plaid Silver Standard 0.1% Interest Saving",
+		type: "savings",
+		subtype: "savings",
+		mask: "1111",
+		currentBalance: 1000000,
+		availableBalance: 1000000,
+		creditLimit: null,
+		isoCurrencyCode: "USD",
+		displayGroup: "cash",
+		isAsset: true,
+	},
+];
+
 function daysAgo(days: number) {
 	const date = new Date();
 	date.setUTCDate(date.getUTCDate() - days);
@@ -192,6 +213,30 @@ function fakePage(cursor: string | null): PlaidTransactionsPage {
 	return { added: [], modified: [], removed: [], nextCursor: cursor };
 }
 
+function fakeSavingsPage(cursor: string | null): PlaidTransactionsPage {
+	if (cursor !== null) {
+		return { added: [], modified: [], removed: [], nextCursor: cursor };
+	}
+	return {
+		added: [
+			fakeTransaction(
+				{
+					plaidTransactionId: "fake-tx-savings-interest",
+					plaidAccountId: "fake-savings",
+					name: "Interest paid",
+					amount: 3001,
+					pfcPrimary: "INCOME",
+					pfcDetailed: "INCOME_INTEREST_EARNED",
+				},
+				0,
+			),
+		],
+		modified: [],
+		removed: [],
+		nextCursor: "fake-savings-cursor-1",
+	};
+}
+
 export class FakePlaid implements PlaidPort {
 	configured = true;
 
@@ -199,11 +244,22 @@ export class FakePlaid implements PlaidPort {
 		return "link-sandbox-fake";
 	}
 
-	async exchangePublicToken(_publicToken: string) {
+	async exchangePublicToken(publicToken: string) {
+		if (publicToken === SAVINGS_PUBLIC_TOKEN) {
+			return { accessToken: SAVINGS_ACCESS_TOKEN, itemId: "item-fake-savings" };
+		}
 		return { accessToken: "access-sandbox-fake", itemId: "item-fake-1" };
 	}
 
-	async getAccounts(_accessToken: string) {
+	async getAccounts(accessToken: string) {
+		if (accessToken === SAVINGS_ACCESS_TOKEN) {
+			return {
+				institutionId: "ins_3",
+				institutionName: "Tattersall Savings",
+				institutionLogo: null,
+				accounts: FAKE_SAVINGS_ACCOUNTS,
+			};
+		}
 		return {
 			institutionId: "ins_1",
 			institutionName: "First Platypus Bank",
@@ -212,8 +268,8 @@ export class FakePlaid implements PlaidPort {
 		};
 	}
 
-	async syncTransactions(_accessToken: string, cursor: string | null) {
-		return fakePage(cursor);
+	async syncTransactions(accessToken: string, cursor: string | null) {
+		return accessToken === SAVINGS_ACCESS_TOKEN ? fakeSavingsPage(cursor) : fakePage(cursor);
 	}
 
 	async verifyWebhook(verification: string, _rawBody: Buffer) {

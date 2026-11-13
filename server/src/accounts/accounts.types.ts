@@ -25,6 +25,12 @@ export type BankAccountDto = {
 	source: "plaid" | "manual";
 	isoCurrencyCode: string;
 	isHidden: boolean;
+	/** Yearly rate in basis points, entered by the User. */
+	apyBps: number | null;
+	/** Funds hosted in this BankAccount; empty unless it is a Fund host. */
+	funds: { goalId: string; name: string; balance: number }[];
+	/** Host only: balance − sum of its Funds, native. */
+	unassigned: number | null;
 	plaidItemId: string | null;
 	plaidItemStatus: string | null;
 	errorCode: string | null;

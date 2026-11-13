@@ -27,6 +27,7 @@ export function updateAccount(
 		currentBalance?: number;
 		creditLimit?: number | null;
 		isHidden?: boolean;
+		apyBps?: number | null;
 	},
 ) {
 	return api<BankAccount>(`/accounts/${id}`, { method: "PATCH", body: JSON.stringify(body) });

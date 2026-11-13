@@ -9,6 +9,7 @@ import { category } from "../db/schema/category";
 import { plaidItem } from "../db/schema/plaid-item";
 import { transaction } from "../db/schema/transaction";
 import { userSettings } from "../db/schema/user-settings";
+import { FundEntriesService } from "../goals/fund-entries.service";
 import type {
 	TransactionDetail,
 	TransactionFilters,
@@ -23,6 +24,7 @@ export class TransactionsService {
 	constructor(
 		@Inject(DATABASE) private readonly db: PostgresJsDatabase,
 		private readonly categories: CategoriesService,
+		private readonly fundEntries: FundEntriesService,
 	) {}
 
 	async list(userId: string, filters: TransactionFilters) {
@@ -110,6 +112,7 @@ export class TransactionsService {
 			...toListItem(row),
 			notes: row.tx.notes,
 			plaidPfcPrimary: row.tx.plaidPfcPrimary,
+			fundEntry: await this.fundEntries.forTransaction(userId, id),
 			similar: similar.map(toListItem),
 		};
 	}
