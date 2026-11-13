@@ -1,99 +1,62 @@
-import { type FormEvent, useState } from "react";
-import { authClient } from "@/auth/auth-client";
+import { useState } from "react";
+import { Link } from "react-router";
+import { downloadTransactionsCsv } from "@/api/export";
+import { CsvDownloadButton } from "@/components/csv-download-button";
+import { CustomizeDrawer } from "@/components/dashboard/customize-drawer";
+import { CategoryManagerDrawer } from "@/components/drawers/category-manager-drawer";
 import { PageHeader } from "@/components/layout/page-header";
-import { PlanSettingsCard } from "@/components/settings/plan-settings-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const SETTINGS_SECTIONS = [
-	"Accounts",
-	"Categories",
-	"Dashboard",
-	"Budget",
-	"Currency",
-	"Data",
-] as const;
+import { PreferenceSections } from "@/components/settings/preference-sections";
+import { ProfileSection } from "@/components/settings/profile-section";
+import { SettingsSection } from "@/components/settings/settings-section";
+import { useSettings } from "@/hooks/use-settings";
 
 export function SettingsPage() {
-	const [currentPassword, setCurrentPassword] = useState("");
-	const [newPassword, setNewPassword] = useState("");
-	const [message, setMessage] = useState<string | null>(null);
-	const [error, setError] = useState<string | null>(null);
-
-	async function onChangePassword(event: FormEvent) {
-		event.preventDefault();
-		setError(null);
-		setMessage(null);
-		const result = await authClient.changePassword({
-			currentPassword,
-			newPassword,
-		});
-		if (result.error) {
-			setError(result.error.message ?? "Could not change password");
-			return;
-		}
-		setCurrentPassword("");
-		setNewPassword("");
-		setMessage("Password changed.");
-	}
+	const settings = useSettings();
+	const [isCategoriesOpen, setCategoriesOpen] = useState(false);
+	const [isCustomizing, setCustomizing] = useState(false);
 
 	return (
 		<>
 			<PageHeader title="Settings" />
-			<div className="flex flex-col gap-4">
-				<Card>
-					<CardHeader>
-						<CardTitle>Profile</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<form className="flex max-w-sm flex-col gap-3" onSubmit={onChangePassword}>
-							<label className="flex flex-col gap-1 text-sm" htmlFor="current-password">
-								Current password
-								<input
-									id="current-password"
-									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
-									type="password"
-									autoComplete="current-password"
-									value={currentPassword}
-									onChange={(event) => setCurrentPassword(event.target.value)}
-									required
-								/>
-							</label>
-							<label className="flex flex-col gap-1 text-sm" htmlFor="new-password">
-								New password
-								<input
-									id="new-password"
-									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
-									type="password"
-									autoComplete="new-password"
-									value={newPassword}
-									onChange={(event) => setNewPassword(event.target.value)}
-									required
-								/>
-							</label>
-							{error ? (
-								<p className="text-sm text-negative" role="alert">
-									{error}
-								</p>
-							) : null}
-							{message ? <p>{message}</p> : null}
-							<button
-								className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-								type="submit"
-							>
-								Change password
-							</button>
-						</form>
-					</CardContent>
-				</Card>
-				{SETTINGS_SECTIONS.map((section) => (
-					<Card key={section}>
-						<CardHeader>
-							<CardTitle>{section}</CardTitle>
-						</CardHeader>
-					</Card>
-				))}
-				<PlanSettingsCard />
+			<div className="flex max-w-3xl flex-col gap-4">
+				<ProfileSection />
+				<SettingsSection
+					title="Accounts"
+					description="Connect, refresh, and disconnect banks on the Accounts page."
+				>
+					<Link
+						to="/accounts"
+						className="self-start rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+					>
+						Manage accounts
+					</Link>
+				</SettingsSection>
+				<SettingsSection
+					title="Categories"
+					description="Add, rename, recolor, or delete transaction categories."
+				>
+					<button
+						type="button"
+						className="self-start rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+						onClick={() => setCategoriesOpen(true)}
+					>
+						Manage categories
+					</button>
+				</SettingsSection>
+				<PreferenceSections onCustomizeWidgets={() => setCustomizing(true)} />
+				<SettingsSection title="Data" description="Download every transaction as a CSV file.">
+					<div className="self-start">
+						<CsvDownloadButton label="Export transactions CSV" download={downloadTransactionsCsv} />
+					</div>
+				</SettingsSection>
 			</div>
+			{isCategoriesOpen ? <CategoryManagerDrawer onClose={() => setCategoriesOpen(false)} /> : null}
+			{isCustomizing && settings.data ? (
+				<CustomizeDrawer
+					widgets={settings.data.dashboardWidgets}
+					onClose={() => setCustomizing(false)}
+				/>
+			) : null}
 		</>
 	);
 }

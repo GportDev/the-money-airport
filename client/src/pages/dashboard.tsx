@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { CustomizeDrawer } from "@/components/dashboard/customize-drawer";
+import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
 import {
 	BudgetWidget,
 	NetWorthWidget,
@@ -13,6 +14,8 @@ import {
 } from "@/components/dashboard/widgets";
 import { TransactionDrawer } from "@/components/drawers/transaction-drawer";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { QueryError } from "@/components/ui/query-error";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useDeleteTransaction } from "@/hooks/use-transactions";
@@ -53,13 +56,15 @@ export function DashboardPage() {
 			</p>
 
 			{dashboard.isError ? (
-				<p role="alert" className="text-sm text-negative">
-					Could not load the dashboard.
-				</p>
+				<QueryError
+					message="Could not load the dashboard."
+					isRetrying={dashboard.isFetching}
+					onRetry={() => void dashboard.refetch()}
+				/>
 			) : !data ? (
-				<p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+				<DashboardSkeleton />
 			) : !data.hasAccounts ? (
-				<EmptyState />
+				<NoAccounts />
 			) : (
 				<Widgets data={data} onRangeChange={setRange} onOpenTransaction={setDrawer} />
 			)}
@@ -160,27 +165,17 @@ function Widgets({
 	);
 }
 
-function EmptyState() {
+function NoAccounts() {
 	return (
-		<section
-			aria-labelledby="dashboard-empty"
-			className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card px-6 py-12 text-center"
+		<EmptyState
+			icon={Landmark}
+			title="Connect an account"
+			description="Link a bank to see your budget, spending, and net worth here."
+			action={<ConnectPlaidButton onDone={() => undefined} label="Connect an account" />}
 		>
-			<span className="flex size-12 items-center justify-center rounded-full bg-muted">
-				<Landmark aria-hidden className="size-6 text-muted-foreground" />
-			</span>
-			<div>
-				<h2 id="dashboard-empty" className="font-medium">
-					Connect an account
-				</h2>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Link a bank to see your budget, spending, and net worth here.
-				</p>
-			</div>
-			<ConnectPlaidButton onDone={() => undefined} label="Connect an account" />
 			<Link to="/accounts" className="text-sm underline hover:text-primary">
 				Or add a manual account
 			</Link>
-		</section>
+		</EmptyState>
 	);
 }

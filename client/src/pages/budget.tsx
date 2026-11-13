@@ -4,14 +4,18 @@ import { toast } from "sonner";
 import { BudgetColumnLabels } from "@/components/budget/budget-column-labels";
 import { BudgetGroup } from "@/components/budget/budget-group";
 import { BudgetSettingsMenu } from "@/components/budget/budget-settings-menu";
+import { BudgetSkeleton } from "@/components/budget/budget-skeleton";
+import { NoBudgetPlans } from "@/components/budget/no-budget-plans";
 import { UnbudgetedList } from "@/components/budget/unbudgeted-list";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { BudgetCategoryDrawer } from "@/components/drawers/budget-category-drawer";
 import { MonthNavigator } from "@/components/layout/month-navigator";
 import { PageHeader } from "@/components/layout/page-header";
+import { QueryError } from "@/components/ui/query-error";
 import { useBudgetMonth, useCopyPreviousBudget } from "@/hooks/use-budgets";
 import { useUpdateSettings } from "@/hooks/use-dashboard";
 import { useSettings } from "@/hooks/use-settings";
+import { hasNoPlans } from "@/lib/budget";
 import { monthLabel, monthStart, parseMonth, shiftMonth } from "@/lib/month";
 import type { BudgetCategoryRow } from "@/types";
 
@@ -82,9 +86,12 @@ export function BudgetPage() {
 			</PageHeader>
 
 			{budget.isError ? (
-				<p role="alert" className="mb-4 text-sm text-negative">
-					Could not load the budget.
-				</p>
+				<QueryError
+					className="mb-4"
+					message="Could not load the budget."
+					isRetrying={budget.isFetching}
+					onRetry={() => void budget.refetch()}
+				/>
 			) : null}
 			{data && data.omittedCurrencies.length > 0 ? (
 				<output className="mb-4 block rounded-md border border-border bg-muted px-3 py-2 text-sm">
@@ -95,6 +102,13 @@ export function BudgetPage() {
 
 			{data ? (
 				<div className="flex flex-col gap-4">
+					{hasNoPlans(data) ? (
+						<NoBudgetPlans
+							monthName={monthLabel(year, month, "month")}
+							previousName={previousName}
+							onCopyPrevious={() => setCopyConfirmOpen(true)}
+						/>
+					) : null}
 					<BudgetColumnLabels />
 					{data.groups
 						.filter((group) => group.key === "income")
@@ -134,7 +148,7 @@ export function BudgetPage() {
 					) : null}
 				</div>
 			) : budget.isPending ? (
-				<p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+				<BudgetSkeleton />
 			) : null}
 
 			{openRow ? (

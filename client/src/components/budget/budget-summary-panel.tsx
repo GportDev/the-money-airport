@@ -2,6 +2,7 @@ import { Tabs } from "radix-ui";
 import { useSearchParams } from "react-router";
 import { BudgetBar } from "@/components/budget/budget-bar";
 import { Amount } from "@/components/ui/amount";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { useBudgetMonth } from "@/hooks/use-budgets";
 import { BUDGET_GROUP_LABELS, isOverBudget } from "@/lib/budget";
 import { cn } from "@/lib/cn";
@@ -28,7 +29,13 @@ export function BudgetSummaryPanel() {
 		);
 	}
 	if (!budget.data) {
-		return <p className="text-sm text-muted-foreground">Loading…</p>;
+		return (
+			<SkeletonGroup label="Loading summary" className="flex flex-col gap-3">
+				<Skeleton className="h-16 w-full" />
+				<Skeleton className="h-4 w-2/3" />
+				<Skeleton className="h-4 w-1/2" />
+			</SkeletonGroup>
+		);
 	}
 	return <PanelBody data={budget.data} />;
 }

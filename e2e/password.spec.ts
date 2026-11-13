@@ -4,6 +4,7 @@ import { logOut, signUp } from "./helpers/auth";
 test("forgot password shows a confirmation after submit", async ({ page }) => {
 	await page.goto("/login");
 	await page.getByRole("link", { name: "Forgot password" }).click();
+	await expect(page.getByRole("heading", { name: "Forgot password" })).toBeVisible();
 	await page.getByLabel("Email").fill("anyone@example.com");
 	await page.getByRole("button", { name: "Send reset link" }).click();
 	await expect(

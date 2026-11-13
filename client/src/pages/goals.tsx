@@ -5,7 +5,9 @@ import { EditAccountsDrawer } from "@/components/drawers/edit-accounts-drawer";
 import { FundDrawer } from "@/components/drawers/fund-drawer";
 import { GoalDrawer } from "@/components/drawers/goal-drawer";
 import { GoalList } from "@/components/goals/goal-list";
+import { GoalsSkeleton } from "@/components/goals/goals-skeleton";
 import { PageHeader } from "@/components/layout/page-header";
+import { QueryError } from "@/components/ui/query-error";
 import { useGoals } from "@/hooks/use-goals";
 import {
 	GOAL_EDIT_ACCOUNTS_PARAM,
@@ -89,9 +91,11 @@ export function GoalsPage() {
 				</Tabs.List>
 				<Tabs.Content value={tab}>
 					{goals.isError ? (
-						<p role="alert" className="text-sm text-negative">
-							Could not load goals.
-						</p>
+						<QueryError
+							message="Could not load goals."
+							isRetrying={goals.isFetching}
+							onRetry={() => void goals.refetch()}
+						/>
 					) : data ? (
 						<GoalList
 							type={tab}
@@ -102,7 +106,7 @@ export function GoalsPage() {
 							onAdd={() => setGoalDrawer("new")}
 						/>
 					) : (
-						<p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+						<GoalsSkeleton />
 					)}
 				</Tabs.Content>
 			</Tabs.Root>

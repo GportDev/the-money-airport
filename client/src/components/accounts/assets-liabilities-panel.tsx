@@ -1,4 +1,6 @@
 import { useSearchParams } from "react-router";
+import { downloadAccountsCsv } from "@/api/export";
+import { CsvDownloadButton } from "@/components/csv-download-button";
 import { Amount } from "@/components/ui/amount";
 import { useNetWorth } from "@/hooks/use-accounts";
 import { formatMoney } from "@/lib/format";
@@ -60,6 +62,7 @@ export function AssetsLiabilitiesPanel() {
 				</p>
 				<StackedBars rows={liabilities} total={liabilityTotal} unit={unit} currency={currency} />
 			</section>
+			<CsvDownloadButton label="Download CSV" download={downloadAccountsCsv} />
 		</div>
 	);
 }

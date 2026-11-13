@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router";
 import { GuestOnly } from "@/auth/guest-only";
 import { RequireSession } from "@/auth/require-session";
 import { PageLayout } from "@/components/layout/page-layout";
+import { RouteError } from "@/components/route-error";
 import { AccountsPage } from "@/pages/accounts";
 import { BudgetPage } from "@/pages/budget";
 import { CashFlowPage } from "@/pages/cash-flow";
@@ -20,31 +21,45 @@ import { TransactionsPage } from "@/pages/transactions";
 
 export const router = createBrowserRouter([
 	{
-		element: <GuestOnly />,
-		children: [
-			{ path: "/login", element: <LoginPage /> },
-			{ path: "/signup", element: <SignupPage /> },
-			{ path: "/forgot-password", element: <ForgotPasswordPage /> },
-		],
-	},
-	{
-		element: <RequireSession />,
+		errorElement: (
+			<div className="min-h-svh bg-background p-6 font-sans">
+				<RouteError />
+			</div>
+		),
 		children: [
 			{
-				element: <PageLayout />,
+				element: <GuestOnly />,
 				children: [
-					{ path: "/", element: <DashboardPage /> },
-					{ path: "/cash-flow", element: <CashFlowPage /> },
-					{ path: "/accounts", element: <AccountsPage /> },
-					{ path: "/transactions", element: <TransactionsPage /> },
-					{ path: "/reports", element: <ReportsPage /> },
-					{ path: "/budget", element: <BudgetPage /> },
-					{ path: "/recurring", element: <RecurringPage /> },
-					{ path: "/goals", element: <GoalsPage /> },
-					{ path: "/investments", element: <InvestmentsPage /> },
-					{ path: "/forecast", element: <ForecastPage /> },
-					{ path: "/settings", element: <SettingsPage /> },
-					{ path: "*", element: <NotFoundPage /> },
+					{ path: "/login", element: <LoginPage /> },
+					{ path: "/signup", element: <SignupPage /> },
+					{ path: "/forgot-password", element: <ForgotPasswordPage /> },
+				],
+			},
+			{
+				element: <RequireSession />,
+				children: [
+					{
+						element: <PageLayout />,
+						children: [
+							{
+								errorElement: <RouteError />,
+								children: [
+									{ path: "/", element: <DashboardPage /> },
+									{ path: "/cash-flow", element: <CashFlowPage /> },
+									{ path: "/accounts", element: <AccountsPage /> },
+									{ path: "/transactions", element: <TransactionsPage /> },
+									{ path: "/reports", element: <ReportsPage /> },
+									{ path: "/budget", element: <BudgetPage /> },
+									{ path: "/recurring", element: <RecurringPage /> },
+									{ path: "/goals", element: <GoalsPage /> },
+									{ path: "/investments", element: <InvestmentsPage /> },
+									{ path: "/forecast", element: <ForecastPage /> },
+									{ path: "/settings", element: <SettingsPage /> },
+									{ path: "*", element: <NotFoundPage /> },
+								],
+							},
+						],
+					},
 				],
 			},
 		],

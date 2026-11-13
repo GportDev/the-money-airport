@@ -1,4 +1,4 @@
-import type { BudgetMonthGroupKey } from "@/types";
+import type { BudgetMonth, BudgetMonthGroupKey } from "@/types";
 
 export const BUDGET_GROUP_LABELS: Record<BudgetMonthGroupKey, string> = {
 	income: "Income",
@@ -13,4 +13,8 @@ export function isOverBudget(group: BudgetMonthGroupKey, planned: number, actual
 		return false;
 	}
 	return actual > planned;
+}
+
+export function hasNoPlans(month: BudgetMonth) {
+	return month.groups.every((group) => group.planned === 0);
 }

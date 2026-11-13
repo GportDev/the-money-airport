@@ -1,8 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
+import { toast } from "sonner";
 import { disconnectItem, syncAll } from "@/api/plaid";
 import { AccountGroups } from "@/components/accounts/account-groups";
+import { AccountsState } from "@/components/accounts/accounts-state";
 import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
 import { NetWorthHero } from "@/components/accounts/net-worth-hero";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -69,7 +71,14 @@ export function AccountsPage() {
 					className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 					type="button"
 					onClick={() => {
-						void syncAll().then(() => invalidateLedger(queryClient));
+						toast.promise(
+							syncAll().then(() => invalidateLedger(queryClient)),
+							{
+								loading: "Refreshing accounts…",
+								success: "Accounts refreshed",
+								error: "Could not refresh accounts",
+							},
+						);
 					}}
 				>
 					Refresh all
@@ -82,26 +91,28 @@ export function AccountsPage() {
 					Add account
 				</button>
 			</PageHeader>
-			<div className="flex flex-col gap-6">
-				{omitted ? (
-					<output className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30">
-						Unofficial currencies are omitted from net worth.
-					</output>
-				) : null}
-				<NetWorthHero
-					netWorth={netWorth.data}
-					range={range}
-					onRangeChange={(next) => {
-						patchParams((params) => params.set("range", next));
-					}}
-				/>
-				<AccountGroups
-					accounts={rows}
-					groups={netWorth.data?.groups ?? []}
-					baseCurrency={netWorth.data?.baseCurrency ?? "USD"}
-					onOpen={(account) => setDrawer(account)}
-				/>
-			</div>
+			<AccountsState accounts={accounts} onAdd={() => setChooser(true)}>
+				<div className="flex flex-col gap-6">
+					{omitted ? (
+						<output className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30">
+							Unofficial currencies are omitted from net worth.
+						</output>
+					) : null}
+					<NetWorthHero
+						netWorth={netWorth.data}
+						range={range}
+						onRangeChange={(next) => {
+							patchParams((params) => params.set("range", next));
+						}}
+					/>
+					<AccountGroups
+						accounts={rows}
+						groups={netWorth.data?.groups ?? []}
+						baseCurrency={netWorth.data?.baseCurrency ?? "USD"}
+						onOpen={(account) => setDrawer(account)}
+					/>
+				</div>
+			</AccountsState>
 			{filtersOpen ? (
 				<div
 					role="dialog"
@@ -228,7 +239,11 @@ export function AccountsPage() {
 					title={`Delete ${pendingDelete.name}?`}
 					onCancel={() => setPendingDelete(null)}
 					onConfirm={() => {
-						void remove.mutateAsync(pendingDelete.id).then(() => setPendingDelete(null));
+						toast.promise(remove.mutateAsync(pendingDelete.id), {
+							success: "Account deleted",
+							error: "Could not delete the account",
+						});
+						setPendingDelete(null);
 					}}
 				/>
 			) : null}
@@ -242,10 +257,13 @@ export function AccountsPage() {
 							setPendingDisconnect(null);
 							return;
 						}
-						void disconnectItem(pendingDisconnect.plaidItemId).then(() => {
-							void invalidateLedger(queryClient);
-							setPendingDisconnect(null);
-						});
+						toast.promise(
+							disconnectItem(pendingDisconnect.plaidItemId).then(() =>
+								invalidateLedger(queryClient),
+							),
+							{ success: "Disconnected. History is kept.", error: "Could not disconnect" },
+						);
+						setPendingDisconnect(null);
 					}}
 				/>
 			) : null}

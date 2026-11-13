@@ -1,9 +1,13 @@
+import { TrendingUp } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { AllocationChart } from "@/components/investments/allocation-chart";
 import { InvestmentAccountList } from "@/components/investments/investment-account-list";
 import { InvestmentRangeToggle } from "@/components/investments/investment-range-toggle";
+import { InvestmentsSkeleton } from "@/components/investments/investments-skeleton";
 import { PortfolioSummary } from "@/components/investments/portfolio-summary";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { QueryError } from "@/components/ui/query-error";
 import { useInvestments } from "@/hooks/use-investments";
 import type { InvestmentRange } from "@/types";
 
@@ -34,24 +38,27 @@ export function InvestmentsPage() {
 				) : null}
 			</PageHeader>
 			{investments.isError ? (
-				<p role="alert" className="text-sm text-negative">
-					Could not load investments.
-				</p>
+				<QueryError
+					message="Could not load investments."
+					isRetrying={investments.isFetching}
+					onRetry={() => void investments.refetch()}
+				/>
 			) : !data ? (
-				<p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+				<InvestmentsSkeleton />
 			) : data.accounts.length === 0 ? (
-				<div className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card px-6 py-12 text-center">
-					<p className="font-medium">No investment accounts yet.</p>
-					<p className="text-sm text-muted-foreground">
-						Connect a brokerage or retirement account, or add one by hand, to see it here.
-					</p>
-					<Link
-						to="/accounts"
-						className="mt-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-					>
-						Go to Accounts
-					</Link>
-				</div>
+				<EmptyState
+					icon={TrendingUp}
+					title="No investment accounts yet."
+					description="Connect a brokerage or retirement account, or add one by hand, to see it here."
+					action={
+						<Link
+							to="/accounts"
+							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
+						>
+							Go to Accounts
+						</Link>
+					}
+				/>
 			) : (
 				<div className="flex flex-col gap-4">
 					{data.omittedCurrencies.length > 0 ? (

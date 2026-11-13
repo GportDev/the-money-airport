@@ -6,6 +6,9 @@ import { BulkCategorizeDrawer } from "@/components/drawers/bulk-categorize-drawe
 import { CategoryManagerDrawer } from "@/components/drawers/category-manager-drawer";
 import { TransactionDrawer } from "@/components/drawers/transaction-drawer";
 import { PageHeader } from "@/components/layout/page-header";
+import { FeedState } from "@/components/transactions/feed-state";
+import { NoMatchingTransactions } from "@/components/transactions/no-matching-transactions";
+import { NoTransactions } from "@/components/transactions/no-transactions";
 import { type FeedColumns, TransactionFeed } from "@/components/transactions/transaction-feed";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
@@ -19,6 +22,8 @@ const TABS = [
 	{ key: "receipts", label: "Receipts" },
 	{ key: "retail", label: "Retail Sync" },
 ] as const;
+
+const FILTER_PARAMS = ["search", "account", "category", "pending", "min", "max", "from", "to"];
 
 const buttonClass =
 	"rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5";
@@ -92,6 +97,13 @@ export function TransactionsPage() {
 		(filters.pending !== undefined ? 1 : 0) +
 		(filters.amountMin !== undefined || filters.amountMax !== undefined ? 1 : 0) +
 		(filters.dateFrom || filters.dateTo ? 1 : 0);
+
+	function clearFilters() {
+		setSearchInput("");
+		patchParams((params) => {
+			for (const key of FILTER_PARAMS) params.delete(key);
+		});
+	}
 
 	function stopSelecting() {
 		setSelecting(false);
@@ -177,13 +189,21 @@ export function TransactionsPage() {
 							</button>
 						)}
 					</div>
-					{feed.isPending ? (
-						<p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
-					) : feed.isError ? (
-						<p role="alert" className="py-10 text-center text-sm text-negative">
-							Could not load transactions.
-						</p>
-					) : (
+					<FeedState
+						feed={feed}
+						isEmpty={items.length === 0}
+						empty={
+							activeFilterCount > 0 || filters.search ? (
+								<NoMatchingTransactions onClear={clearFilters} />
+							) : (
+								<NoTransactions
+									title="No transactions yet."
+									description="Connect an account or add one by hand."
+									onAdd={() => setDrawer("add")}
+								/>
+							)
+						}
+					>
 						<TransactionFeed
 							items={items}
 							hasNextPage={feed.hasNextPage}
@@ -201,13 +221,8 @@ export function TransactionsPage() {
 									return next;
 								})
 							}
-							emptyMessage={
-								activeFilterCount > 0 || filters.search
-									? "No transactions match these filters."
-									: "No transactions yet. Connect an account or add one."
-							}
 						/>
-					)}
+					</FeedState>
 				</>
 			) : (
 				<p className="py-10 text-center text-sm text-muted-foreground">

@@ -23,6 +23,7 @@ export function IncomeExpensesCard({ range, onSelectMonth }: Props) {
 	};
 	return (
 		<ReportCard
+			onRetry={() => void report.refetch()}
 			title="Income vs expenses"
 			status={reportStatus(report, (data) =>
 				data.months.every((row) => row.income === 0 && row.expenses === 0),

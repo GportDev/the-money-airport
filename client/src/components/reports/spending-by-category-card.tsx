@@ -17,6 +17,7 @@ export function SpendingByCategoryCard({ range, onSelect }: Props) {
 	const currency = data?.baseCurrency ?? "USD";
 	return (
 		<ReportCard
+			onRetry={() => void spending.refetch()}
 			title="Spending by category"
 			status={reportStatus(spending, (report) => report.categories.length === 0)}
 			omittedCurrencies={spending.data?.omittedCurrencies}

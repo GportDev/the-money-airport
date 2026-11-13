@@ -44,6 +44,7 @@ export function BalanceHistoryCard({ range }: { range: ReportRange }) {
 	const names = new Map(accounts.map((row) => [row.accountId, row.name]));
 	return (
 		<ReportCard
+			onRetry={() => void history.refetch()}
 			title="Account balances over time"
 			status={reportStatus(history, (data) => data.points.length === 0)}
 			omittedCurrencies={history.data?.omittedCurrencies}

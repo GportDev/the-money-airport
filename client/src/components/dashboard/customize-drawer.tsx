@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { WIDGET_LABELS } from "@/components/dashboard/widgets";
 import {
 	Sheet,
@@ -43,6 +44,7 @@ export function CustomizeDrawer({
 			await update.mutateAsync({
 				dashboardWidgets: draft.map((widget, order) => ({ ...widget, order })),
 			});
+			toast.success("Dashboard updated");
 			close();
 		} catch {
 			setError("Could not save. Try again.");

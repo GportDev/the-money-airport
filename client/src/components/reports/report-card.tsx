@@ -1,4 +1,6 @@
 import { type ReactNode, useId } from "react";
+import { QueryError } from "@/components/ui/query-error";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { cn } from "@/lib/cn";
 import type { ReportStatus } from "@/lib/report-status";
 
@@ -8,6 +10,7 @@ type Props = {
 	emptyMessage: string;
 	/** Currencies left out of the totals for want of an FX rate. */
 	omittedCurrencies?: string[];
+	onRetry: () => void;
 	className?: string;
 	children: ReactNode;
 };
@@ -17,6 +20,7 @@ export function ReportCard({
 	status,
 	emptyMessage,
 	omittedCurrencies = [],
+	onRetry,
 	className,
 	children,
 }: Props) {
@@ -39,13 +43,13 @@ export function ReportCard({
 					) : null}
 				</>
 			) : status === "error" ? (
-				<p role="alert" className="py-10 text-center text-sm text-negative">
-					Could not load this report.
-				</p>
+				<QueryError message="Could not load this report." onRetry={onRetry} />
+			) : status === "loading" ? (
+				<SkeletonGroup label={`Loading ${title}`}>
+					<Skeleton className="h-48 w-full" />
+				</SkeletonGroup>
 			) : (
-				<p className="py-10 text-center text-sm text-muted-foreground">
-					{status === "loading" ? "Loading…" : emptyMessage}
-				</p>
+				<p className="py-10 text-center text-sm text-muted-foreground">{emptyMessage}</p>
 			)}
 		</section>
 	);

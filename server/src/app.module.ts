@@ -9,6 +9,7 @@ import { CashFlowModule } from "./cash-flow/cash-flow.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { DbModule } from "./db/db.module";
+import { ExportModule } from "./export/export.module";
 import { ForecastModule } from "./forecast/forecast.module";
 import { FxModule } from "./fx/fx.module";
 import { GoalsModule } from "./goals/goals.module";
@@ -44,6 +45,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		InvestmentsModule,
 		ForecastModule,
 		LiabilitiesModule,
+		ExportModule,
 	],
 })
 export class AppModule {}

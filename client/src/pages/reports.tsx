@@ -7,8 +7,10 @@ import { BalanceHistoryCard } from "@/components/reports/balance-history-card";
 import { IncomeExpensesCard } from "@/components/reports/income-expenses-card";
 import { NetCashFlowCard } from "@/components/reports/net-cash-flow-card";
 import { ReportRangePicker } from "@/components/reports/report-range-picker";
+import { ReportsState } from "@/components/reports/reports-state";
 import { SpendingByCategoryCard } from "@/components/reports/spending-by-category-card";
 import { TopCategoriesCard } from "@/components/reports/top-categories-card";
+import { useAccounts } from "@/hooks/use-accounts";
 import { formatLongDate } from "@/lib/format";
 import {
 	monthWithinRange,
@@ -27,6 +29,7 @@ function rangeLabel(range: ReportRange) {
 export function ReportsPage() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const { preset, range } = parseReportRange(searchParams);
+	const accounts = useAccounts();
 	const [drilldown, setDrilldown] = useState<Drilldown | null>(null);
 	const [transactionId, setTransactionId] = useState<string | null>(null);
 
@@ -83,13 +86,15 @@ export function ReportsPage() {
 				/>
 			</PageHeader>
 
-			<div className="grid gap-4 lg:grid-cols-2">
-				<SpendingByCategoryCard range={range} onSelect={openCategory} />
-				<IncomeExpensesCard range={range} onSelectMonth={openMonth} />
-				<TopCategoriesCard range={range} onSelect={openCategory} />
-				<NetCashFlowCard range={range} onSelectMonth={openMonth} />
-				<BalanceHistoryCard range={range} />
-			</div>
+			<ReportsState accounts={accounts}>
+				<div className="grid gap-4 lg:grid-cols-2">
+					<SpendingByCategoryCard range={range} onSelect={openCategory} />
+					<IncomeExpensesCard range={range} onSelectMonth={openMonth} />
+					<TopCategoriesCard range={range} onSelect={openCategory} />
+					<NetCashFlowCard range={range} onSelectMonth={openMonth} />
+					<BalanceHistoryCard range={range} />
+				</div>
+			</ReportsState>
 
 			{transactionId ? (
 				<TransactionDrawer

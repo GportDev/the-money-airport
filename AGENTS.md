@@ -105,7 +105,7 @@ client/src/
   main.tsx, App.tsx     Entry; QueryClientProvider + RouterProvider + <Toaster />
   router.tsx            All routes
   index.css             Tailwind entry + design tokens
-  api/                  One file per resource; client.ts `api<T>()` is the ONLY fetch
+  api/                  One file per resource; client.ts `api<T>()` (JSON) and `downloadFile()` (files) are the ONLY fetches
   auth/                 better-auth client, session hooks, route guards
   hooks/                use-*.ts TanStack Query hooks per resource
   components/ui/        Generic primitives (Radix / Base UI wrappers)
@@ -162,6 +162,13 @@ e2e/                    Playwright specs, fixtures, helpers
 - Use a toast for results the user would otherwise miss. Inline state (disabled button, spinner, field error) stays the feedback for in-place changes; don't toast what is already visible on screen.
 - Toast colors come from tokens in `index.css`. Don't style toasts per call.
 
+## Client — Page states
+
+- Loading: a skeleton shaped like the content (`ui/skeleton.tsx`: `SkeletonGroup` with `label="Loading {page}"`, `SkeletonCard`, `SkeletonRows`). No "Loading…" text on pages.
+- Failed query: `ui/query-error.tsx` with the page's message and a **Try again** that calls `refetch()`. Queries retry once by default (`App.tsx`).
+- No data: `ui/empty-state.tsx` with one primary CTA.
+- Render crashes: the router `errorElement` (`components/route-error.tsx`) shows inside the app shell.
+
 ## Client — Styling
 
 - Tailwind v4. Tokens live in `client/src/index.css` (`:root` values, mapped by `@theme inline`). Use token classes (`bg-primary`, `text-muted-foreground`, `text-negative`). No hardcoded colors. New tokens go in both blocks.
@@ -175,7 +182,7 @@ e2e/                    Playwright specs, fixtures, helpers
 ## Server — API
 
 - One Nest module per domain: `module`, `controller`, `service`, `types`. No repository layer.
-- Controllers stay thin: validate the body with a Zod schema (`safeParse`, then `throw new BadRequestException(...)`), pass `user.id` from `@CurrentUser()` to the service, return `{ data: ... }`.
+- Controllers stay thin: validate the body with a Zod schema (`safeParse`, then `throw new BadRequestException(...)`), pass `user.id` from `@CurrentUser()` to the service, return `{ data: ... }`. File downloads (`export/`) return CSV text with `Content-Disposition` instead.
 - Services get `userId` as an argument and never touch the request object.
 - Errors: throw Nest exceptions (`BadRequestException`, `NotFoundException`, `ForbiddenException`). Never hand-build error payloads.
 - Routes are REST under the `/api` global prefix (see `docs/04_API_SPEC.md`). The transaction feed uses cursor pagination. Aggregates (net worth, cash flow, dashboard) are computed on the server, not in the client.

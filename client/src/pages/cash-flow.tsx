@@ -2,12 +2,16 @@ import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { CashFlowChart, type CashFlowGranularity } from "@/components/cash-flow/cash-flow-chart";
+import { CashFlowSkeleton } from "@/components/cash-flow/cash-flow-skeleton";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { TransactionDrawer } from "@/components/drawers/transaction-drawer";
 import { MonthNavigator } from "@/components/layout/month-navigator";
 import { PageHeader } from "@/components/layout/page-header";
+import { FeedState } from "@/components/transactions/feed-state";
+import { NoTransactions } from "@/components/transactions/no-transactions";
 import { TransactionFeed } from "@/components/transactions/transaction-feed";
 import { Amount } from "@/components/ui/amount";
+import { QueryError } from "@/components/ui/query-error";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCashFlow } from "@/hooks/use-cash-flow";
 import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
@@ -98,9 +102,12 @@ export function CashFlowPage() {
 			</PageHeader>
 
 			{cashFlow.isError ? (
-				<p role="alert" className="mb-4 text-sm text-negative">
-					Could not load cash flow.
-				</p>
+				<QueryError
+					className="mb-4"
+					message="Could not load cash flow."
+					isRetrying={cashFlow.isFetching}
+					onRetry={() => void cashFlow.refetch()}
+				/>
 			) : null}
 			{data && data.omittedCurrencies.length > 0 ? (
 				<output className="mb-4 block rounded-md border border-border bg-muted px-3 py-2 text-sm">
@@ -109,90 +116,105 @@ export function CashFlowPage() {
 				</output>
 			) : null}
 
-			<div className="mb-4 grid gap-3 sm:grid-cols-3">
-				<KpiCard
-					label="Income"
-					value={formatMoney(data?.summary.totalIncome ?? 0, currency)}
-					className="text-positive"
-				/>
-				<KpiCard label="Expenses" value={formatMoney(data?.summary.totalExpenses ?? 0, currency)} />
-				<KpiCard
-					label="Net"
-					value={`${net > 0 ? "+" : net < 0 ? "-" : ""}${formatMoney(Math.abs(net), currency)}`}
-					className={net > 0 ? "text-positive" : net < 0 ? "text-negative" : undefined}
-				/>
-			</div>
-
-			<section
-				aria-labelledby="cash-flow-chart-heading"
-				className="mb-6 rounded-xl border border-border bg-card p-4"
-			>
-				<div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-					<h2 id="cash-flow-chart-heading" className="text-sm font-medium text-muted-foreground">
-						Income vs expenses
-					</h2>
-					<div className="flex items-center gap-3 text-sm">
-						<fieldset className="flex rounded-md border border-border p-0.5">
-							<legend className="sr-only">Chart interval</legend>
-							{(["daily", "weekly"] as const).map((option) => (
-								<button
-									key={option}
-									type="button"
-									aria-pressed={granularity === option}
-									className={cn(
-										"rounded px-2 py-1 capitalize transition-colors hover:bg-foreground/5 hover:text-foreground",
-										granularity === option ? "bg-muted font-medium" : "text-muted-foreground",
-									)}
-									onClick={() =>
-										patchParams((next) => {
-											if (option === "weekly") next.set("view", "weekly");
-											else next.delete("view");
-										})
-									}
-								>
-									{option}
-								</button>
-							))}
-						</fieldset>
-						<label className="flex items-center gap-2">
-							<input
-								type="checkbox"
-								checked={showBalance}
-								onChange={(event) => setShowBalance(event.target.checked)}
-							/>
-							Running balance
-						</label>
-					</div>
-				</div>
-				{data ? (
-					<CashFlowChart
-						days={data.daily}
-						currency={currency}
-						granularity={granularity}
-						showBalance={showBalance}
-						balanceKind={data.runningBalanceKind}
-					/>
-				) : (
-					<div className="h-64" aria-hidden />
-				)}
-			</section>
-
-			{feed.isPending ? (
-				<p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
-			) : feed.isError ? (
-				<p role="alert" className="py-10 text-center text-sm text-negative">
-					Could not load transactions.
-				</p>
+			{cashFlow.isPending ? (
+				<CashFlowSkeleton />
 			) : (
+				<>
+					<div className="mb-4 grid gap-3 sm:grid-cols-3">
+						<KpiCard
+							label="Income"
+							value={formatMoney(data?.summary.totalIncome ?? 0, currency)}
+							className="text-positive"
+						/>
+						<KpiCard
+							label="Expenses"
+							value={formatMoney(data?.summary.totalExpenses ?? 0, currency)}
+						/>
+						<KpiCard
+							label="Net"
+							value={`${net > 0 ? "+" : net < 0 ? "-" : ""}${formatMoney(Math.abs(net), currency)}`}
+							className={net > 0 ? "text-positive" : net < 0 ? "text-negative" : undefined}
+						/>
+					</div>
+
+					<section
+						aria-labelledby="cash-flow-chart-heading"
+						className="mb-6 rounded-xl border border-border bg-card p-4"
+					>
+						<div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+							<h2
+								id="cash-flow-chart-heading"
+								className="text-sm font-medium text-muted-foreground"
+							>
+								Income vs expenses
+							</h2>
+							<div className="flex items-center gap-3 text-sm">
+								<fieldset className="flex rounded-md border border-border p-0.5">
+									<legend className="sr-only">Chart interval</legend>
+									{(["daily", "weekly"] as const).map((option) => (
+										<button
+											key={option}
+											type="button"
+											aria-pressed={granularity === option}
+											className={cn(
+												"rounded px-2 py-1 capitalize transition-colors hover:bg-foreground/5 hover:text-foreground",
+												granularity === option ? "bg-muted font-medium" : "text-muted-foreground",
+											)}
+											onClick={() =>
+												patchParams((next) => {
+													if (option === "weekly") next.set("view", "weekly");
+													else next.delete("view");
+												})
+											}
+										>
+											{option}
+										</button>
+									))}
+								</fieldset>
+								<label className="flex items-center gap-2">
+									<input
+										type="checkbox"
+										checked={showBalance}
+										onChange={(event) => setShowBalance(event.target.checked)}
+									/>
+									Running balance
+								</label>
+							</div>
+						</div>
+						{data ? (
+							<CashFlowChart
+								days={data.daily}
+								currency={currency}
+								granularity={granularity}
+								showBalance={showBalance}
+								balanceKind={data.runningBalanceKind}
+							/>
+						) : (
+							<div className="h-64" aria-hidden />
+						)}
+					</section>
+				</>
+			)}
+
+			<FeedState
+				feed={feed}
+				isEmpty={items.length === 0}
+				empty={
+					<NoTransactions
+						title={`No transactions in ${monthLabel(year, month)}.`}
+						description="Add one by hand, or pick another month or account."
+						onAdd={() => setDrawer("add")}
+					/>
+				}
+			>
 				<TransactionFeed
 					items={items}
 					hasNextPage={feed.hasNextPage}
 					isFetchingNextPage={feed.isFetchingNextPage}
 					fetchNextPage={() => void feed.fetchNextPage()}
 					onOpen={(item) => setDrawer(item.id)}
-					emptyMessage={`No transactions in ${monthLabel(year, month)}.`}
 				/>
-			)}
+			</FeedState>
 
 			{drawer !== "closed" ? (
 				<TransactionDrawer

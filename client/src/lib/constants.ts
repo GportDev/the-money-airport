@@ -12,3 +12,24 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const SUMMARY_PANEL_PATHS = new Set(["/accounts", "/budget", "/goals"]);
+
+export const BASE_CURRENCIES = [
+	"USD",
+	"EUR",
+	"GBP",
+	"CAD",
+	"AUD",
+	"NZD",
+	"BRL",
+	"MXN",
+	"JPY",
+	"CHF",
+	"SEK",
+	"NOK",
+	"DKK",
+	"PLN",
+	"INR",
+	"SGD",
+	"HKD",
+	"ZAR",
+] as const;

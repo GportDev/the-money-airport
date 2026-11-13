@@ -27,6 +27,7 @@ export function NetCashFlowCard({ range, onSelectMonth }: Props) {
 	const currency = trend.data?.baseCurrency ?? "USD";
 	return (
 		<ReportCard
+			onRetry={() => void trend.refetch()}
 			title="Net cash flow"
 			status={reportStatus(trend, (data) => data.months.every((row) => row.net === 0))}
 			omittedCurrencies={trend.data?.omittedCurrencies}

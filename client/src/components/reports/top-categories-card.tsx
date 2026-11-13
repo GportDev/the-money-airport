@@ -18,6 +18,7 @@ export function TopCategoriesCard({ range, onSelect }: Props) {
 	const largest = categories[0]?.total ?? 0;
 	return (
 		<ReportCard
+			onRetry={() => void top.refetch()}
 			title="Top categories"
 			status={reportStatus(top, (report) => report.categories.length === 0)}
 			omittedCurrencies={top.data?.omittedCurrencies}
