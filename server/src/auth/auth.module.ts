@@ -10,6 +10,7 @@ import { DATABASE } from "../db/db.module";
 import { createAuth } from "./auth";
 import { AUTH, DEFAULT_CLIENT_URL } from "./auth.constants";
 import { AuthGuard } from "./auth.guard";
+import { parseEmailList } from "./signup-allowlist";
 
 @Global()
 @Module({
@@ -33,6 +34,8 @@ import { AuthGuard } from "./auth.guard";
 					secret,
 					baseURL,
 					clientUrl: config.get<string>("CLIENT_URL") ?? DEFAULT_CLIENT_URL,
+					allowedEmails: parseEmailList(config.get<string>("ALLOWED_EMAILS")),
+					isEmailSignUpDisabled: config.get<string>("DISABLE_EMAIL_SIGNUP") === "true",
 					googleClientId: config.get<string>("GOOGLE_CLIENT_ID"),
 					googleClientSecret: config.get<string>("GOOGLE_CLIENT_SECRET"),
 					onUserCreated: async (user) => {

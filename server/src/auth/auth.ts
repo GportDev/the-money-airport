@@ -2,11 +2,14 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../db/schema/auth";
+import { assertSignupAllowed } from "./signup-allowlist";
 
 type AuthEnv = {
 	secret: string;
 	baseURL: string;
 	clientUrl: string;
+	allowedEmails: string[];
+	isEmailSignUpDisabled: boolean;
 	googleClientId?: string;
 	googleClientSecret?: string;
 	onUserCreated?: (user: { id: string; email: string; name: string }) => Promise<void>;
@@ -30,6 +33,7 @@ export function createAuth(db: PostgresJsDatabase, env: AuthEnv) {
 		trustedOrigins: [env.clientUrl],
 		emailAndPassword: {
 			enabled: true,
+			disableSignUp: env.isEmailSignUpDisabled,
 			minPasswordLength: 8,
 			sendResetPassword: async () => {
 				// Mail delivery is out of scope for this phase.
@@ -39,6 +43,9 @@ export function createAuth(db: PostgresJsDatabase, env: AuthEnv) {
 		databaseHooks: {
 			user: {
 				create: {
+					before: async (user) => {
+						assertSignupAllowed(user.email, env.allowedEmails);
+					},
 					after: async (user) => {
 						try {
 							await env.onUserCreated?.(user);

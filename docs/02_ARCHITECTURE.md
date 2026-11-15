@@ -200,6 +200,8 @@ The browser only talks to the Vercel origin. `client/vercel.json` rewrites `/api
    - `DATABASE_URL`: the Neon URL.
    - `BETTER_AUTH_URL` and `CLIENT_URL`: the Vercel URL, e.g. `https://money-airport.vercel.app`. An `https://` `BETTER_AUTH_URL` turns on secure cookies.
    - `BETTER_AUTH_SECRET`: `openssl rand -base64 32`. `ENCRYPTION_KEY`: `openssl rand -hex 32`. Never reuse local values.
+   - `ALLOWED_EMAILS`: your Google email. Any other address is refused at account creation.
+   - `DISABLE_EMAIL_SIGNUP`: `true` (preset). Email is not verified, so open password sign-up would let anyone claim an allowed address before its owner signs in with Google.
    - `PLAID_WEBHOOK_URL`: `https://money-airport-api.onrender.com/api/plaid/webhook`.
    - Plaid, Stripe, and Google keys as needed.
 3. **Vercel.** Import the repo, Root Directory `client`, framework Vite. Set `VITE_API_URL=/api`. If Render gave the service a different hostname, update the destination in `client/vercel.json`.
@@ -217,6 +219,8 @@ DATABASE_URL=postgresql://user:pass@host:5432/money_airport
 BETTER_AUTH_SECRET=random-32-char-string
 BETTER_AUTH_URL=http://localhost:3000
 CLIENT_URL=http://localhost:5173  # origin the browser loads the app from
+ALLOWED_EMAILS=you@gmail.com  # optional; only these emails can create accounts
+DISABLE_EMAIL_SIGNUP=true  # optional; Google becomes the only sign-up path
 PORT=3000  # optional; hosts like Render set it
 PLAID_CLIENT_ID=xxx
 PLAID_SECRET=xxx
