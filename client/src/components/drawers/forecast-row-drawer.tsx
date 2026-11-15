@@ -4,6 +4,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FundSelect } from "@/components/forecast/fund-select";
 import { PayFromSelect } from "@/components/forecast/pay-from-select";
 import { PlanAmountsFields } from "@/components/forecast/plan-amounts-fields";
+import { RecurringSelect } from "@/components/forecast/recurring-select";
 import {
 	Sheet,
 	SheetContent,
@@ -59,6 +60,7 @@ export function ForecastRowDrawer({ section, row, year, onClose }: Props) {
 	const [day, setDay] = useState(row?.dayOfMonth ? String(row.dayOfMonth) : "");
 	const [bankAccountId, setBankAccountId] = useState(row?.bankAccountId ?? null);
 	const [goalId, setGoalId] = useState(row?.goalId ?? null);
+	const [recurringItemId, setRecurringItemId] = useState(row?.recurringItemId ?? null);
 	const [amounts, setAmountsDraft] = useState<Record<number, string>>(() => initialAmounts(row));
 	const [error, setError] = useState<string | null>(null);
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
@@ -87,6 +89,7 @@ export function ForecastRowDrawer({ section, row, year, onClose }: Props) {
 			dayOfMonth: day === "" ? null : Number(day),
 			bankAccountId,
 			goalId: section.type === "savings" ? goalId : null,
+			recurringItemId,
 		};
 		try {
 			const saved = row
@@ -149,6 +152,13 @@ export function ForecastRowDrawer({ section, row, year, onClose }: Props) {
 						onChange={setBankAccountId}
 					/>
 					{section.type === "savings" ? <FundSelect value={goalId} onChange={setGoalId} /> : null}
+					<RecurringSelect value={recurringItemId} onChange={setRecurringItemId} />
+					{row?.countedInDebt ? (
+						<p className="text-sm text-muted-foreground">
+							Counted in Debt: the Debt plan already makes these payments, so totals leave this item
+							out.
+						</p>
+					) : null}
 					<PlanAmountsFields year={year} amounts={amounts} onChange={setAmountsDraft} />
 					{error ? (
 						<p role="alert" className="text-sm text-negative">

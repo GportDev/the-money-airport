@@ -1,16 +1,15 @@
 import { Tabs } from "radix-ui";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
-import { toast } from "sonner";
 import { ForecastRowDrawer } from "@/components/drawers/forecast-row-drawer";
 import { OneOffDrawer } from "@/components/drawers/one-off-drawer";
 import { DebtView } from "@/components/forecast/debt-view";
 import { MonthView } from "@/components/forecast/month-view";
+import { PlanSeedButtons } from "@/components/forecast/plan-seed-buttons";
 import { YearView } from "@/components/forecast/year-view";
 import { MonthNavigator } from "@/components/layout/month-navigator";
 import { PageHeader } from "@/components/layout/page-header";
 import { YearNavigator } from "@/components/layout/year-navigator";
-import { useAddRowsFromCategories } from "@/hooks/use-forecast";
 import { FORECAST_TABS, parseForecastTab, parseYear } from "@/lib/forecast";
 import { parseMonth, shiftMonth } from "@/lib/month";
 import type { ForecastRow, ForecastSection, OneOff } from "@/types";
@@ -24,7 +23,6 @@ export function ForecastPage() {
 	const tab = parseForecastTab(searchParams.get("tab"));
 	const year = parseYear(searchParams.get("year"));
 	const month = parseMonth(searchParams.get("month"));
-	const addFromCategories = useAddRowsFromCategories();
 	const [rowDrawer, setRowDrawer] = useState<RowDrawer>(null);
 	const [oneOffDrawer, setOneOffDrawer] = useState<OneOffDrawerState>(null);
 
@@ -43,19 +41,6 @@ export function ForecastPage() {
 		});
 	}
 
-	async function onAddFromCategories() {
-		try {
-			const created = await addFromCategories.mutateAsync(year);
-			if (created.length === 0) {
-				toast.info("Every category is already on the plan");
-				return;
-			}
-			toast.success(`Added ${created.length} item${created.length === 1 ? "" : "s"}`);
-		} catch (_error) {
-			toast.error("Could not add items from categories");
-		}
-	}
-
 	return (
 		<>
 			<PageHeader title="Forecasting">
@@ -65,14 +50,7 @@ export function ForecastPage() {
 							year={year}
 							onShift={(delta) => patchParams((next) => next.set("year", String(year + delta)))}
 						/>
-						<button
-							type="button"
-							disabled={addFromCategories.isPending}
-							onClick={() => void onAddFromCategories()}
-							className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5 disabled:opacity-60"
-						>
-							Add from categories
-						</button>
+						<PlanSeedButtons year={year} />
 					</>
 				) : tab === "month" ? (
 					<MonthNavigator

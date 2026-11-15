@@ -24,6 +24,9 @@ export function ForecastRowItem({ row, currency, cardName, fundName, onOpen }: P
 			>
 				<span className="flex min-w-0 flex-1 flex-col">
 					<span className="truncate font-medium">{row.name}</span>
+					{row.countedInDebt ? (
+						<span className="truncate text-xs text-muted-foreground">Counted in Debt</span>
+					) : null}
 					{cardName || fundName ? (
 						<span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
 							{cardName ? <CreditCard aria-hidden className="size-3" /> : null}

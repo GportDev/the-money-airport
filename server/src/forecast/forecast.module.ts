@@ -11,6 +11,7 @@ import { ForecastViewsService } from "./forecast-views.service";
 import { ForecastYearService } from "./forecast-year.service";
 import { OneOffsService } from "./one-offs.service";
 import { ProjectionService } from "./projection.service";
+import { RecurringRowsService } from "./recurring-rows.service";
 
 @Module({
 	imports: [AccountsModule, CategoriesModule, FxModule, SettingsModule],
@@ -23,6 +24,7 @@ import { ProjectionService } from "./projection.service";
 		ProjectionService,
 		ForecastViewsService,
 		DebtPlanService,
+		RecurringRowsService,
 	],
 	exports: [OneOffsService, ProjectionService, DebtPlanService],
 })

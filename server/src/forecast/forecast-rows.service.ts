@@ -32,6 +32,7 @@ export class ForecastRowsService {
 				name: input.name,
 				dayOfMonth: input.dayOfMonth ?? null,
 				categoryId: input.categoryId ?? null,
+				recurringItemId: input.recurringItemId ?? null,
 				bankAccountId: input.bankAccountId ?? null,
 				goalId: input.goalId ?? null,
 				sortOrder: await this.nextSortOrder(userId, section.id),
@@ -135,7 +136,7 @@ export class ForecastRowsService {
 }
 
 /** PRD F12.10: income → revenue, Savings Transfer → savings, fixed → fixed, the rest variable. */
-function sectionTypeFor(item: { name: string; kind: string; budgetGroup: string | null }) {
+export function sectionTypeFor(item: { name: string; kind: string; budgetGroup: string | null }) {
 	if (item.kind === "income") return "revenue";
 	if (item.name === SAVINGS_TRANSFER) return "savings";
 	return item.budgetGroup === "fixed" ? "fixed_expense" : "variable_expense";
@@ -158,13 +159,14 @@ function amountEntries(amounts: Record<number, number>, copyToAll: boolean): [nu
 	return MONTHS.map((month) => [month, first[1]]);
 }
 
-function toDto(row: typeof forecastRow.$inferSelect): ForecastRowDto {
+export function toDto(row: typeof forecastRow.$inferSelect): ForecastRowDto {
 	return {
 		id: row.id,
 		sectionId: row.sectionId,
 		name: row.name,
 		dayOfMonth: row.dayOfMonth,
 		categoryId: row.categoryId,
+		recurringItemId: row.recurringItemId,
 		bankAccountId: row.bankAccountId,
 		goalId: row.goalId,
 		sortOrder: row.sortOrder,

@@ -14,6 +14,7 @@ import { FxService } from "../fx/fx.service";
 import { latestStatement, loanTermsDto, spendSince } from "../liabilities/liability-details";
 import { SettingsService } from "../settings/settings.service";
 import { type AccountRole, historyReader, type RoleTotals } from "./balance-history";
+import { countedInDebtRowIds } from "./counted-in-debt";
 import { monthKey, todayIso } from "./dates";
 import {
 	type CardInput,
@@ -216,16 +217,19 @@ export class ProjectionService {
 			byMonth.set(monthKey(cell.year, cell.month), cell.amount);
 			amounts.set(cell.rowId, byMonth);
 		}
-		return rows.map(({ row, type }) => ({
-			id: row.id,
-			name: row.name,
-			// Narrowed on write by the controller's enum.
-			sectionType: type as SectionType,
-			dayOfMonth: row.dayOfMonth,
-			cardId: row.bankAccountId && cardIds.has(row.bankAccountId) ? row.bankAccountId : null,
-			savingsAccountId: row.goalId ? (fundHosts.get(row.goalId) ?? null) : null,
-			amounts: amounts.get(row.id) ?? new Map(),
-		}));
+		const countedInDebt = await countedInDebtRowIds(this.db, userId);
+		return rows
+			.filter(({ row }) => !countedInDebt.has(row.id))
+			.map(({ row, type }) => ({
+				id: row.id,
+				name: row.name,
+				// Narrowed on write by the controller's enum.
+				sectionType: type as SectionType,
+				dayOfMonth: row.dayOfMonth,
+				cardId: row.bankAccountId && cardIds.has(row.bankAccountId) ? row.bankAccountId : null,
+				savingsAccountId: row.goalId ? (fundHosts.get(row.goalId) ?? null) : null,
+				amounts: amounts.get(row.id) ?? new Map(),
+			}));
 	}
 
 	/** Only expected One-offs project; done ones are already in balances. */

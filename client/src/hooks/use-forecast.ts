@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	addRowsFromCategories,
+	addRowsFromRecurring,
 	createForecastRow,
 	createOneOff,
 	deleteForecastRow,
@@ -69,6 +70,10 @@ export function useDeleteForecastRow() {
 
 export function useAddRowsFromCategories() {
 	return useForecastMutation(addRowsFromCategories);
+}
+
+export function useAddRowsFromRecurring() {
+	return useForecastMutation(addRowsFromRecurring);
 }
 
 export function useCreateOneOff() {

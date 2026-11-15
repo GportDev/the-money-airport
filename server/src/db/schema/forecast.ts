@@ -12,6 +12,7 @@ import { user } from "./auth";
 import { bankAccount } from "./bank-account";
 import { category } from "./category";
 import { goal } from "./goal";
+import { recurringItem } from "./recurring-item";
 import { transaction } from "./transaction";
 
 export const forecastSection = pgTable(
@@ -42,6 +43,10 @@ export const forecastRow = pgTable(
 			.references(() => user.id, { onDelete: "cascade" }),
 		name: text("name").notNull(),
 		categoryId: uuid("category_id").references(() => category.id, { onDelete: "set null" }),
+		// Actuals match this merchant instead of the Category when set (PRD F12.9).
+		recurringItemId: uuid("recurring_item_id").references(() => recurringItem.id, {
+			onDelete: "set null",
+		}),
 		dayOfMonth: integer("day_of_month"),
 		// Pay-from / receive-into. Null = Operating cash; a credit BankAccount puts spend on the card.
 		bankAccountId: uuid("bank_account_id").references(() => bankAccount.id, {

@@ -15,6 +15,7 @@ export type ForecastRowInput = {
 	dayOfMonth: number | null;
 	bankAccountId: string | null;
 	goalId: string | null;
+	recurringItemId?: string | null;
 };
 
 export type OneOffInput = {
@@ -65,6 +66,13 @@ export function deleteForecastRow(id: string) {
 
 export function addRowsFromCategories(year: number) {
 	return api<ForecastRow[]>("/forecast/rows/from-categories", {
+		method: "POST",
+		body: JSON.stringify({ year }),
+	});
+}
+
+export function addRowsFromRecurring(year: number) {
+	return api<ForecastRow[]>("/forecast/rows/from-recurring", {
 		method: "POST",
 		body: JSON.stringify({ year }),
 	});

@@ -31,16 +31,19 @@ export type ForecastRowDto = {
 	name: string;
 	dayOfMonth: number | null;
 	categoryId: string | null;
+	recurringItemId: string | null;
 	bankAccountId: string | null;
 	goalId: string | null;
 	sortOrder: number;
 };
 
 export type ForecastRowFull = ForecastRowDto & {
+	/** F12.25: the Debt plan already models these payments, so totals leave the row out. */
+	countedInDebt: boolean;
 	typicalMonthly: number;
 	/** Twelve Plan amounts, January first. */
 	sparkline: number[];
-	/** Month (1-12) → Plan and, for past months with a Category, the Actual. */
+	/** Month (1-12) → Plan and, for past months with a RecurringItem or Category, the Actual. */
 	cells: Record<number, { plan: number; actual: number | null }>;
 };
 
@@ -95,6 +98,7 @@ export type RowInput = {
 	name: string;
 	dayOfMonth?: number | null;
 	categoryId?: string | null;
+	recurringItemId?: string | null;
 	bankAccountId?: string | null;
 	goalId?: string | null;
 };

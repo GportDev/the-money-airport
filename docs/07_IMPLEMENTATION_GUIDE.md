@@ -224,7 +224,7 @@ first. **7b Recurring** (`recurring_item`, steps 2 and 6) follows.
 
 ### Phase 9 — Forecasting: Year + Month (Days 25-30)
 
-Built without Recurring (7b): no `recurring_item_id` column, no **Add from recurring**, and Actuals match by Category only. Those land with 7b.
+First built without Recurring; 7b added `recurring_item_id`, **Add from recurring**, and merchant-matched Actuals.
 
 ```
 1. forecast_section, forecast_row (+ bank_account_id, goal_id), forecast_cell, forecast_one_off tables;
@@ -247,7 +247,7 @@ Built without Recurring (7b): no `recurring_item_id` column, no **Add from recur
 
 ### Phase 10 — Debt plan: cards, loans, Payback (Days 31-36)
 
-F12.25 (dedupe rows counted in Debt) waits for Recurring (7b). The account drawer's loan section links **View payoff** to the Debt tab, where the Loan payoff drawer opens from the loan card.
+F12.25 (dedupe rows counted in Debt) landed with Recurring (7b). The account drawer's loan section links **View payoff** to the Debt tab, where the Loan payoff drawer opens from the loan card.
 
 ```
 1. bank_account card-term columns (apr_bps, statement_close_day, payment_due_day, payment_rule,

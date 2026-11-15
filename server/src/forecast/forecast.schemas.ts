@@ -25,6 +25,7 @@ export const sectionPatch = z
 const rowLinks = {
 	dayOfMonth: z.number().int().min(1).max(31).nullable().optional(),
 	categoryId: uuid.nullable().optional(),
+	recurringItemId: uuid.nullable().optional(),
 	bankAccountId: uuid.nullable().optional(),
 	goalId: uuid.nullable().optional(),
 };
@@ -46,6 +47,8 @@ export const debtQuery = z.object({ months: z.coerce.number().int().min(1).max(1
 export const debtOrderBody = z.object({ bankAccountIds: z.array(uuid).min(1).max(100) }).strict();
 
 export const fromCategoriesBody = z.object({ year: yearQuery.shape.year });
+
+export const fromRecurringBody = fromCategoriesBody;
 
 const oneOffLinks = {
 	bankAccountId: uuid.nullable().optional(),

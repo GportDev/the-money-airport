@@ -19,6 +19,7 @@ import {
 	debtOrderBody,
 	debtQuery,
 	fromCategoriesBody,
+	fromRecurringBody,
 	monthQuery,
 	oneOffBody,
 	oneOffPatch,
@@ -34,6 +35,7 @@ import { ForecastSectionsService } from "./forecast-sections.service";
 import { ForecastViewsService } from "./forecast-views.service";
 import { ForecastYearService } from "./forecast-year.service";
 import { OneOffsService } from "./one-offs.service";
+import { RecurringRowsService } from "./recurring-rows.service";
 
 type User = { id: string };
 
@@ -54,6 +56,7 @@ export class ForecastController {
 		private readonly year: ForecastYearService,
 		private readonly views: ForecastViewsService,
 		private readonly debt: DebtPlanService,
+		private readonly recurringRows: RecurringRowsService,
 	) {}
 
 	@Get("sections")
@@ -90,6 +93,12 @@ export class ForecastController {
 	async fromCategories(@CurrentUser() user: User, @Body() body: unknown) {
 		parse(fromCategoriesBody, body);
 		return { data: await this.rows.fromCategories(user.id) };
+	}
+
+	@Post("rows/from-recurring")
+	async fromRecurring(@CurrentUser() user: User, @Body() body: unknown) {
+		const { year } = parse(fromRecurringBody, body);
+		return { data: await this.recurringRows.fromRecurring(user.id, year) };
 	}
 
 	@Patch("rows/:id")

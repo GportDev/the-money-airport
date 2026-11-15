@@ -361,9 +361,12 @@ export type ForecastRow = {
 	name: string;
 	dayOfMonth: number | null;
 	categoryId: string | null;
+	recurringItemId: string | null;
 	bankAccountId: string | null;
 	goalId: string | null;
 	sortOrder: number;
+	/** F12.25: the Debt plan already models these payments, so totals leave the row out. */
+	countedInDebt: boolean;
 	typicalMonthly: number;
 	sparkline: number[];
 	cells: Record<number, { plan: number; actual: number | null }>;

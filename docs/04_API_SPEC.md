@@ -558,7 +558,7 @@ Click-through uses `GET /transactions` with category + date filters in a drawer 
 | POST | `/forecast/rows` | `{ sectionId, name, dayOfMonth?, defaultAmount?, categoryId?, recurringItemId?, bankAccountId?, goalId? }` | `{ data: ForecastRow }` |
 | PATCH | `/forecast/rows/:id` | `{ name?, dayOfMonth?, sortOrder?, categoryId?, recurringItemId?, bankAccountId?, goalId? }` | `{ data: ForecastRow }` | `bankAccountId` null = Operating cash; `goalId` savings rows only, must be a Fund |
 | POST | `/forecast/rows/from-categories` | `{ year }` | `{ data: ForecastRow[] }` | One-shot seed; skip Uncategorized and existing category links |
-| POST | `/forecast/rows/from-recurring` | `{ year }` | `{ data: ForecastRow[] }` | Skip RecurringItems already linked |
+| POST | `/forecast/rows/from-recurring` | `{ year }` | `{ data: ForecastRow[] }` | One row per active RecurringItem not yet linked, with `year`'s Plan amounts from its cadence (in Base). Category maps like from-categories; none → fixed expense |
 | PUT | `/forecast/rows/:id/amounts` | `{ year, amounts: Record<number, number>, copyToAll?: boolean }` | `{ data: ForecastRow }` |
 | DELETE | `/forecast/rows/:id` | — | `{ success }` |
 
@@ -603,7 +603,7 @@ interface ForecastSectionFull {
     recurringItemId: string | null;
     bankAccountId: string | null;   // pay-from; null = Operating cash
     goalId: string | null;          // Fund target (savings rows)
-    countedInDebt: boolean;         // F12.25: excluded from totals
+    countedInDebt: boolean;         // F12.25: excluded from totals and the projection
     typicalMonthly: number;
     sparkline: number[]; // 12 plan values
     cells: Record<number, { plan: number; actual: number | null }>;

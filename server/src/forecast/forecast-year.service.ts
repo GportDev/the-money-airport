@@ -6,10 +6,12 @@ import { forecastCell, forecastRow } from "../db/schema/forecast";
 import { transaction } from "../db/schema/transaction";
 import { FxService } from "../fx/fx.service";
 import { SettingsService } from "../settings/settings.service";
+import { countedInDebtRowIds } from "./counted-in-debt";
 import { monthEndOf, monthKey, todayIso } from "./dates";
 import type { ForecastRowFull, ForecastSectionDto, ForecastSectionFull } from "./forecast.types";
 import { ForecastSectionsService } from "./forecast-sections.service";
 import { OneOffsService } from "./one-offs.service";
+import { type ActualsByRow, recurringActuals } from "./recurring-actuals";
 
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 
@@ -17,6 +19,14 @@ const isTransfer = sql<boolean>`${transaction.tags} && array['transfer','savings
 
 /** Category id → month → net Base cents; transfers kept apart for savings rows. */
 type ActualsByCategory = Map<string, Map<number, { net: number; transferNet: number }>>;
+
+/** What a row needs beyond its own Plan to build its cells. */
+type RowContext = {
+	pastMonths: number[];
+	byCategory: ActualsByCategory;
+	byRecurring: ActualsByRow;
+	countedInDebt: Set<string>;
+};
 
 @Injectable()
 export class ForecastYearService {
@@ -41,13 +51,18 @@ export class ForecastYearService {
 		);
 		const thisMonth = todayIso().slice(0, 7);
 		const pastMonths = MONTHS.filter((month) => monthKey(year, month) < thisMonth);
-		const actuals = await this.actuals(userId, year, pastMonths);
+		const context: RowContext = {
+			pastMonths,
+			byCategory: await this.actuals(userId, year, pastMonths),
+			byRecurring: await this.recurringActuals(userId, year, pastMonths),
+			countedInDebt: await countedInDebtRowIds(this.db, userId),
+		};
 		const oneOffs = await this.oneOffs.list(userId, year);
 
 		return sections.map((section) => {
 			const sectionRows = rows
 				.filter((row) => row.sectionId === section.id)
-				.map((row) => fullRow(row, plans.get(row.id), section, pastMonths, actuals));
+				.map((row) => fullRow(row, plans.get(row.id), section, context));
 			return {
 				...section,
 				rows: sectionRows,
@@ -70,6 +85,13 @@ export class ForecastYearService {
 			plans.set(cell.forecastRowId, byMonth);
 		}
 		return plans;
+	}
+
+	private async recurringActuals(userId: string, year: number, pastMonths: number[]) {
+		const lastMonth = pastMonths.at(-1);
+		if (!lastMonth) return new Map() as ActualsByRow;
+		const base = (await this.settings.get(userId)).currency;
+		return recurringActuals(this.db, this.fx, { userId, year, lastMonth, base });
 	}
 
 	/** Net Money per Category per past month in Base, each month at its month-end rate. */
@@ -122,17 +144,14 @@ function fullRow(
 	row: typeof forecastRow.$inferSelect,
 	plan: Map<number, number> | undefined,
 	section: ForecastSectionDto,
-	pastMonths: number[],
-	actuals: ActualsByCategory,
+	context: RowContext,
 ): ForecastRowFull {
 	const sparkline = MONTHS.map((month) => plan?.get(month) ?? 0);
 	const cells: ForecastRowFull["cells"] = {};
 	for (const month of MONTHS) {
-		const isPast = pastMonths.includes(month);
 		cells[month] = {
 			plan: sparkline[month - 1] ?? 0,
-			actual:
-				isPast && row.categoryId ? actualFor(section, actuals.get(row.categoryId), month) : null,
+			actual: context.pastMonths.includes(month) ? rowActual(row, section, context, month) : null,
 		};
 	}
 	return {
@@ -141,13 +160,30 @@ function fullRow(
 		name: row.name,
 		dayOfMonth: row.dayOfMonth,
 		categoryId: row.categoryId,
+		recurringItemId: row.recurringItemId,
 		bankAccountId: row.bankAccountId,
 		goalId: row.goalId,
 		sortOrder: row.sortOrder,
+		countedInDebt: context.countedInDebt.has(row.id),
 		typicalMonthly: typicalOf(sparkline),
 		sparkline,
 		cells,
 	};
+}
+
+/** PRD F12.9: the RecurringItem's merchant wins over the Category; neither means no Actual. */
+function rowActual(
+	row: typeof forecastRow.$inferSelect,
+	section: ForecastSectionDto,
+	context: RowContext,
+	month: number,
+) {
+	if (row.recurringItemId) {
+		const net = context.byRecurring.get(row.id)?.get(month) ?? 0;
+		return section.type === "revenue" ? Math.max(0, net) : Math.max(0, -net);
+	}
+	if (!row.categoryId) return null;
+	return actualFor(section, context.byCategory.get(row.categoryId), month);
 }
 
 /**
@@ -186,7 +222,9 @@ function typicalOf(amounts: number[]) {
 function totalsOf(rows: ForecastRowFull[]) {
 	const totals: Record<number, number> = {};
 	for (const month of MONTHS) {
-		totals[month] = rows.reduce((sum, row) => sum + (row.cells[month]?.plan ?? 0), 0);
+		totals[month] = rows
+			.filter((row) => !row.countedInDebt)
+			.reduce((sum, row) => sum + (row.cells[month]?.plan ?? 0), 0);
 	}
 	return totals;
 }
