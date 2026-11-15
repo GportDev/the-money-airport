@@ -87,7 +87,7 @@ interface DashboardPayload {
   transactions: TransactionListItem[] | null; // most recent 8
   recurring: {
     remainingDue: number;
-    upcoming: RecurringListItem[]; // next ~5; empty until Recurring (Phase 7)
+    upcoming: RecurringListItem[]; // next 5 active, by nextDate
   } | null;
 }
 ```
@@ -379,26 +379,39 @@ interface BudgetCategoryRow {
 
 | Method | Path | Query/Body | Response |
 |--------|------|-----------|----------|
-| GET | `/recurring` | `?month=YYYY-MM` | `{ data: { remainingDue: number; paid: number; items: RecurringListItem[] } }` |
-| POST | `/recurring` | `{ merchantName, amount, cadence, nextDate, bankAccountId?, categoryId? }` | `{ data: RecurringItem }` |
-| PATCH | `/recurring/:id` | `{ amount?, cadence?, nextDate?, isActive? }` | `{ data: RecurringItem }` |
-| POST | `/recurring/:id/skip` | — | `{ data: RecurringItem }` |
-| POST | `/recurring/:id/mark-paid` | `{ date? }` | `{ data: RecurringItem }` | Advances schedule only; no Transaction |
-| POST | `/recurring/detect` | — | `{ data: RecurringListItem[] }` | Suggest from history |
+| GET | `/recurring` | `?month=YYYY-MM` (default: this month) | `{ data: { month: string; baseCurrency: string; remainingDue: number; paid: number; items: RecurringListItem[] } }` |
+| POST | `/recurring` | `{ merchantName, amount, cadence, nextDate, bankAccountId?, categoryId?, isActive?, isManual? }` | `{ data: RecurringListItem }` |
+| PATCH | `/recurring/:id` | `{ amount?, cadence?, nextDate?, isActive? }` | `{ data: RecurringListItem }` |
+| POST | `/recurring/:id/skip` | — | `{ data: RecurringListItem }` | Advances `nextDate` one period |
+| POST | `/recurring/:id/mark-paid` | `{ date? }` | `{ data: RecurringListItem }` | Sets `lastPaidOn` (default today) and advances `nextDate` one period; no Transaction |
+| POST | `/recurring/detect` | — | `{ data: RecurringCandidate[] }` | Suggest from history; stores nothing |
 | DELETE | `/recurring/:id` | — | `{ success }` |
 
 ```typescript
-interface RecurringListItem {
-  id: string;
+interface RecurringCandidate {
   merchantName: string;
   merchantLogoUrl: string | null;
-  amount: number;
+  amount: number;            // absolute cents in isoCurrencyCode, an outflow
+  isoCurrencyCode: string;   // the BankAccount's currency, else Base
   cadence: "weekly" | "monthly" | "yearly";
   nextDate: string;
-  daysUntil: number;
+  daysUntil: number;         // negative once nextDate has passed
+  categoryId: string | null;
   account: { id: string; name: string } | null;
 }
+
+interface RecurringListItem extends RecurringCandidate {
+  id: string;
+  lastPaidOn: string | null;
+  isActive: boolean;
+  isManual: boolean;         // false when confirmed from detection
+}
 ```
+
+- `items`: active by `nextDate`, then inactive. `remainingDue` (Base) counts every scheduled date of an active item through the end of `month`, overdue ones included; `paid` (Base) sums items whose `lastPaidOn` falls in `month`.
+- Detection: outflows from the last 400 days grouped by merchant (`coalesce(merchant_name, name)`, case-insensitive) and BankAccount. A group qualifies across at least two calendar months with every gap fitting one cadence (weekly 6-8 days and 4+ charges, monthly 25-36, yearly 350-380) and every amount within 25% of the median. A pattern that missed two periods is stale. Groups already tracked by a RecurringItem (same merchant, and same BankAccount unless the item has none) are left out.
+- Confirm a candidate by POSTing it with `isManual: false`; dismiss it by POSTing with `isActive: false` too, so detection stops suggesting it.
+- The logo comes from the latest matching Transaction, never from the body. A `bankAccountId` or `categoryId` the User does not own returns 404; so do PATCH, skip, mark-paid, and DELETE on another User's item.
 
 ---
 

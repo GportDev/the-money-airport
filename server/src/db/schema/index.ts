@@ -10,5 +10,6 @@ export * from "./fx-rate";
 export * from "./goal";
 export * from "./loan-terms";
 export * from "./plaid-item";
+export * from "./recurring-item";
 export * from "./transaction";
 export * from "./user-settings";

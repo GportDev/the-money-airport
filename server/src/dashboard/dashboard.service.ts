@@ -8,12 +8,14 @@ import { CashFlowService } from "../cash-flow/cash-flow.service";
 import type { CashFlowResponse } from "../cash-flow/cash-flow.types";
 import { DATABASE } from "../db/db.module";
 import { bankAccount } from "../db/schema/bank-account";
+import { RecurringService } from "../recurring/recurring.service";
 import type { DashboardWidgetId } from "../settings/dashboard-widgets";
 import { SettingsService } from "../settings/settings.service";
 import { TransactionsService } from "../transactions/transactions.service";
 import type { BudgetGroupKey, DashboardPayload } from "./dashboard.types";
 
 const RECENT_TRANSACTIONS = 8;
+const UPCOMING_RECURRING = 5;
 
 function pad(value: number) {
 	return String(value).padStart(2, "0");
@@ -39,6 +41,7 @@ export class DashboardService {
 		private readonly transactions: TransactionsService,
 		private readonly settings: SettingsService,
 		private readonly budgets: BudgetsService,
+		private readonly recurring: RecurringService,
 	) {}
 
 	async get(
@@ -57,11 +60,12 @@ export class DashboardService {
 			.where(eq(bankAccount.userId, user.id))
 			.limit(1);
 
-		const [budget, netWorth, spending, transactions] = await Promise.all([
+		const [budget, netWorth, spending, transactions, recurring] = await Promise.all([
 			visible.has("budget") ? this.budget(user.id, year, month) : null,
 			visible.has("net_worth") ? this.netWorth(user.id, netWorthRange) : null,
 			visible.has("spending") ? this.spending(user.id, year, month) : null,
 			visible.has("transactions") ? this.recent(user.id) : null,
+			visible.has("recurring") ? this.recurring.upcoming(user.id, UPCOMING_RECURRING) : null,
 		]);
 
 		return {
@@ -74,8 +78,7 @@ export class DashboardService {
 			netWorth,
 			spending,
 			transactions,
-			// Recurring arrives with Phase 7; the widget shows its empty state until then.
-			recurring: visible.has("recurring") ? { remainingDue: 0, upcoming: [] } : null,
+			recurring,
 		};
 	}
 

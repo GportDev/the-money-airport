@@ -192,7 +192,7 @@ export type Dashboard = {
 		lastMonth: { day: number; amount: number }[];
 	} | null;
 	transactions: TransactionListItem[] | null;
-	recurring: { remainingDue: number; upcoming: never[] } | null;
+	recurring: { remainingDue: number; upcoming: RecurringListItem[] } | null;
 };
 
 export type BudgetMonthGroupKey = "income" | BudgetGroupKey;
@@ -521,4 +521,36 @@ export type ForecastDebtSection = {
 		cells: Record<number, { scheduled: number; payback: number; actual: number | null }>;
 	}[];
 	totals: Record<number, number>;
+};
+
+export type Cadence = "weekly" | "monthly" | "yearly";
+
+/** A pattern detection found that no RecurringItem tracks yet. */
+export type RecurringCandidate = {
+	merchantName: string;
+	merchantLogoUrl: string | null;
+	/** Absolute cents in `isoCurrencyCode`, an outflow. */
+	amount: number;
+	isoCurrencyCode: string;
+	cadence: Cadence;
+	nextDate: string;
+	/** Negative once `nextDate` has passed. */
+	daysUntil: number;
+	categoryId: string | null;
+	account: { id: string; name: string } | null;
+};
+
+export type RecurringListItem = RecurringCandidate & {
+	id: string;
+	lastPaidOn: string | null;
+	isActive: boolean;
+	isManual: boolean;
+};
+
+export type RecurringMonth = {
+	month: string;
+	baseCurrency: string;
+	remainingDue: number;
+	paid: number;
+	items: RecurringListItem[];
 };

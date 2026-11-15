@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Area, AreaChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { BudgetProgress } from "@/components/budget/budget-progress";
+import { RecurringUpcoming } from "@/components/dashboard/recurring-upcoming";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
@@ -331,7 +332,7 @@ export function RecurringWidget({
 				</p>
 			}
 		>
-			<p className="text-sm text-muted-foreground">No recurring bills yet.</p>
+			<RecurringUpcoming items={recurring.upcoming} />
 		</WidgetCard>
 	);
 }

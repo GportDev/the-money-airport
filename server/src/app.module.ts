@@ -17,6 +17,7 @@ import { HealthModule } from "./health/health.module";
 import { InvestmentsModule } from "./investments/investments.module";
 import { LiabilitiesModule } from "./liabilities/liabilities.module";
 import { PlaidModule } from "./plaid/plaid.module";
+import { RecurringModule } from "./recurring/recurring.module";
 import { ReportsModule } from "./reports/reports.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
@@ -39,6 +40,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		CashFlowModule,
 		BudgetsModule,
 		GoalsModule,
+		RecurringModule,
 		SettingsModule,
 		DashboardModule,
 		ReportsModule,

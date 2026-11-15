@@ -10,12 +10,13 @@ const PAGES = [
 	{ path: "/transactions", name: "transactions", api: /\/api\/transactions\?/ },
 	{ path: "/reports", name: "reports", api: /\/api\/accounts(\?|$)/ },
 	{ path: "/budget", name: "budget", api: /\/api\/budgets\?/ },
+	{ path: "/recurring", name: "recurring", api: /\/api\/recurring$/ },
 	{ path: "/goals", name: "goals", api: /\/api\/goals(\?|$)/ },
 	{ path: "/investments", name: "investments", api: /\/api\/investments\?/ },
 	{ path: "/settings", name: "settings", api: /\/api\/settings$/ },
 ] as const;
 
-const ALL_PATHS = [...PAGES.map((page) => page.path), "/recurring", "/forecast"];
+const ALL_PATHS = [...PAGES.map((page) => page.path), "/forecast"];
 
 /** Holds matching requests until the returned release() is called. */
 async function holdRequests(page: Page, pattern: RegExp) {

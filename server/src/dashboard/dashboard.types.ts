@@ -1,4 +1,5 @@
 import type { NetWorthRange } from "../accounts/accounts.types";
+import type { RecurringListItem } from "../recurring/recurring.types";
 import type { DashboardWidget } from "../settings/dashboard-widgets";
 import type { TransactionListItem } from "../transactions/transactions.types";
 
@@ -28,5 +29,5 @@ export type DashboardPayload = {
 		lastMonth: { day: number; amount: number }[];
 	} | null;
 	transactions: TransactionListItem[] | null;
-	recurring: { remainingDue: number; upcoming: never[] } | null;
+	recurring: { remainingDue: number; upcoming: RecurringListItem[] } | null;
 };
