@@ -191,6 +191,22 @@ Manual accounts (vehicles, property, cash, personal loans) skip Plaid. They are 
 | Stripe | Stripe Dashboard (test → live); Billing, not Connect |
 | FX | Frankfurter (`api.frankfurter.dev`) daily rates cached in `fx_rate` |
 
+### Free single-user setup: Neon + Render + Vercel
+
+The browser only talks to the Vercel origin. `client/vercel.json` rewrites `/api/*` to the Render API, so the auth cookie stays first-party (`sameSite: lax` would drop it across domains) and CORS never triggers.
+
+1. **Neon.** Create a project, copy the direct (non-pooled) connection string. From your machine run `DATABASE_URL='<neon url>' pnpm db:push` once, and again after each schema change.
+2. **Render.** New → Blueprint, pick this repo. `render.yaml` defines the `money-airport-api` free web service. Fill in the env vars:
+   - `DATABASE_URL`: the Neon URL.
+   - `BETTER_AUTH_URL` and `CLIENT_URL`: the Vercel URL, e.g. `https://money-airport.vercel.app`. An `https://` `BETTER_AUTH_URL` turns on secure cookies.
+   - `BETTER_AUTH_SECRET`: `openssl rand -base64 32`. `ENCRYPTION_KEY`: `openssl rand -hex 32`. Never reuse local values.
+   - `PLAID_WEBHOOK_URL`: `https://money-airport-api.onrender.com/api/plaid/webhook`.
+   - Plaid, Stripe, and Google keys as needed.
+3. **Vercel.** Import the repo, Root Directory `client`, framework Vite. Set `VITE_API_URL=/api`. If Render gave the service a different hostname, update the destination in `client/vercel.json`.
+4. If Google sign-in is on, add `https://<vercel url>/api/auth/callback/google` as an authorized redirect URI.
+
+Free tier trade-offs: Render sleeps after 15 min idle (first request takes ~30–60 s); Neon suspends compute when idle and wakes in about a second.
+
 ---
 
 ## 7. Environment Variables
@@ -200,6 +216,8 @@ Manual accounts (vehicles, property, cash, personal loans) skip Plaid. They are 
 DATABASE_URL=postgresql://user:pass@host:5432/money_airport
 BETTER_AUTH_SECRET=random-32-char-string
 BETTER_AUTH_URL=http://localhost:3000
+CLIENT_URL=http://localhost:5173  # origin the browser loads the app from
+PORT=3000  # optional; hosts like Render set it
 PLAID_CLIENT_ID=xxx
 PLAID_SECRET=xxx
 PLAID_ENV=sandbox  # sandbox | production (Plaid retired Development)

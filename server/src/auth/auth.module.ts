@@ -8,7 +8,7 @@ import { CategoriesModule } from "../categories/categories.module";
 import { CategoriesService } from "../categories/categories.service";
 import { DATABASE } from "../db/db.module";
 import { createAuth } from "./auth";
-import { AUTH } from "./auth.constants";
+import { AUTH, DEFAULT_CLIENT_URL } from "./auth.constants";
 import { AuthGuard } from "./auth.guard";
 
 @Global()
@@ -32,6 +32,7 @@ import { AuthGuard } from "./auth.guard";
 				return createAuth(db, {
 					secret,
 					baseURL,
+					clientUrl: config.get<string>("CLIENT_URL") ?? DEFAULT_CLIENT_URL,
 					googleClientId: config.get<string>("GOOGLE_CLIENT_ID"),
 					googleClientSecret: config.get<string>("GOOGLE_CLIENT_SECRET"),
 					onUserCreated: async (user) => {

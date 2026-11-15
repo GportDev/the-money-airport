@@ -6,6 +6,7 @@ import * as schema from "../db/schema/auth";
 type AuthEnv = {
 	secret: string;
 	baseURL: string;
+	clientUrl: string;
 	googleClientId?: string;
 	googleClientSecret?: string;
 	onUserCreated?: (user: { id: string; email: string; name: string }) => Promise<void>;
@@ -26,7 +27,7 @@ export function createAuth(db: PostgresJsDatabase, env: AuthEnv) {
 		database: drizzleAdapter(db, { provider: "pg", schema }),
 		secret: env.secret,
 		baseURL: env.baseURL,
-		trustedOrigins: ["http://localhost:5173"],
+		trustedOrigins: [env.clientUrl],
 		emailAndPassword: {
 			enabled: true,
 			minPasswordLength: 8,
@@ -52,7 +53,7 @@ export function createAuth(db: PostgresJsDatabase, env: AuthEnv) {
 			defaultCookieAttributes: {
 				httpOnly: true,
 				sameSite: "lax",
-				secure: false,
+				secure: env.baseURL.startsWith("https://"),
 			},
 		},
 	});

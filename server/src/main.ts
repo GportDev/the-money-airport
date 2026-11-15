@@ -1,18 +1,21 @@
+import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import { json, raw } from "express";
 import { AppModule } from "./app.module";
 import type { Auth } from "./auth/auth";
-import { AUTH } from "./auth/auth.constants";
+import { AUTH, DEFAULT_CLIENT_URL } from "./auth/auth.constants";
 
-const corsOptions = {
-	origin: "http://localhost:5173",
-	credentials: true,
-};
+const DEFAULT_PORT = 3000;
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule, { bodyParser: false });
+	const config = app.get(ConfigService);
+	const corsOptions = {
+		origin: config.get<string>("CLIENT_URL") ?? DEFAULT_CLIENT_URL,
+		credentials: true,
+	};
 	const auth = app.get<Auth>(AUTH);
 	const http = app.getHttpAdapter().getInstance();
 	http.use(cors(corsOptions));
@@ -23,7 +26,7 @@ async function bootstrap() {
 	app.use(json());
 	app.setGlobalPrefix("api");
 	app.enableCors(corsOptions);
-	await app.listen(3000);
+	await app.listen(config.get<string>("PORT") ?? DEFAULT_PORT);
 }
 
 void bootstrap();

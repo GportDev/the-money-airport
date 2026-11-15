@@ -1,6 +1,7 @@
 {
 	"name": "money-airport",
 	"private": true,
+	"packageManager": "pnpm@10.33.3",
 	"scripts": {
 		"dev:server": "pnpm --filter server start:dev",
 		"dev:client": "pnpm --filter client dev",
