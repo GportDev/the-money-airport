@@ -3,6 +3,8 @@ import { ForecastSectionCard } from "@/components/forecast/forecast-section-card
 import { ForecastSummaryCards } from "@/components/forecast/forecast-summary-cards";
 import { ProjectedBalanceChart } from "@/components/forecast/projected-balance-chart";
 import { ShortfallCallout } from "@/components/forecast/shortfall-callout";
+import { YearSkeleton } from "@/components/forecast/year-skeleton";
+import { QueryError } from "@/components/ui/query-error";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useForecastSections, useForecastSummary } from "@/hooks/use-forecast";
 import { useGoals } from "@/hooks/use-goals";
@@ -49,14 +51,17 @@ export function YearView({
 
 	if (summary.isError || sections.isError) {
 		return (
-			<p role="alert" className="text-sm text-negative">
-				Could not load the plan.
-			</p>
+			<QueryError
+				message="Could not load the plan."
+				isRetrying={summary.isFetching || sections.isFetching}
+				onRetry={() => {
+					void summary.refetch();
+					void sections.refetch();
+				}}
+			/>
 		);
 	}
-	if (!summary.data || !sections.data) {
-		return <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>;
-	}
+	if (!summary.data || !sections.data) return <YearSkeleton />;
 	return (
 		<div className="flex flex-col gap-4">
 			<ForecastSummaryCards summary={summary.data} />

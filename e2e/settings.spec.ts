@@ -17,7 +17,9 @@ test("Settings opens from the gear and stacks its sections in spec order", async
 	await expect(page).toHaveURL("/settings");
 	const main = page.getByRole("main");
 	await expect(main.getByRole("heading", { level: 2 })).toHaveText(SECTIONS);
-	await expect(page.getByRole("region", { name: "Plan" }).getByText(/Safety buffer/i)).toBeVisible();
+	await expect(
+		page.getByRole("region", { name: "Plan" }).getByLabel("Safety buffer"),
+	).toBeVisible();
 });
 
 test("Profile shows email read-only and saves a new name", async ({ page }) => {

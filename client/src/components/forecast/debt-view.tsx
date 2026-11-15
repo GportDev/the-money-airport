@@ -7,6 +7,8 @@ import { DebtPlanList } from "@/components/debt/debt-plan-list";
 import { NotInPlan } from "@/components/debt/not-in-plan";
 import { PlanControls } from "@/components/debt/plan-controls";
 import { LoanPayoffDrawer } from "@/components/drawers/loan-payoff-drawer";
+import { DebtSkeleton } from "@/components/forecast/debt-skeleton";
+import { QueryError } from "@/components/ui/query-error";
 import { useDebtPlan, useReorderDebt } from "@/hooks/use-forecast";
 import { useSettings } from "@/hooks/use-settings";
 import type { DebtLiability } from "@/types";
@@ -37,14 +39,14 @@ export function DebtView() {
 
 	if (plan.isError) {
 		return (
-			<p role="alert" className="text-sm text-negative">
-				Could not load the debt plan.
-			</p>
+			<QueryError
+				message="Could not load the debt plan."
+				isRetrying={plan.isFetching}
+				onRetry={() => void plan.refetch()}
+			/>
 		);
 	}
-	if (!plan.data) {
-		return <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>;
-	}
+	if (!plan.data) return <DebtSkeleton />;
 	return (
 		<div className="flex flex-col gap-4">
 			<DebtHero plan={plan.data} />

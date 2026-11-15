@@ -330,9 +330,10 @@ async getFullYear(userId: string, year: number) {
 3. Toasts, error boundary, retry
 4. Responsive: stack right panel under main at 1024px; icon-rail at 375px
 5. Export CSV (transactions + accounts)
-6. Dark mode tokens (palette in SCREEN_SPECS)
-7. Settings page (profile, categories, dashboard widgets, budget copy-forward, base currency, Plan)
+6. Settings page (profile, categories, dashboard widgets, budget copy-forward, Plan, base currency)
 ```
+
+Light theme only (`DESIGN.md`): no dark mode in V1.
 
 AI Assistant, Advice, Weekly Recap, remittance/tax calculators, spreadsheet/CSV import, and payroll audit are out of V1.
 

@@ -184,3 +184,158 @@ test("at 375px the sidebar is an icon rail and no page scrolls sideways", async 
 		expect(overflow, path).toEqual({ document: 0, content: 0 });
 	}
 });
+
+const FORECAST_TABS = [
+	{
+		path: "/forecast",
+		name: "forecast",
+		api: /\/api\/forecast\/summary\?/,
+		error: "Could not load the plan.",
+	},
+	{
+		path: "/forecast?tab=month",
+		name: "forecast month",
+		api: /\/api\/forecast\/month\?/,
+		error: "Could not load this month.",
+	},
+	{
+		path: "/forecast?tab=debt",
+		name: "debt plan",
+		api: /\/api\/forecast\/debt$/,
+		error: "Could not load the debt plan.",
+	},
+] as const;
+
+test("every Forecasting tab shows a skeleton while it loads", async ({ page }) => {
+	for (const target of FORECAST_TABS) {
+		const release = await holdRequests(page, target.api);
+		await page.goto(target.path);
+		const skeleton = page.getByRole("status", { name: `Loading ${target.name}`, exact: true });
+		await expect(skeleton, target.path).toBeVisible();
+		await expect(page.getByText("Loading…"), target.path).toHaveCount(0);
+		release();
+		await expect(skeleton, target.path).toHaveCount(0);
+		await page.unroute(target.api);
+	}
+});
+
+test("a failed Forecasting tab shows Try again, which recovers once the API is back", async ({
+	page,
+}) => {
+	for (const target of FORECAST_TABS) {
+		await page.route(target.api, (route) =>
+			route.fulfill({ status: 500, json: { message: "Boom" } }),
+		);
+		await page.goto(target.path);
+		const alert = page.getByRole("alert").filter({ hasText: target.error });
+		await expect(alert, target.path).toBeVisible();
+		await page.unroute(target.api);
+		await alert.getByRole("button", { name: "Try again" }).click();
+		await expect(alert, target.path).toHaveCount(0);
+	}
+});
+
+test("the Fund drawer shows a skeleton while its entries load", async ({ page }) => {
+	const accountRes = await page.request.post(`${API}/accounts`, {
+		data: { name: "Savings", type: "savings", displayGroup: "cash", currentBalance: 100000 },
+	});
+	const hostId = ((await accountRes.json()) as { data: { id: string } }).data.id;
+	await page.request.post(`${API}/goals`, {
+		data: {
+			name: "Emergency",
+			type: "save_up",
+			targetAmount: 500000,
+			funding: "fund",
+			hostBankAccountId: hostId,
+		},
+	});
+	const entriesApi = /\/api\/goals\/[^/]+\/entries$/;
+	const release = await holdRequests(page, entriesApi);
+	await page.goto("/goals");
+	await page
+		.getByRole("main")
+		.getByRole("button", { name: /Emergency/ })
+		.click();
+	const skeleton = page.getByRole("status", { name: "Loading fund entries", exact: true });
+	await expect(skeleton).toBeVisible();
+	await expect(page.getByText("Loading…")).toHaveCount(0);
+	release();
+	await expect(skeleton).toHaveCount(0);
+});
+
+async function createCheckingWithGrocery(page: Page, date: string) {
+	const account = await page.request.post(`${API}/accounts`, {
+		data: { name: "Checking", type: "checking", displayGroup: "cash", currentBalance: 50000 },
+	});
+	const bankAccountId = ((await account.json()) as { data: { id: string } }).data.id;
+	const categories = await page.request.get(`${API}/categories`);
+	const groceries = (
+		(await categories.json()) as { data: { id: string; name: string }[] }
+	).data.find((category) => category.name === "Groceries");
+	await page.request.post(`${API}/transactions`, {
+		data: { name: "Corner Deli", amount: -1250, date, bankAccountId, categoryId: groceries?.id },
+	});
+}
+
+test("the Transaction drawer shows a skeleton while its detail loads", async ({ page }) => {
+	await createCheckingWithGrocery(page, new Date().toISOString().slice(0, 10));
+	const detailApi = /\/api\/transactions\/[0-9a-f-]{36}$/;
+	const release = await holdRequests(page, detailApi);
+	await page.goto("/transactions");
+	await page
+		.getByRole("list", { name: "Transactions" })
+		.getByRole("button", { name: /Corner Deli/ })
+		.click({ position: { x: 60, y: 12 } });
+	const drawer = page.getByRole("dialog");
+	const skeleton = drawer.getByRole("status", { name: "Loading transaction", exact: true });
+	await expect(skeleton).toBeVisible();
+	await expect(drawer.getByText("Loading…")).toHaveCount(0);
+	release();
+	await expect(skeleton).toHaveCount(0);
+});
+
+test("the report Transactions drawer shows a skeleton while its feed loads", async ({ page }) => {
+	await createCheckingWithGrocery(page, "2025-03-10");
+	await page.goto("/reports?range=custom&from=2025-03-01&to=2025-03-31");
+	const feedApi = /\/api\/transactions\?/;
+	const release = await holdRequests(page, feedApi);
+	await page
+		.getByRole("region", { name: "Spending by category" })
+		.getByRole("button", { name: /Groceries/ })
+		.click();
+	const drawer = page.getByRole("dialog");
+	const skeleton = drawer.getByRole("status", { name: "Loading transactions", exact: true });
+	await expect(skeleton).toBeVisible();
+	await expect(drawer.getByText("Loading…")).toHaveCount(0);
+	release();
+	await expect(skeleton).toHaveCount(0);
+});
+
+test("the Loan payoff drawer shows a skeleton while the schedule loads", async ({ page }) => {
+	const created = await page.request.post(`${API}/accounts`, {
+		data: { name: "Truck loan", type: "loan", displayGroup: "loan", currentBalance: 3_260_550 },
+	});
+	const loanId = ((await created.json()) as { data: { id: string } }).data.id;
+	await page.request.patch(`${API}/accounts/${loanId}`, { data: { aprBps: 700 } });
+	const nextMonth = new Date();
+	nextMonth.setUTCDate(1);
+	nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+	await page.request.put(`${API}/accounts/${loanId}/loan-terms`, {
+		data: {
+			principal: 3_260_550,
+			termMonths: 75,
+			firstPaymentDate: nextMonth.toISOString().slice(0, 10),
+			paymentDay: 1,
+		},
+	});
+	const amortizationApi = /\/api\/accounts\/[^/]+\/amortization/;
+	const release = await holdRequests(page, amortizationApi);
+	await page.goto("/forecast?tab=debt");
+	await page.getByRole("button", { name: /Truck loan/ }).click();
+	const drawer = page.getByRole("dialog", { name: "Truck loan payoff" });
+	const skeleton = drawer.getByRole("status", { name: "Loading payoff", exact: true });
+	await expect(skeleton).toBeVisible();
+	await expect(drawer.getByText("Loading…")).toHaveCount(0);
+	release();
+	await expect(skeleton).toHaveCount(0);
+});

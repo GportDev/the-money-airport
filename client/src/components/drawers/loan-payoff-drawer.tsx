@@ -12,6 +12,7 @@ import {
 	SheetTitle,
 	useSheetClose,
 } from "@/components/ui/sheet";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { useAmortization, useSetLoanTerms } from "@/hooks/use-liabilities";
 import { monthName } from "@/lib/debt";
 import { majorUnitsToCents } from "@/lib/format";
@@ -56,7 +57,19 @@ export function LoanPayoffDrawer({ account, onClose }: Props) {
 						Add APR and term in the account drawer to see a payoff.
 					</p>
 				) : !data ? (
-					<p className="px-4 py-6 text-center text-sm text-muted-foreground">Loading…</p>
+					<SkeletonGroup label="Loading payoff" className="flex flex-col gap-4 px-4 pb-6">
+						<div className="grid grid-cols-3 gap-2">
+							{["payment", "interest", "payoff"].map((stat) => (
+								<Skeleton key={stat} className="h-16" />
+							))}
+						</div>
+						<div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+							{["first", "second", "third", "fourth"].map((scenario) => (
+								<Skeleton key={scenario} className="h-20" />
+							))}
+						</div>
+						<Skeleton className="h-48 w-full" />
+					</SkeletonGroup>
 				) : (
 					<div className="flex flex-col gap-4 px-4 pb-6">
 						<dl className="grid grid-cols-3 gap-2">

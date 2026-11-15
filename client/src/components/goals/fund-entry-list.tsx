@@ -1,6 +1,8 @@
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Amount } from "@/components/ui/amount";
+import { QueryError } from "@/components/ui/query-error";
+import { SkeletonGroup, SkeletonRows } from "@/components/ui/skeleton";
 import { useDeleteFundEntry } from "@/hooks/use-goals";
 import { cn } from "@/lib/cn";
 import { formatLongDate, formatMoney, formatSignedMoney } from "@/lib/format";
@@ -13,6 +15,8 @@ type Props = {
 	currency: string;
 	isLoading: boolean;
 	hasError: boolean;
+	isRetrying: boolean;
+	onRetry: () => void;
 };
 
 const KIND_LABELS: Record<FundEntry["kind"], string> = {
@@ -21,7 +25,15 @@ const KIND_LABELS: Record<FundEntry["kind"], string> = {
 	interest: "Interest",
 };
 
-export function FundEntryList({ goalId, entries, currency, isLoading, hasError }: Props) {
+export function FundEntryList({
+	goalId,
+	entries,
+	currency,
+	isLoading,
+	hasError,
+	isRetrying,
+	onRetry,
+}: Props) {
 	const remove = useDeleteFundEntry();
 
 	async function onDelete(entryId: string) {
@@ -35,13 +47,20 @@ export function FundEntryList({ goalId, entries, currency, isLoading, hasError }
 
 	if (hasError) {
 		return (
-			<p role="alert" className="px-4 text-sm text-negative">
-				Could not load entries.
-			</p>
+			<QueryError
+				className="mx-4"
+				message="Could not load entries."
+				isRetrying={isRetrying}
+				onRetry={onRetry}
+			/>
 		);
 	}
 	if (isLoading) {
-		return <p className="px-4 text-sm text-muted-foreground">Loading…</p>;
+		return (
+			<SkeletonGroup label="Loading fund entries" className="px-4">
+				<SkeletonRows count={3} />
+			</SkeletonGroup>
+		);
 	}
 	if (entries.length === 0) {
 		return <p className="px-4 text-sm text-muted-foreground">No entries yet.</p>;

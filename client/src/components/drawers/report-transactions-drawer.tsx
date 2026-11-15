@@ -1,6 +1,7 @@
 import { useMemo, useRef } from "react";
 import { ScrollContainerContext } from "@/components/layout/scroll-container";
 import { TransactionFeed } from "@/components/transactions/transaction-feed";
+import { TransactionFeedSkeleton } from "@/components/transactions/transaction-feed-skeleton";
 import {
 	Sheet,
 	SheetContent,
@@ -40,7 +41,7 @@ export function ReportTransactionsDrawer({
 				<ScrollContainerContext.Provider value={scrollRef}>
 					<div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto px-2 pb-4">
 						{feed.isPending ? (
-							<p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+							<TransactionFeedSkeleton />
 						) : feed.isError ? (
 							<p role="alert" className="py-10 text-center text-sm text-negative">
 								Could not load transactions.

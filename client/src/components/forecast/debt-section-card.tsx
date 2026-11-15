@@ -1,5 +1,6 @@
 import { Sparkline } from "@/components/accounts/sparkline";
 import { Amount } from "@/components/ui/amount";
+import { QueryError } from "@/components/ui/query-error";
 import { useDebtSection } from "@/hooks/use-forecast";
 import { MONTH_NUMBERS } from "@/lib/forecast";
 import { formatMoney } from "@/lib/format";
@@ -16,9 +17,11 @@ export function DebtSectionCard({ year, currency, onOpenDebt }: Props) {
 	const rows = section.data?.rows ?? [];
 	if (section.isError) {
 		return (
-			<p role="alert" className="text-sm text-negative">
-				Could not load the Debt section.
-			</p>
+			<QueryError
+				message="Could not load the Debt section."
+				isRetrying={section.isFetching}
+				onRetry={() => void section.refetch()}
+			/>
 		);
 	}
 	if (rows.length === 0) return null;

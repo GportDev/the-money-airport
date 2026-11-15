@@ -70,6 +70,8 @@ export function FundDrawer({ goal, currency, onEdit, onClose }: Props) {
 					currency={hostCurrency}
 					isLoading={entries.isPending}
 					hasError={entries.isError}
+					isRetrying={entries.isFetching}
+					onRetry={() => void entries.refetch()}
 				/>
 			</SheetContent>
 		</Sheet>

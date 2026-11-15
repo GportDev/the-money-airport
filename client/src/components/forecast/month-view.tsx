@@ -1,6 +1,8 @@
 import { DailyBalanceChart } from "@/components/forecast/daily-balance-chart";
 import { MonthDayGroup } from "@/components/forecast/month-day-group";
+import { MonthSkeleton } from "@/components/forecast/month-skeleton";
 import { SummaryStat } from "@/components/forecast/summary-stat";
+import { QueryError } from "@/components/ui/query-error";
 import { useForecastMonth } from "@/hooks/use-forecast";
 import { shortDate } from "@/lib/forecast";
 
@@ -13,15 +15,15 @@ export function MonthView({ year, month }: Props) {
 	const forecast = useForecastMonth(year, month);
 	if (forecast.isError) {
 		return (
-			<p role="alert" className="text-sm text-negative">
-				Could not load this month.
-			</p>
+			<QueryError
+				message="Could not load this month."
+				isRetrying={forecast.isFetching}
+				onRetry={() => void forecast.refetch()}
+			/>
 		);
 	}
 	const data = forecast.data;
-	if (!data) {
-		return <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>;
-	}
+	if (!data) return <MonthSkeleton />;
 	const currency = data.baseCurrency;
 	return (
 		<div className="flex flex-col gap-4">
