@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: money-airport-api
+    name: the-money-airport
     runtime: node
     plan: free
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter server build:prod
