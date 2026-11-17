@@ -5,6 +5,7 @@
 		"start": "nest start",
 		"start:dev": "nest start --watch",
 		"build": "nest build",
+		"build:prod": "tsx scripts/build.ts",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {

@@ -3,7 +3,7 @@ services:
     name: money-airport-api
     runtime: node
     plan: free
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter server build
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter server build:prod
     startCommand: node server/dist/main.js
     healthCheckPath: /api/health
     envVars:
