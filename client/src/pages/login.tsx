@@ -2,9 +2,12 @@ import { type FormEvent, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { authClient } from "@/auth/auth-client";
 import { safeNextPath } from "@/auth/safe-next-path";
+import { useOAuthErrorToast } from "@/auth/use-oauth-error-toast";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function LoginPage() {
+	useOAuthErrorToast();
 	const location = useLocation();
 	const next = safeNextPath(new URLSearchParams(location.search).get("next"));
 	const [email, setEmail] = useState("");
@@ -67,15 +70,7 @@ export function LoginPage() {
 							Log in
 						</button>
 					</form>
-					<button
-						className="mt-3 w-full rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
-						type="button"
-						onClick={() => {
-							void authClient.signIn.social({ provider: "google" });
-						}}
-					>
-						Continue with Google
-					</button>
+					<GoogleSignInButton next={next} />
 					<p className="mt-4 text-sm text-muted-foreground">
 						<Link className="text-foreground underline hover:text-primary" to="/signup">
 							Sign up
