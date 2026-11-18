@@ -5,7 +5,6 @@ import {
 	LineChart,
 	List,
 	PieChart,
-	Plane,
 	Repeat,
 	Target,
 	TrendingUp,
@@ -14,6 +13,8 @@ import {
 import { NavLink } from "react-router";
 import { authClient } from "@/auth/auth-client";
 import { useSession } from "@/auth/use-session";
+import { BrandLockup } from "@/components/brand/brand-lockup";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { NAV_ITEMS } from "@/lib/constants";
 
 const NAV_ICONS = {
@@ -43,10 +44,8 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 			className={`relative flex h-full shrink-0 flex-col overflow-x-hidden overflow-y-auto border-r border-border bg-card ${collapsed ? "w-16" : "w-16 xl:w-60"}`}
 		>
 			<div className="flex h-14 shrink-0 items-center border-b border-border px-3">
-				<p className="truncate font-semibold text-foreground">
-					<span className={collapsed ? "sr-only" : "hidden xl:inline"}>Money Airport</span>
-					<Plane aria-hidden className={`size-5 ${collapsed ? "inline" : "xl:hidden"}`} />
-				</p>
+				<BrandLockup className={`h-10 ${collapsed ? "hidden" : "hidden xl:block"}`} />
+				<BrandMark className={collapsed ? "block" : "xl:hidden"} />
 			</div>
 			<nav aria-label="Primary" className="flex flex-1 flex-col gap-1 p-2">
 				{NAV_ITEMS.map((item) => {

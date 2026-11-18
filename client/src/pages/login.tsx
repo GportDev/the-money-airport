@@ -4,7 +4,8 @@ import { authClient } from "@/auth/auth-client";
 import { safeNextPath } from "@/auth/safe-next-path";
 import { useOAuthErrorToast } from "@/auth/use-oauth-error-toast";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandLockup } from "@/components/brand/brand-lockup";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export function LoginPage() {
 	useOAuthErrorToast();
@@ -29,7 +30,7 @@ export function LoginPage() {
 		<div className="flex min-h-svh items-center justify-center bg-background p-6">
 			<Card className="w-full max-w-sm">
 				<CardHeader>
-					<CardTitle>Money Airport</CardTitle>
+					<BrandLockup />
 					<h1 className="text-xl font-semibold">Log in</h1>
 				</CardHeader>
 				<CardContent>
