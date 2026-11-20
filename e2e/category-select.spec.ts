@@ -64,3 +64,52 @@ test("a transaction's Category can be changed from the feed and is saved", async
 		page.getByRole("dialog").getByRole("heading", { name: "Corner Deli" }),
 	).toBeVisible();
 });
+
+test("typing in a Category picker narrows the list by name", async ({ page }) => {
+	await page.request.post(`${API}/transactions`, {
+		data: {
+			name: "Night Market",
+			amount: -900,
+			date: new Date().toISOString().slice(0, 10),
+			categoryId: await categoryId(page, "Groceries"),
+		},
+	});
+
+	await page.goto("/transactions");
+	const picker = page
+		.getByRole("list", { name: "Transactions" })
+		.getByRole("combobox", { name: "Category for Night Market" });
+	await picker.click();
+	await page.getByRole("combobox", { name: "Search categories" }).fill("din");
+	await expect(page.getByRole("option", { name: "Dining" })).toBeVisible();
+	await expect(page.getByRole("option", { name: "Groceries" })).toHaveCount(0);
+
+	await page.getByRole("combobox", { name: "Search categories" }).fill("zzz");
+	await expect(page.getByText("No categories match.")).toBeVisible();
+
+	await page.getByRole("combobox", { name: "Search categories" }).fill("din");
+	await page.getByRole("option", { name: "Dining" }).click();
+	await expect(picker).toHaveText("Dining");
+});
+
+test("the Category form's icon picker shows each icon beside its name", async ({ page }) => {
+	await page.goto("/transactions");
+	await page.getByRole("button", { name: "Filters" }).click();
+	await page.getByRole("button", { name: "Manage categories" }).click();
+	const manager = page.getByRole("dialog");
+	await manager.getByRole("button", { name: "New category" }).click();
+	await manager.getByLabel("Name").fill("Pet food");
+
+	await manager.getByRole("combobox", { name: "Icon" }).click();
+	const option = page.getByRole("option", { name: "Paw print" });
+	await expect(option).toBeVisible();
+	await expect(option.locator("svg").first()).toBeVisible();
+	await option.click();
+	await expect(manager.getByRole("combobox", { name: "Icon" })).toHaveText("Paw print");
+
+	await manager.getByRole("button", { name: "Create category" }).click();
+	await expect(manager.getByRole("button", { name: "Pet food", exact: true })).toBeVisible();
+	const res = await page.request.get(`${API}/categories`);
+	const rows = ((await res.json()) as { data: { name: string; icon: string }[] }).data;
+	expect(rows.find((row) => row.name === "Pet food")?.icon).toBe("paw-print");
+});

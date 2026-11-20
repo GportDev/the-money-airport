@@ -193,6 +193,7 @@ function FeedRow({
 	const rowLabel = [
 		title,
 		item.pending ? "Pending" : null,
+		item.isSplit ? "Split" : null,
 		isTransfer(item) ? "Transfer" : null,
 		item.category?.name,
 		accountLabel,
@@ -232,6 +233,11 @@ function FeedRow({
 				{item.pending ? (
 					<span className="shrink-0 rounded-sm border border-border px-1.5 text-xs text-muted-foreground">
 						Pending
+					</span>
+				) : null}
+				{item.isSplit ? (
+					<span className="shrink-0 rounded-sm border border-border px-1.5 text-xs text-muted-foreground">
+						Split
 					</span>
 				) : null}
 				{isTransfer(item) ? (

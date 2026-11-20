@@ -10,6 +10,7 @@ import { plaidItem } from "../db/schema/plaid-item";
 import { transaction } from "../db/schema/transaction";
 import { userSettings } from "../db/schema/user-settings";
 import { FundEntriesService } from "../goals/fund-entries.service";
+import { TransactionSplitsService } from "./transaction-splits.service";
 import type {
 	TransactionDetail,
 	TransactionFilters,
@@ -25,6 +26,7 @@ export class TransactionsService {
 		@Inject(DATABASE) private readonly db: PostgresJsDatabase,
 		private readonly categories: CategoriesService,
 		private readonly fundEntries: FundEntriesService,
+		private readonly splits: TransactionSplitsService,
 	) {}
 
 	async list(userId: string, filters: TransactionFilters) {
@@ -103,6 +105,7 @@ export class TransactionsService {
 				and(
 					eq(transaction.userId, userId),
 					ne(transaction.id, id),
+					sql`coalesce(${transaction.splitParentId}, ${transaction.id}) <> ${row.tx.splitParentId ?? id}`,
 					sql`lower(coalesce(${transaction.merchantName}, ${transaction.name})) = lower(${merchant})`,
 				),
 			)
@@ -114,6 +117,7 @@ export class TransactionsService {
 			plaidPfcPrimary: row.tx.plaidPfcPrimary,
 			fundEntry: await this.fundEntries.forTransaction(userId, id),
 			similar: similar.map(toListItem),
+			split: await this.splits.forTransaction(userId, row.tx),
 		};
 	}
 
@@ -182,6 +186,9 @@ export class TransactionsService {
 			input.bankAccountId !== undefined;
 		if (editsLedger && !existing.isManual) {
 			throw new BadRequestException("Only manual Transactions can change name, amount, or date");
+		}
+		if (editsLedger && (await this.splits.forTransaction(userId, existing))) {
+			throw new BadRequestException("Unsplit this Transaction to change its name, amount, or date");
 		}
 		const lookup = await this.categories.lookup(userId);
 		const categoryId = input.categoryId ?? existing.categoryId;
@@ -259,6 +266,7 @@ export class TransactionsService {
 					mask: bankAccount.mask,
 				},
 				institutionLogo: plaidItem.institutionLogo,
+				hasSplitParts: sql<boolean>`exists (select 1 from ${transaction} as split_part where split_part.split_parent_id = ${transaction.id})`,
 			})
 			.from(transaction)
 			.leftJoin(category, eq(transaction.categoryId, category.id))
@@ -306,6 +314,7 @@ type ItemRow = {
 	category: { id: string; name: string; icon: string; color: string } | null;
 	account: { id: string; name: string; mask: string | null } | null;
 	institutionLogo: string | null;
+	hasSplitParts: boolean;
 };
 
 function toListItem(row: ItemRow): TransactionListItem {
@@ -320,6 +329,7 @@ function toListItem(row: ItemRow): TransactionListItem {
 		pending: row.tx.pending,
 		isManual: row.tx.isManual,
 		tags: row.tx.tags,
+		isSplit: row.tx.splitParentId !== null || row.hasSplitParts,
 		category: row.category,
 		account: row.account ? { ...row.account, institutionLogo: row.institutionLogo } : null,
 	};

@@ -1,5 +1,11 @@
 import { api, apiUrl } from "@/api/client";
-import type { TransactionDetail, TransactionFilters, TransactionPage, TransferTag } from "@/types";
+import type {
+	SplitPartInput,
+	TransactionDetail,
+	TransactionFilters,
+	TransactionPage,
+	TransferTag,
+} from "@/types";
 
 export function transactionQuery(filters: TransactionFilters, cursor?: string | null, limit = 50) {
 	const params = new URLSearchParams();
@@ -70,4 +76,15 @@ export function bulkCategorize(transactionIds: string[], categoryId: string) {
 
 export function deleteTransaction(id: string) {
 	return api<{ success: true }>(`/transactions/${id}`, { method: "DELETE" });
+}
+
+export function splitTransaction(id: string, parts: SplitPartInput[]) {
+	return api<TransactionDetail>(`/transactions/${id}/split`, {
+		method: "PUT",
+		body: JSON.stringify({ parts }),
+	});
+}
+
+export function unsplitTransaction(id: string) {
+	return api<TransactionDetail>(`/transactions/${id}/split`, { method: "DELETE" });
 }

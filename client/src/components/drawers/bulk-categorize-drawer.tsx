@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from "react";
+import { CategoryCombobox } from "@/components/transactions/category-combobox";
 import { Button } from "@/components/ui/button";
 import {
 	Sheet,
@@ -8,7 +9,6 @@ import {
 	SheetTitle,
 	useSheetClose,
 } from "@/components/ui/sheet";
-import { useCategories } from "@/hooks/use-categories";
 import { useBulkCategorize } from "@/hooks/use-transactions";
 
 export function BulkCategorizeDrawer({
@@ -20,7 +20,6 @@ export function BulkCategorizeDrawer({
 	onClose: () => void;
 	onDone: () => void;
 }) {
-	const categories = useCategories();
 	const bulk = useBulkCategorize();
 	const { sheet, close } = useSheetClose(onClose);
 	const [categoryId, setCategoryId] = useState("");
@@ -51,19 +50,12 @@ export function BulkCategorizeDrawer({
 				<form className="flex flex-col gap-3 px-4" onSubmit={onSubmit}>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="bulk-category">
 						Category
-						<select
+						<CategoryCombobox
 							id="bulk-category"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
-							value={categoryId}
-							onChange={(event) => setCategoryId(event.target.value)}
-						>
-							<option value="">Choose…</option>
-							{(categories.data ?? []).map((category) => (
-								<option key={category.id} value={category.id}>
-									{category.name}
-								</option>
-							))}
-						</select>
+							value={categoryId || null}
+							onValueChange={setCategoryId}
+							className="rounded-md border border-border bg-card px-3 py-2 hover:border-foreground/30"
+						/>
 					</label>
 					{error ? (
 						<p role="alert" className="text-sm text-negative">

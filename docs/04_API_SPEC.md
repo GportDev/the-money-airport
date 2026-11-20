@@ -229,12 +229,16 @@ interface NetWorthResponse {
 | GET | `/transactions/:id` | — | `{ data: TransactionDetail }` |
 | POST | `/transactions` | `{ name, amount, date, categoryId?, bankAccountId?, notes? }` | `{ data: Transaction }` |
 | PATCH | `/transactions/:id` | `{ categoryId?, notes?, tags?, name?, amount?, date?, bankAccountId? }` | `{ data: TransactionDetail }` |
+| PUT | `/transactions/:id/split` | `{ parts: { categoryId, amount }[] }` (2–50 parts) | `{ data: TransactionDetail }` (the parent part) |
+| DELETE | `/transactions/:id/split` | — | `{ data: TransactionDetail }` (the parent, whole again) |
 | PATCH | `/transactions/bulk-categorize` | `{ transactionIds: string[], categoryId: string }` | `{ data: { updated: number } }` |
 | DELETE | `/transactions/:id` | — | `{ data: { success } }` |
 
 `limit` default 50, max 200. `nextCursor` is an opaque `(date, id)` key; the feed sorts by date (`sortDir` `desc` default). `accountId` and `categoryId` accept repeated params (multi-select). `amountMin` / `amountMax` compare absolute cents. `search` matches name, merchant, and notes.
 
 `name`, `amount`, `date`, and `bankAccountId` change only on manual Transactions, and only manual Transactions can be deleted (400 otherwise). Setting `categoryId` locks the Category against later syncs; setting `tags` locks the transfer flag against automatic pairing. A Transfer whose Category is Savings Transfer is stored as `savings_transfer`.
+
+**Split:** `PUT /:id/split` replaces the parts of a Transaction (`:id` may be any part). Every part is non-zero, has the total's sign, and the parts add up to the original amount to the cent (400 otherwise). The original row keeps the first part; the rest are child rows, so every total stays a plain sum. A split part cannot change name, amount, date, or account until it is unsplit. `DELETE /:id/split` folds the parts back into the parent (400 if not split). Another User's id returns 404.
 
 ```typescript
 interface TransactionListItem {
@@ -248,6 +252,7 @@ interface TransactionListItem {
   pending: boolean;
   isManual: boolean;
   tags: string[];
+  isSplit: boolean; // true for every part of a split
   category: { id: string; name: string; icon: string; color: string } | null;
   account: { id: string; name: string; mask: string | null; institutionLogo: string | null } | null;
 }
@@ -255,7 +260,12 @@ interface TransactionListItem {
 interface TransactionDetail extends TransactionListItem {
   notes: string | null;
   plaidPfcPrimary: string | null;
-  similar: TransactionListItem[]; // same merchant, recent
+  similar: TransactionListItem[]; // same merchant, recent, other splits' parts left out
+  split: {
+    parentId: string;
+    total: number; // original amount, cents
+    parts: { id: string; amount: number; category: { id: string; name: string; icon: string; color: string } | null }[]; // parent first
+  } | null;
 }
 ```
 

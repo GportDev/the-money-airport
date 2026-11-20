@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { CATEGORY_ICONS, CategoryIcon } from "@/components/transactions/category-icon";
+import { CategoryIcon } from "@/components/transactions/category-icon";
+import { CategoryIconSelect } from "@/components/transactions/category-icon-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -167,21 +168,15 @@ function CategoryForm({ category, onDone }: { category: Category | null; onDone:
 						onChange={(event) => setColor(event.target.value)}
 					/>
 				</label>
-				<label className="flex flex-1 flex-col gap-1 text-sm" htmlFor="category-icon">
-					Icon
-					<select
-						id="category-icon"
-						className={fieldClass}
+				<div className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
+					<span id="category-icon-label">Icon</span>
+					<CategoryIconSelect
+						labelId="category-icon-label"
 						value={icon}
-						onChange={(event) => setIcon(event.target.value)}
-					>
-						{Object.keys(CATEGORY_ICONS).map((key) => (
-							<option key={key} value={key}>
-								{key}
-							</option>
-						))}
-					</select>
-				</label>
+						color={color}
+						onValueChange={setIcon}
+					/>
+				</div>
 			</div>
 			{category?.isUncategorized ? null : (
 				<label className="flex flex-col gap-1 text-sm" htmlFor="category-kind">
