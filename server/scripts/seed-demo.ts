@@ -1,6 +1,7 @@
 /**
  * Seeds Plaid-shaped demo data for one local User so every screen has something to show:
- * three PlaidItems (checking, savings, credit card, brokerage, auto loan), transactions
+ * three PlaidItems (checking, savings, two credit cards with Card benefits, brokerage, auto
+ * loan), transactions
  * from the first of the month two months back through today, paired transfers, a refund,
  * a few pending and Uncategorized rows, and daily balance snapshots that agree with them.
  *
@@ -13,11 +14,21 @@ import { join } from "node:path";
 import { and, eq, inArray, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import type { CardBenefitsInput } from "../src/card-benefits/card-benefits.types";
+import { flatCashBack2 } from "../src/card-benefits/presets/flat-cash-back-2";
 import { DEFAULT_CATEGORIES } from "../src/categories/category-defaults";
 import { encryptToken } from "../src/crypto/token-crypto";
 import * as schema from "../src/db/schema";
 
-const { accountBalanceSnapshot, bankAccount, category, plaidItem, transaction, user } = schema;
+const {
+	accountBalanceSnapshot,
+	bankAccount,
+	cardBenefits,
+	category,
+	plaidItem,
+	transaction,
+	user,
+} = schema;
 
 const SEED = "seed-demo";
 
@@ -76,7 +87,7 @@ const pick = <T>(items: readonly T[]) => items[Math.floor(random() * items.lengt
 // ---------------------------------------------------------------------------------------------
 // Accounts
 
-type AccountKey = "checking" | "savings" | "card" | "brokerage" | "auto";
+type AccountKey = "checking" | "savings" | "card" | "cashCard" | "brokerage" | "auto";
 
 const ITEMS = [
 	{ key: "chase", name: "Chase", institutionId: "ins_56" },
@@ -129,6 +140,17 @@ const ACCOUNTS: Record<
 		openingBalance: 1_046_18,
 		creditLimit: 12_000_00,
 	},
+	cashCard: {
+		item: "chase",
+		name: "Cash Rewards",
+		officialName: "Chase Cash Rewards Visa",
+		type: "credit",
+		subtype: "credit card",
+		displayGroup: "credit",
+		mask: "8140",
+		openingBalance: 212_40,
+		creditLimit: 8_000_00,
+	},
 	brokerage: {
 		item: "vanguard",
 		name: "Brokerage",
@@ -153,6 +175,27 @@ const ACCOUNTS: Record<
 
 const isAsset = (key: AccountKey) =>
 	ACCOUNTS[key].type !== "credit" && ACCOUNTS[key].type !== "loan";
+
+const TRAVEL_CARD_BENEFITS: CardBenefitsInput = {
+	productName: "Travel rewards",
+	rewardCurrency: "points",
+	unitValue: 125,
+	baseRatePer100: 100,
+	earnRules: [
+		{ label: "Dining", ratePer100: 300, categories: ["dining"], merchants: [], cap: null },
+	],
+	credits: [
+		{
+			label: "Dining credit",
+			amount: 10_00,
+			period: "month",
+			categories: ["dining"],
+			merchants: [],
+		},
+	],
+	perks: [{ label: "No foreign transaction fees", description: null }],
+	annualFee: 95_00,
+};
 
 // ---------------------------------------------------------------------------------------------
 // Transactions
@@ -652,12 +695,11 @@ async function main() {
 					subtype: spec.subtype,
 					mask: spec.mask,
 					currentBalance: balance,
-					availableBalance:
-						key === "card" && spec.creditLimit
-							? spec.creditLimit - balance
-							: isAsset(key)
-								? balance
-								: null,
+					availableBalance: spec.creditLimit
+						? spec.creditLimit - balance
+						: isAsset(key)
+							? balance
+							: null,
 					creditLimit: spec.creditLimit ?? null,
 					isoCurrencyCode: "USD",
 					isAsset: isAsset(key),
@@ -671,6 +713,20 @@ async function main() {
 			}
 		}
 		await tx.insert(accountBalanceSnapshot).values(snapshots);
+
+		await tx.insert(cardBenefits).values([
+			{
+				...TRAVEL_CARD_BENEFITS,
+				userId,
+				bankAccountId: accountIds.get("card") as string,
+			},
+			{
+				...flatCashBack2.benefits,
+				userId,
+				bankAccountId: accountIds.get("cashCard") as string,
+				presetKey: flatCashBack2.key,
+			},
+		]);
 
 		await tx.insert(transaction).values(
 			rows.map((row, index) => {

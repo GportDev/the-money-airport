@@ -18,6 +18,7 @@ User (BetterAuth)
  │         │         └── N:1 → Category
  │         ├── 1:N → AccountBalanceSnapshot
  │         ├── 1:N → CardStatement   (credit only)
+ │         ├── 0:1 → CardBenefits    (credit only)
  │         ├── 0:1 → LoanTerms       (loan only)
  │         ├── 0:1 → GoalAccount (exclusive)
  │         └── 1:N → Goal (as Fund host)
@@ -143,6 +144,33 @@ One closed Statement of a credit BankAccount. From Plaid Liabilities (`last_stat
 **Index:** `(bank_account_id, period_end DESC)` — latest Statement
 
 Current period spend = sum of the card's non-Transfer Transactions dated after the latest `period_end`. When Plaid gives no `period_start`, use the previous Statement's `period_end + 1` (or `period_end − 1 month + 1` for the first).
+
+---
+
+### `card_benefits`
+
+The Card benefits of one credit BankAccount, copied from a Card product preset (`server/src/card-benefits/presets/`) or entered through the API. Rewards earned, Benefit credit status, and the Better card are computed at read time, never stored.
+
+| Column | Type | Constraints |
+|--------|------|------------|
+| `id` | `uuid` | PK, default `gen_random_uuid()` |
+| `user_id` | `text` | FK → user.id, ON DELETE CASCADE, NOT NULL |
+| `bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE CASCADE, UNIQUE, NOT NULL |
+| `preset_key` | `text` | nullable — null = entered through the API |
+| `product_name` | `text` | NOT NULL |
+| `reward_currency` | `text` | `cash_back` \| `points` \| `miles`, NOT NULL |
+| `unit_value` | `integer` | Hundredths of a cent per unit (125 = 1.25¢), NOT NULL — always `100` for `cash_back` |
+| `base_rate_per_100` | `integer` | Units per $100 of spend (200 = 2%), NOT NULL |
+| `earn_rules` | `jsonb` | `EarnRule[]`, default `[]` |
+| `credits` | `jsonb` | `BenefitCredit[]`, default `[]` |
+| `perks` | `jsonb` | `CardPerk[]`, default `[]` |
+| `annual_fee` | `integer` | Native cents, nullable |
+| `created_at` | `timestamptz` | default `now()` |
+| `updated_at` | `timestamptz` | default `now()` |
+
+**Index:** `(user_id)`
+
+JSON shapes are the `EarnRule`, `BenefitCredit`, and `CardPerk` types in `docs/04_API_SPEC.md`. Cap and credit amounts are native cents.
 
 ---
 

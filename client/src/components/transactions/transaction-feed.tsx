@@ -2,6 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowLeftRight, ChevronRight } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useScrollContainer } from "@/components/layout/scroll-container";
+import { BetterCardBadge } from "@/components/transactions/better-card-badge";
 import { CategorySelect } from "@/components/transactions/category-select";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
@@ -194,6 +195,7 @@ function FeedRow({
 		title,
 		item.pending ? "Pending" : null,
 		isTransfer(item) ? "Transfer" : null,
+		item.betterCard ? `Better with ${item.betterCard.name}` : null,
 		item.category?.name,
 		accountLabel,
 		amount,
@@ -238,6 +240,13 @@ function FeedRow({
 					<ArrowLeftRight
 						aria-label="Transfer"
 						className="size-3.5 shrink-0 text-muted-foreground"
+					/>
+				) : null}
+				{item.betterCard ? (
+					<BetterCardBadge
+						betterCard={item.betterCard}
+						currency={item.isoCurrencyCode}
+						className="hidden sm:inline-flex"
 					/>
 				) : null}
 			</span>

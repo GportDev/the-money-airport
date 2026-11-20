@@ -6,6 +6,7 @@ import { RouteError } from "@/components/route-error";
 import { AccountsPage } from "@/pages/accounts";
 import { BudgetPage } from "@/pages/budget";
 import { CashFlowPage } from "@/pages/cash-flow";
+import { CreditCardsPage } from "@/pages/credit-cards";
 import { DashboardPage } from "@/pages/dashboard";
 import { ForecastPage } from "@/pages/forecast";
 import { ForgotPasswordPage } from "@/pages/forgot-password";
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
 									{ path: "/", element: <DashboardPage /> },
 									{ path: "/cash-flow", element: <CashFlowPage /> },
 									{ path: "/accounts", element: <AccountsPage /> },
+									{ path: "/credit-cards", element: <CreditCardsPage /> },
 									{ path: "/transactions", element: <TransactionsPage /> },
 									{ path: "/reports", element: <ReportsPage /> },
 									{ path: "/budget", element: <BudgetPage /> },

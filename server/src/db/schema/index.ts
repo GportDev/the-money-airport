@@ -3,6 +3,7 @@ export * from "./auth";
 export * from "./bank-account";
 export * from "./billing";
 export * from "./budget";
+export * from "./card-benefits";
 export * from "./card-statement";
 export * from "./category";
 export * from "./forecast";

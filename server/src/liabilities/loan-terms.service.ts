@@ -58,10 +58,10 @@ export function nextPaymentDate(terms: Pick<LoanTermsDto, "firstPaymentDate" | "
 	return thisMonth > today ? thisMonth : dayInMonth(monthAfter(today), day);
 }
 
-function dayInMonth(month: string, day: number) {
+export function dayInMonth(month: string, day: number) {
 	return `${month}-${pad(Math.min(day, lastDayOf(month)))}`;
 }
 
-function monthAfter(date: string) {
+export function monthAfter(date: string) {
 	return addMonths(`${date.slice(0, 7)}-01`, 1).slice(0, 7);
 }
