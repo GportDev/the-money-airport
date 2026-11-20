@@ -11,6 +11,7 @@ import { FeedState } from "@/components/transactions/feed-state";
 import { NoTransactions } from "@/components/transactions/no-transactions";
 import { TransactionFeed } from "@/components/transactions/transaction-feed";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
 import { QueryError } from "@/components/ui/query-error";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCashFlow } from "@/hooks/use-cash-flow";
@@ -91,14 +92,10 @@ export function CashFlowPage() {
 						patchParams((next) => next.set("month", shiftMonth(year, month, delta)))
 					}
 				/>
-				<button
-					className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-					type="button"
-					onClick={() => setDrawer("add")}
-				>
+				<Button type="button" onClick={() => setDrawer("add")}>
 					<Plus aria-hidden className="size-4" />
 					Add
-				</button>
+				</Button>
 			</PageHeader>
 
 			{cashFlow.isError ? (

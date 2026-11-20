@@ -14,6 +14,7 @@ import {
 } from "@/components/dashboard/widgets";
 import { TransactionDrawer } from "@/components/drawers/transaction-drawer";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QueryError } from "@/components/ui/query-error";
 import { useDashboard } from "@/hooks/use-dashboard";
@@ -40,15 +41,15 @@ export function DashboardPage() {
 	return (
 		<>
 			<PageHeader title="Dashboard">
-				<button
+				<Button
+					variant="outline"
 					type="button"
-					className="flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 					disabled={!data}
 					onClick={() => setCustomizing(true)}
 				>
 					<SlidersHorizontal aria-hidden className="size-4" />
 					Customize
-				</button>
+				</Button>
 			</PageHeader>
 			<p className="-mt-4 mb-6 text-lg">
 				{greeting(new Date().getHours())}

@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
 	year: number;
@@ -8,25 +9,27 @@ type Props = {
 export function YearNavigator({ year, onShift }: Props) {
 	return (
 		<div className="flex items-center gap-1">
-			<button
+			<Button
+				variant="ghost"
+				size="icon"
 				type="button"
-				className="rounded-md p-2 transition-colors hover:bg-foreground/5"
 				aria-label="Previous year"
 				onClick={() => onShift(-1)}
 			>
 				<ChevronLeft aria-hidden className="size-4" />
-			</button>
+			</Button>
 			<p className="min-w-16 text-center text-sm font-medium" aria-live="polite">
 				{year}
 			</p>
-			<button
+			<Button
+				variant="ghost"
+				size="icon"
 				type="button"
-				className="rounded-md p-2 transition-colors hover:bg-foreground/5"
 				aria-label="Next year"
 				onClick={() => onShift(1)}
 			>
 				<ChevronRight aria-hidden className="size-4" />
-			</button>
+			</Button>
 		</div>
 	);
 }

@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FundSelect } from "@/components/forecast/fund-select";
 import { PayFromSelect } from "@/components/forecast/pay-from-select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import {
 	Sheet,
@@ -101,18 +103,16 @@ export function OneOffDrawer({ section, oneOff, onClose }: Props) {
 				<form id="one-off-form" className="flex flex-col gap-4 px-4" onSubmit={onSubmit}>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="one-off-name">
 						Name
-						<input
+						<Input
 							id="one-off-name"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={name}
 							onChange={(event) => setName(event.target.value)}
 						/>
 					</label>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="one-off-date">
 						Date
-						<input
+						<Input
 							id="one-off-date"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							type="date"
 							value={date}
 							onChange={(event) => setDate(event.target.value)}
@@ -120,9 +120,8 @@ export function OneOffDrawer({ section, oneOff, onClose }: Props) {
 					</label>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="one-off-amount">
 						Amount
-						<input
+						<Input
 							id="one-off-amount"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							type="number"
 							inputMode="decimal"
 							min="0"
@@ -157,23 +156,18 @@ export function OneOffDrawer({ section, oneOff, onClose }: Props) {
 					) : null}
 				</form>
 				<SheetFooter>
-					<button
-						form="one-off-form"
-						type="submit"
-						disabled={isBusy}
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-					>
+					<Button form="one-off-form" type="submit" disabled={isBusy}>
 						Save one-off
-					</button>
+					</Button>
 					{oneOff ? (
-						<button
+						<Button
+							variant="danger-outline"
 							type="button"
 							disabled={isBusy}
 							onClick={() => setDeleteOpen(true)}
-							className="rounded-md border border-border px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/5 disabled:opacity-60"
 						>
 							Delete one-off
-						</button>
+						</Button>
 					) : null}
 				</SheetFooter>
 				{isDeleteOpen && oneOff ? (

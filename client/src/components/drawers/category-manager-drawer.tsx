@@ -1,6 +1,8 @@
 import { type FormEvent, useState } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { CATEGORY_ICONS, CategoryIcon } from "@/components/transactions/category-icon";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Sheet,
 	SheetContent,
@@ -50,13 +52,9 @@ export function CategoryManagerDrawer({ onClose }: { onClose: () => void }) {
 								onDone={() => setEditing(null)}
 							/>
 						) : (
-							<button
-								className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-								type="button"
-								onClick={() => setEditing("new")}
-							>
+							<Button type="button" onClick={() => setEditing("new")}>
 								New category
-							</button>
+							</Button>
 						)}
 						{(["expense", "income"] as const).map((kind) => (
 							<section key={kind} aria-labelledby={`categories-${kind}`}>
@@ -151,9 +149,8 @@ function CategoryForm({ category, onDone }: { category: Category | null; onDone:
 		>
 			<label className="flex flex-col gap-1 text-sm" htmlFor="category-name">
 				Name
-				<input
+				<Input
 					id="category-name"
-					className={fieldClass}
 					value={name}
 					onChange={(event) => setName(event.target.value)}
 					required
@@ -223,19 +220,12 @@ function CategoryForm({ category, onDone }: { category: Category | null; onDone:
 				</p>
 			) : null}
 			<div className="flex gap-2">
-				<button
-					className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-					type="submit"
-				>
+				<Button className="flex-1" type="submit">
 					{category ? "Save category" : "Create category"}
-				</button>
-				<button
-					className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
-					type="button"
-					onClick={onDone}
-				>
+				</Button>
+				<Button variant="outline" type="button" onClick={onDone}>
 					Cancel
-				</button>
+				</Button>
 			</div>
 		</form>
 	);

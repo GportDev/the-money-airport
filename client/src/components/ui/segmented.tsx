@@ -27,7 +27,7 @@ export function Segmented<T extends string>({
 			onValueChange={(next: string) => {
 				if (next) onValueChange(next as T);
 			}}
-			className={cn("inline-flex rounded-md border border-border p-0.5 text-sm", className)}
+			className={cn("inline-flex rounded-md bg-foreground/5 p-0.5 text-sm", className)}
 			{...props}
 		>
 			{options.map((option) => (
@@ -42,7 +42,7 @@ export function Segmented<T extends string>({
 function SegmentedItem(props: React.ComponentProps<typeof ToggleGroup.Item>) {
 	return (
 		<ToggleGroup.Item
-			className="rounded px-3 py-1 transition-colors hover:bg-foreground/5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+			className="rounded px-3 py-1 text-muted-foreground transition-colors hover:text-foreground data-[state=on]:bg-card data-[state=on]:font-medium data-[state=on]:text-foreground"
 			{...props}
 		/>
 	);

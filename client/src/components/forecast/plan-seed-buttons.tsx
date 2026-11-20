@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { useAddRowsFromCategories, useAddRowsFromRecurring } from "@/hooks/use-forecast";
 
 function addedMessage(count: number) {
@@ -39,22 +40,22 @@ export function PlanSeedButtons({ year }: { year: number }) {
 
 	return (
 		<>
-			<button
+			<Button
+				variant="outline"
 				type="button"
 				disabled={isBusy}
 				onClick={() => void onAddFromCategories()}
-				className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5 disabled:opacity-60"
 			>
 				Add from categories
-			</button>
-			<button
+			</Button>
+			<Button
+				variant="outline"
 				type="button"
 				disabled={isBusy}
 				onClick={() => void onAddFromRecurring()}
-				className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5 disabled:opacity-60"
 			>
 				Add from recurring
-			</button>
+			</Button>
 		</>
 	);
 }

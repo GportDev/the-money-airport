@@ -132,6 +132,7 @@ e2e/                    Playwright specs, fixtures, helpers
 - Generic primitives go in `components/ui/`; domain UI in `components/[domain]/`. Files are kebab-case `.tsx`. **Check `components/ui/` before creating a primitive.**
 - **One component per file.** Use folders so bigger components compose from smaller ones. A `ui/` primitive may keep its sub-parts in one file, as `sheet.tsx` does.
 - **Radix (`radix-ui` barrel) or Base UI is the base for interactive elements.** No new raw `<dialog>`, `<select>`, or `<input type="checkbox">`.
+- Buttons are `<Button>` (`ui/button.tsx`, `asChild` for links) and text fields are `<Input>` (`ui/input.tsx`). No hand-rolled button or input class strings.
 - Create, edit, and detail flows use a right drawer (`ui/sheet.tsx`, in `components/drawers/`). Confirm-only actions use `confirm-dialog.tsx`.
 - **Named exports only.** No default exports.
 - **Props typing:**

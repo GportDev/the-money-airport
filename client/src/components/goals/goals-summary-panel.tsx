@@ -1,6 +1,7 @@
 import { useSearchParams } from "react-router";
 import { FundBalanceList } from "@/components/goals/fund-balance-list";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
 import { useGoals } from "@/hooks/use-goals";
 import { formatMoney } from "@/lib/format";
 import { GOAL_EDIT_ACCOUNTS_PARAM, GOAL_EDIT_ACCOUNTS_VALUE, parseGoalTab } from "@/lib/goals";
@@ -51,13 +52,9 @@ export function GoalsSummaryPanel() {
 					/>
 				</section>
 			))}
-			<button
-				type="button"
-				onClick={openEditAccounts}
-				className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-			>
+			<Button type="button" onClick={openEditAccounts}>
 				Edit accounts
-			</button>
+			</Button>
 		</div>
 	);
 }

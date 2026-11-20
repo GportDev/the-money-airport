@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { longMonthName, MONTH_NUMBERS } from "@/lib/forecast";
 import { centsToMajorUnits, majorUnitsToCents } from "@/lib/format";
 
@@ -25,9 +27,8 @@ export function PlanAmountsFields({ year, amounts, onChange }: Props) {
 			<div className="flex items-end gap-2">
 				<label className="flex flex-1 flex-col gap-1" htmlFor="plan-every-month">
 					Amount for every month
-					<input
+					<Input
 						id="plan-every-month"
-						className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 						type="number"
 						inputMode="decimal"
 						min="0"
@@ -36,14 +37,9 @@ export function PlanAmountsFields({ year, amounts, onChange }: Props) {
 						onChange={(event) => setEveryMonth(event.target.value)}
 					/>
 				</label>
-				<button
-					type="button"
-					disabled={!canCopy}
-					onClick={copyToAll}
-					className="rounded-md border border-border px-3 py-2 transition-colors hover:bg-foreground/5 disabled:opacity-60"
-				>
+				<Button variant="outline" type="button" disabled={!canCopy} onClick={copyToAll}>
 					Copy to all months
-				</button>
+				</Button>
 			</div>
 			<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
 				{MONTH_NUMBERS.map((month) => (

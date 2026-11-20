@@ -29,7 +29,7 @@ export function LastStatement({ statement, currency }: Props) {
 				</Amount>
 				{statement.minimumPayment !== null ? (
 					<span className="text-muted-foreground">
-						min {formatMoney(statement.minimumPayment, currency)}
+						min <Amount>{formatMoney(statement.minimumPayment, currency)}</Amount>
 					</span>
 				) : null}
 			</p>

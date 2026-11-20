@@ -28,6 +28,33 @@
 	--radius-lg: var(--radius);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-sm: calc(var(--radius) - 4px);
+	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+	--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+	--animate-pop-in: pop-in 160ms var(--ease-out);
+	--animate-pop-out: pop-out 100ms var(--ease-out) forwards;
+	--animate-fade-in: fade-in 160ms var(--ease-out);
+}
+
+/* Popovers and dialogs grow from 96% so they never appear from nothing; exit is faster than
+   enter. Reduced motion keeps the fade and drops the scale. */
+@keyframes pop-in {
+	from {
+		opacity: 0;
+		scale: var(--pop-scale);
+	}
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes pop-out {
+	to {
+		opacity: 0;
+		scale: var(--pop-scale);
+	}
 }
 
 :root {
@@ -53,6 +80,13 @@
 	--chart-5: #ca8a04;
 	--chart-6: #64748b;
 	--radius: 0.5rem;
+	--pop-scale: 0.96;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--pop-scale: 1;
+	}
 }
 
 html,

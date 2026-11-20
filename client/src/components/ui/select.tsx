@@ -38,7 +38,7 @@ function SelectContent({
 				position="popper"
 				sideOffset={4}
 				className={cn(
-					"z-50 max-h-72 min-w-(--radix-select-trigger-width) overflow-hidden rounded-lg border border-border bg-card p-1 text-sm shadow-lg",
+					"z-50 max-h-72 min-w-(--radix-select-trigger-width) origin-(--radix-select-content-transform-origin) overflow-hidden rounded-lg border border-border bg-card p-1 text-sm shadow-lg data-[state=closed]:animate-pop-out data-[state=open]:animate-pop-in",
 					className,
 				)}
 				{...props}
@@ -57,7 +57,7 @@ function SelectItem({
 	return (
 		<SelectPrimitive.Item
 			className={cn(
-				"flex cursor-default items-center justify-between gap-2 rounded-md px-2 py-1.5 outline-none data-[highlighted]:bg-foreground/5",
+				"flex cursor-default items-center justify-between gap-2 rounded-md px-2 py-1.5 outline-none transition-colors data-[highlighted]:bg-foreground/5",
 				className,
 			)}
 			{...props}

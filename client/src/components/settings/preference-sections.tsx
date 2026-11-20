@@ -3,6 +3,7 @@ import { CopyForwardToggle } from "@/components/settings/copy-forward-toggle";
 import { PlanSection } from "@/components/settings/plan-section";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsSkeleton } from "@/components/settings/settings-skeleton";
+import { Button } from "@/components/ui/button";
 import { QueryError } from "@/components/ui/query-error";
 import { useSettings } from "@/hooks/use-settings";
 
@@ -24,13 +25,9 @@ export function PreferenceSections({ onCustomizeWidgets }: Props) {
 	return (
 		<>
 			<SettingsSection title="Dashboard" description="Choose which widgets show and in what order.">
-				<button
-					type="button"
-					className="self-start rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
-					onClick={onCustomizeWidgets}
-				>
+				<Button variant="outline" type="button" className="self-start" onClick={onCustomizeWidgets}>
 					Customize widgets
-				</button>
+				</Button>
 			</SettingsSection>
 			<SettingsSection
 				title="Budget"
