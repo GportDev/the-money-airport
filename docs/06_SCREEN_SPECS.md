@@ -161,9 +161,11 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 - Sub-tabs: **All** (default). Receipts and Retail Sync are empty states in V1.
 - Date-grouped feed. Date header shows that day's net. Infinite/virtual scroll.
-- Row: merchant logo + name; category icon + label; account logo + name; amount; chevron. Pending badge when `pending`.
+- Row: merchant logo + name; category icon + label; account logo + name; amount; chevron. Pending badge when `pending`; Split badge on every part of a split.
+- Every category picker (feed row, transaction drawer, add form, bulk assign) is searchable: typing narrows the list by name.
 - Spend in default text; income/credits green with `+`.
-- Click row → **transaction drawer** (category select, notes, similar transactions, **This is a transfer** toggle).
+- Click row → **transaction drawer** (category select, notes, similar transactions, **This is a transfer** toggle, **Split**).
+- **Split:** **Split transaction** opens rows of Category + amount (starts with the current Category and full amount, plus an empty row). **Add part** adds a row pre-filled with what is left. A status line shows "Left $x", "Over by $x", or "Adds up"; **Save split** stays disabled until every row has a Category and the parts add up to the total. A split shows its parts in the drawer; **Edit split** reopens the editor with **Unsplit**. A split manual Transaction hides name, amount, date, and account until unsplit.
 - Search (300ms debounce). Filters: account multi, category multi, amount, pending. All in URL search params.
 - **Edit multiple:** checkboxes → bulk category assign (drawer).
 - **Columns:** show/hide category and account.
@@ -455,7 +457,7 @@ Vertical stacked sections (cards), no sub-nav:
 | Fund | Fund card | Balance, target, date-grouped entries, + Entry |
 | Forecast item | Row / + Add | Name, day of month, 12 Plan amounts, copy-to-all, pay-from account, Fund (savings) |
 | One-off | One-off row / + One-off | Name, date, amount, account, Category, Fund, status, matched Transaction |
-| Category manager | Filters gear / Settings | List with color/icon; create/edit; delete confirm |
+| Category manager | Filters gear / Settings | List with color/icon; create/edit (icon picker lists each icon beside its name); delete confirm |
 | Report transactions | Report category or month click | Filtered `transaction-feed`; a row opens the Transaction drawer, closing it returns here |
 
 ## Dialog Catalog (small, confirm only)

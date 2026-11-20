@@ -1,7 +1,9 @@
 import { type FormEvent, useState } from "react";
 import { AssignToFund } from "@/components/transactions/assign-to-fund";
+import { CategoryCombobox } from "@/components/transactions/category-combobox";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
+import { TransactionSplit } from "@/components/transactions/split/transaction-split";
 import { Amount } from "@/components/ui/amount";
 import { QueryError } from "@/components/ui/query-error";
 import {
@@ -58,7 +60,6 @@ export function TransactionDrawer({
 					<EditForm
 						key={detail.data.id}
 						transaction={detail.data}
-						categories={categories.data ?? []}
 						onDone={() => close()}
 						onDelete={onDelete}
 						onOpenSimilar={onOpenSimilar}
@@ -98,53 +99,13 @@ function TransactionDetailSkeleton() {
 	);
 }
 
-function CategorySelect({
-	id,
-	value,
-	onChange,
-	categories,
-}: {
-	id: string;
-	value: string;
-	onChange: (value: string) => void;
-	categories: Category[];
-}) {
-	const income = categories.filter((category) => category.kind === "income");
-	const expense = categories.filter((category) => category.kind === "expense");
-	return (
-		<select
-			id={id}
-			className={fieldClass}
-			value={value}
-			onChange={(event) => onChange(event.target.value)}
-		>
-			<optgroup label="Expense">
-				{expense.map((category) => (
-					<option key={category.id} value={category.id}>
-						{category.name}
-					</option>
-				))}
-			</optgroup>
-			<optgroup label="Income">
-				{income.map((category) => (
-					<option key={category.id} value={category.id}>
-						{category.name}
-					</option>
-				))}
-			</optgroup>
-		</select>
-	);
-}
-
 function EditForm({
 	transaction,
-	categories,
 	onDone,
 	onDelete,
 	onOpenSimilar,
 }: {
 	transaction: TransactionDetail;
-	categories: Category[];
 	onDone: () => void;
 	onDelete?: (transaction: TransactionDetail) => void;
 	onOpenSimilar?: (id: string) => void;
@@ -161,6 +122,8 @@ function EditForm({
 	const [error, setError] = useState<string | null>(null);
 	const title = transaction.merchantName ?? transaction.name;
 	const wasTransfer = transaction.tags.length > 0;
+	// The ledger fields of a split part are fixed; unsplit to change them.
+	const canEditLedger = transaction.isManual && !transaction.split;
 
 	async function onSubmit(event: FormEvent) {
 		event.preventDefault();
@@ -171,7 +134,7 @@ function EditForm({
 				...(categoryId !== transaction.category?.id ? { categoryId } : {}),
 				notes: notes.trim() === "" ? null : notes,
 				...(isTransfer !== wasTransfer ? { tags: isTransfer ? ["transfer"] : [] } : {}),
-				...(transaction.isManual
+				...(canEditLedger
 					? {
 							name,
 							amount: majorUnitsToCents(amount),
@@ -212,7 +175,7 @@ function EditForm({
 				</p>
 			</SheetHeader>
 			<form className="flex flex-col gap-3 px-4" onSubmit={onSubmit}>
-				{transaction.isManual ? (
+				{canEditLedger ? (
 					<>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-name">
 							Name
@@ -266,11 +229,11 @@ function EditForm({
 				) : null}
 				<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-category">
 					Category
-					<CategorySelect
+					<CategoryCombobox
 						id="transaction-category"
 						value={categoryId}
-						onChange={setCategoryId}
-						categories={categories}
+						onValueChange={setCategoryId}
+						className={fieldClass}
 					/>
 				</label>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-notes">
@@ -307,6 +270,7 @@ function EditForm({
 					Save
 				</button>
 			</form>
+			<TransactionSplit transaction={transaction} />
 			<AssignToFund transaction={transaction} />
 			{transaction.similar.length > 0 ? (
 				<section aria-labelledby="similar-heading" className="flex flex-col gap-2 px-4">
@@ -466,11 +430,11 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 				</label>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-category">
 					Category
-					<CategorySelect
+					<CategoryCombobox
 						id="new-transaction-category"
-						value={categoryId || uncategorized?.id || ""}
-						onChange={setCategoryId}
-						categories={categories}
+						value={categoryId || uncategorized?.id || null}
+						onValueChange={setCategoryId}
+						className={fieldClass}
 					/>
 				</label>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-notes">

@@ -8,10 +8,12 @@ import {
 	ParseUUIDPipe,
 	Patch,
 	Post,
+	Put,
 	Query,
 } from "@nestjs/common";
 import { z } from "zod";
 import { CurrentUser } from "../auth/current-user.decorator";
+import { TransactionSplitsService } from "./transaction-splits.service";
 import { TransactionsService } from "./transactions.service";
 import { TRANSFER_TAGS } from "./transactions.types";
 
@@ -56,6 +58,15 @@ const updateBody = z.object({
 	bankAccountId: z.string().uuid().nullable().optional(),
 });
 
+const MAX_SPLIT_PARTS = 50;
+
+const splitBody = z.object({
+	parts: z
+		.array(z.object({ categoryId: z.string().uuid(), amount: z.number().int() }))
+		.min(2)
+		.max(MAX_SPLIT_PARTS),
+});
+
 const bulkBody = z.object({
 	transactionIds: z.array(z.string().uuid()).min(1).max(500),
 	categoryId: z.string().uuid(),
@@ -63,7 +74,10 @@ const bulkBody = z.object({
 
 @Controller("transactions")
 export class TransactionsController {
-	constructor(private readonly transactions: TransactionsService) {}
+	constructor(
+		private readonly transactions: TransactionsService,
+		private readonly splits: TransactionSplitsService,
+	) {}
 
 	@Get()
 	async list(@CurrentUser() user: { id: string }, @Query() query: unknown) {
@@ -122,6 +136,26 @@ export class TransactionsController {
 			throw new BadRequestException(parsed.error.message);
 		}
 		return { data: await this.transactions.update(user.id, id, parsed.data) };
+	}
+
+	@Put(":id/split")
+	async split(
+		@CurrentUser() user: { id: string },
+		@Param("id", ParseUUIDPipe) id: string,
+		@Body() body: unknown,
+	) {
+		const parsed = splitBody.safeParse(body);
+		if (!parsed.success) {
+			throw new BadRequestException(parsed.error.message);
+		}
+		const parentId = await this.splits.split(user.id, id, parsed.data.parts);
+		return { data: await this.transactions.get(user.id, parentId) };
+	}
+
+	@Delete(":id/split")
+	async unsplit(@CurrentUser() user: { id: string }, @Param("id", ParseUUIDPipe) id: string) {
+		const parentId = await this.splits.unsplit(user.id, id);
+		return { data: await this.transactions.get(user.id, parentId) };
 	}
 
 	@Delete(":id")
