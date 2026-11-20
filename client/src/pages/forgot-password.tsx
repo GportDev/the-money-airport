@@ -1,7 +1,8 @@
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { authClient } from "@/auth/auth-client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandLockup } from "@/components/brand/brand-lockup";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export function ForgotPasswordPage() {
 	const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ export function ForgotPasswordPage() {
 		<div className="flex min-h-svh items-center justify-center bg-background p-6">
 			<Card className="w-full max-w-sm">
 				<CardHeader>
-					<CardTitle>Money Airport</CardTitle>
+					<BrandLockup />
 					<h1 className="text-xl font-semibold">Forgot password</h1>
 				</CardHeader>
 				<CardContent>

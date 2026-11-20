@@ -1,7 +1,9 @@
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { authClient } from "@/auth/auth-client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { BrandLockup } from "@/components/brand/brand-lockup";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export function SignupPage() {
 	const [name, setName] = useState("");
@@ -24,7 +26,7 @@ export function SignupPage() {
 		<div className="flex min-h-svh items-center justify-center bg-background p-6">
 			<Card className="w-full max-w-sm">
 				<CardHeader>
-					<CardTitle>Money Airport</CardTitle>
+					<BrandLockup />
 					<h1 className="text-xl font-semibold">Sign up</h1>
 				</CardHeader>
 				<CardContent>
@@ -76,15 +78,7 @@ export function SignupPage() {
 							Sign up
 						</button>
 					</form>
-					<button
-						className="mt-3 w-full rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
-						type="button"
-						onClick={() => {
-							void authClient.signIn.social({ provider: "google" });
-						}}
-					>
-						Continue with Google
-					</button>
+					<GoogleSignInButton next="/" />
 					<p className="mt-4 text-sm text-muted-foreground">
 						<Link className="text-foreground underline hover:text-primary" to="/login">
 							Log in

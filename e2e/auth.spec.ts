@@ -5,7 +5,7 @@ test("visitor at home sees login, not the shell", async ({ page }) => {
 	await page.goto("/");
 	await expect(page).toHaveURL(/\/login/);
 	await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
-	await expect(page.getByText("Money Airport")).toBeVisible();
+	await expect(page.getByRole("img", { name: "Money Airport" })).toBeVisible();
 	await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
 });
 

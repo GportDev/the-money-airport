@@ -14,5 +14,5 @@ export function parseEmailList(value: string | undefined): string[] {
 export function assertSignupAllowed(email: string, allowedEmails: string[]) {
 	if (allowedEmails.length === 0) return;
 	if (allowedEmails.includes(email.trim().toLowerCase())) return;
-	throw new APIError("FORBIDDEN", { message: SIGNUP_CLOSED_MESSAGE });
+	throw new APIError("FORBIDDEN", { code: "SIGNUP_CLOSED", message: SIGNUP_CLOSED_MESSAGE });
 }
