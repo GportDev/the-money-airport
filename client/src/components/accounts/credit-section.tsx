@@ -4,6 +4,7 @@ import { LastStatement } from "@/components/accounts/last-statement";
 import { ManualStatementForm } from "@/components/accounts/manual-statement-form";
 import { StatementPeriods } from "@/components/accounts/statement-periods";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/format";
 import type { BankAccount, CardSummary } from "@/types";
 
@@ -45,14 +46,15 @@ export function CreditSection({ account, card }: Props) {
 				</div>
 			</dl>
 			<CardTermsForm key={account.aprBps ?? "none"} account={account} card={card} />
-			<button
+			<Button
+				variant="outline"
 				type="button"
 				aria-expanded={isStatementFormOpen}
 				onClick={() => setStatementFormOpen((value) => !value)}
-				className="self-start rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+				className="self-start"
 			>
 				+ Statement
-			</button>
+			</Button>
 			{isStatementFormOpen ? (
 				<ManualStatementForm accountId={account.id} onDone={() => setStatementFormOpen(false)} />
 			) : null}

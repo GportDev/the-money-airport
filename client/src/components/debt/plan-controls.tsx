@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -67,9 +69,9 @@ export function PlanControls({ settings }: Props) {
 			<form className="flex items-end gap-2" onSubmit={onBufferSubmit}>
 				<label className="flex flex-col gap-1" htmlFor="plan-buffer">
 					Safety buffer
-					<input
+					<Input
 						id="plan-buffer"
-						className="w-28 rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
+						className="w-28"
 						type="number"
 						inputMode="decimal"
 						min="0"
@@ -78,13 +80,9 @@ export function PlanControls({ settings }: Props) {
 						onChange={(event) => setBuffer(event.target.value)}
 					/>
 				</label>
-				<button
-					type="submit"
-					disabled={update.isPending}
-					className="rounded-md border border-border px-3 py-2 transition-colors hover:bg-foreground/5 disabled:opacity-60"
-				>
+				<Button variant="outline" type="submit" disabled={update.isPending}>
 					Save buffer
-				</button>
+				</Button>
 			</form>
 			<div className="flex flex-col gap-1">
 				<label htmlFor="plan-payback-day">Payback day</label>

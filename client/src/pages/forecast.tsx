@@ -74,13 +74,13 @@ export function ForecastPage() {
 			>
 				<Tabs.List
 					aria-label="Forecast view"
-					className="mb-4 inline-flex rounded-md border border-border p-0.5 text-sm"
+					className="mb-4 inline-flex rounded-md bg-foreground/5 p-0.5 text-sm"
 				>
 					{FORECAST_TABS.map((option) => (
 						<Tabs.Trigger
 							key={option.value}
 							value={option.value}
-							className="rounded px-3 py-1 transition-colors hover:bg-foreground/5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+							className="rounded px-3 py-1 text-muted-foreground transition-colors hover:text-foreground data-[state=active]:bg-card data-[state=active]:font-medium data-[state=active]:text-foreground"
 						>
 							{option.label}
 						</Tabs.Trigger>

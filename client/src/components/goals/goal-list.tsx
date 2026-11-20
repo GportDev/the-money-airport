@@ -1,5 +1,6 @@
 import { GoalCard } from "@/components/goals/goal-card";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/format";
 import type { Goal, GoalType } from "@/types";
 
@@ -23,13 +24,9 @@ export function GoalList({ type, goals, total, currency, onOpen, onAdd }: Props)
 		return (
 			<div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-12 text-center">
 				<p className="text-sm text-muted-foreground">{heading.empty}</p>
-				<button
-					type="button"
-					onClick={onAdd}
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-				>
+				<Button type="button" onClick={onAdd}>
 					Add your first goal
-				</button>
+				</Button>
 			</div>
 		);
 	}

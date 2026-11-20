@@ -20,7 +20,7 @@ export function BudgetSettingsMenu({ isCopyForward, onCopyPrevious, onCopyForwar
 				<DropdownMenu.Content
 					align="end"
 					sideOffset={6}
-					className="z-50 min-w-60 rounded-lg border border-border bg-card p-1 text-sm shadow-lg"
+					className="z-50 min-w-60 origin-(--radix-dropdown-menu-content-transform-origin) rounded-lg border border-border bg-card p-1 text-sm shadow-lg data-[state=closed]:animate-pop-out data-[state=open]:animate-pop-in"
 				>
 					<DropdownMenu.Item
 						className="cursor-default rounded-md px-2 py-2 outline-none data-[highlighted]:bg-foreground/5"

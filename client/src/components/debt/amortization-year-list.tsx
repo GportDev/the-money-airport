@@ -1,5 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { Collapsible } from "radix-ui";
+import { Amount } from "@/components/ui/amount";
 import { formatMoney } from "@/lib/format";
 import type { AmortizationRow } from "@/types";
 
@@ -30,7 +31,7 @@ export function AmortizationYearList({ schedule, currency }: Props) {
 						/>
 						{year}
 						<span className="ml-auto text-muted-foreground">
-							ends {formatMoney(rows.at(-1)?.endingBalance ?? 0, currency)}
+							ends <Amount>{formatMoney(rows.at(-1)?.endingBalance ?? 0, currency)}</Amount>
 						</span>
 					</Collapsible.Trigger>
 					<Collapsible.Content>

@@ -213,11 +213,12 @@ Restrained and precise. Status comes from type, charts, and progress fill, not f
 
 ### Buttons
 
-No button primitive ships yet. Token-derived default:
+`<Button>` (`components/ui/button.tsx`) for every pressable control; `asChild` wraps a `<Link>`. Raw `<button>` only for bespoke rows (list items, chart legends).
 
-- **Shape:** 6px corners, 36px tall, 8px 16px padding
-- **Primary:** Signal Orange fill, white label, 14px Geist medium
-- **Hover / Focus:** Darken the orange fill. Focus is the 2px Ink outline, 2px offset. No orange glow, no lift, no shadow
+- **Shape:** 6px corners, 36px tall (`h-9`), 12px horizontal padding, 14px Geist medium. `sm` is 28px and 12px text; `icon` is 32px square, `icon-sm` 28px
+- **Variants:** `primary` (Signal Orange fill, white label), `outline` (white fill, Hairline Gray stroke), `ghost` (no fill until hover), `danger` (Overage Red fill, confirm dialogs only), `danger-outline` (Hairline Gray stroke, red label)
+- **Hover / Focus:** Darken the fill or add a 5% Ink wash. Focus is the 2px Ink outline, 2px offset. No orange glow, no lift, no shadow
+- **Press:** scales to 97% over 150ms so the board answers the click. Dropped under reduced motion
 
 ### Chips
 
@@ -234,7 +235,7 @@ No button primitive ships yet. Token-derived default:
 
 ### Inputs / Fields
 
-No text-field primitive ships yet. Token-derived default:
+`<Input>` (`components/ui/input.tsx`). Same 36px height as Button so fields and actions line up in a row.
 
 - **Style:** Surface White fill, 1px Hairline Gray stroke, 6px corners, 36px tall, 8px 12px padding, 14px Geist
 - **Focus:** 2px Ink outline, 2px offset
@@ -247,6 +248,19 @@ Left rail on Surface White. 16px icons, 14px Geist labels. Default is Quiet Gray
 ### Amount
 
 Money and numeric figures. Geist Mono Variable, tabular nums, -0.02em tracking. Inherits size and color from context. Wrap figures in `<Amount>`, not in a mono class on a heading or nav label.
+
+### Segmented and tabs
+
+A Wash track (5% Ink) with the active option as a white pill, Ink text, medium weight. Same Quiet-Active rule as the nav: not orange.
+
+### Motion
+
+Motion is feedback, never decoration. Tokens live in `index.css`.
+
+- **Easing:** `ease-out` is a strong curve (`cubic-bezier(0.23, 1, 0.32, 1)`). The Sheet uses `ease-drawer` (`cubic-bezier(0.32, 0.72, 0, 1)`). Never `ease-in`
+- **Popovers and dialogs:** `animate-pop-in` (160ms, from 96% scale and transparent) and `animate-pop-out` (100ms). Popovers grow from their trigger via the Radix transform-origin variable; dialogs stay centered
+- **Duration:** under 300ms for everything except the Sheet slide
+- **Reduced motion:** keep fades, drop scale and slides
 
 ### Progress
 

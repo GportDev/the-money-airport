@@ -10,6 +10,8 @@ import { FeedState } from "@/components/transactions/feed-state";
 import { NoMatchingTransactions } from "@/components/transactions/no-matching-transactions";
 import { NoTransactions } from "@/components/transactions/no-transactions";
 import { type FeedColumns, TransactionFeed } from "@/components/transactions/transaction-feed";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
@@ -25,8 +27,6 @@ const TABS = [
 
 const FILTER_PARAMS = ["search", "account", "category", "pending", "min", "max", "from", "to"];
 
-const buttonClass =
-	"rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5";
 const fieldClass =
 	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";
 
@@ -113,14 +113,10 @@ export function TransactionsPage() {
 	return (
 		<>
 			<PageHeader title="Transactions">
-				<button
-					className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-					type="button"
-					onClick={() => setDrawer("add")}
-				>
+				<Button type="button" onClick={() => setDrawer("add")}>
 					<Plus aria-hidden className="size-4" />
 					Add
-				</button>
+				</Button>
 			</PageHeader>
 			<nav aria-label="Transaction views" className="mb-4 flex gap-1 border-b border-border">
 				{TABS.map((item) => (
@@ -154,39 +150,38 @@ export function TransactionsPage() {
 								aria-hidden
 								className="pointer-events-none absolute left-3 size-4 text-muted-foreground"
 							/>
-							<input
+							<Input
 								id="tx-search"
 								type="search"
 								placeholder="Search"
-								className={cn(fieldClass, "w-full pl-9")}
+								className="w-full pl-9"
 								value={searchInput}
 								onChange={(event) => setSearchInput(event.target.value)}
 							/>
 						</label>
-						<button className={buttonClass} type="button" onClick={() => setFiltersOpen(true)}>
+						<Button variant="outline" type="button" onClick={() => setFiltersOpen(true)}>
 							Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-						</button>
-						<button className={buttonClass} type="button" onClick={() => setColumnsOpen(true)}>
+						</Button>
+						<Button variant="outline" type="button" onClick={() => setColumnsOpen(true)}>
 							Columns
-						</button>
+						</Button>
 						{selecting ? (
 							<>
-								<button
-									className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
+								<Button
 									type="button"
 									disabled={selected.size === 0}
 									onClick={() => setBulkOpen(true)}
 								>
 									Edit {selected.size}
-								</button>
-								<button className={buttonClass} type="button" onClick={stopSelecting}>
+								</Button>
+								<Button variant="outline" type="button" onClick={stopSelecting}>
 									Cancel
-								</button>
+								</Button>
 							</>
 						) : (
-							<button className={buttonClass} type="button" onClick={() => setSelecting(true)}>
+							<Button variant="outline" type="button" onClick={() => setSelecting(true)}>
 								Edit multiple
-							</button>
+							</Button>
 						)}
 					</div>
 					<FeedState
@@ -270,9 +265,9 @@ export function TransactionsPage() {
 							/>
 							Account
 						</label>
-						<button className={buttonClass} type="button" onClick={() => setColumnsOpen(false)}>
+						<Button variant="outline" type="button" onClick={() => setColumnsOpen(false)}>
 							Done
-						</button>
+						</Button>
 					</div>
 				</div>
 			) : null}
@@ -415,9 +410,8 @@ function FiltersPanel({
 				<div className="grid grid-cols-2 gap-2">
 					<label className="flex flex-col gap-1 text-sm" htmlFor="filter-min">
 						Min amount
-						<input
+						<Input
 							id="filter-min"
-							className={fieldClass}
 							inputMode="decimal"
 							defaultValue={local.get("min") ?? ""}
 							onBlur={(event) => setValue("min", event.target.value.trim())}
@@ -425,9 +419,8 @@ function FiltersPanel({
 					</label>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="filter-max">
 						Max amount
-						<input
+						<Input
 							id="filter-max"
-							className={fieldClass}
 							inputMode="decimal"
 							defaultValue={local.get("max") ?? ""}
 							onBlur={(event) => setValue("max", event.target.value.trim())}
@@ -435,28 +428,27 @@ function FiltersPanel({
 					</label>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="filter-from">
 						From
-						<input
+						<Input
 							id="filter-from"
 							type="date"
-							className={fieldClass}
 							value={local.get("from") ?? ""}
 							onChange={(event) => setValue("from", event.target.value)}
 						/>
 					</label>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="filter-to">
 						To
-						<input
+						<Input
 							id="filter-to"
 							type="date"
-							className={fieldClass}
 							value={local.get("to") ?? ""}
 							onChange={(event) => setValue("to", event.target.value)}
 						/>
 					</label>
 				</div>
 				<div className="flex gap-2">
-					<button
-						className={cn(buttonClass, "flex-1")}
+					<Button
+						variant="outline"
+						className="flex-1"
 						type="button"
 						onClick={() =>
 							apply((next) => {
@@ -467,14 +459,10 @@ function FiltersPanel({
 						}
 					>
 						Clear
-					</button>
-					<button
-						className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-						type="button"
-						onClick={onClose}
-					>
+					</Button>
+					<Button className="flex-1" type="button" onClick={onClose}>
 						Done
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>

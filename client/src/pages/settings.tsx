@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { PreferenceSections } from "@/components/settings/preference-sections";
 import { ProfileSection } from "@/components/settings/profile-section";
 import { SettingsSection } from "@/components/settings/settings-section";
+import { Button } from "@/components/ui/button";
 import { useSettings } from "@/hooks/use-settings";
 
 export function SettingsPage() {
@@ -24,24 +25,22 @@ export function SettingsPage() {
 					title="Accounts"
 					description="Connect, refresh, and disconnect banks on the Accounts page."
 				>
-					<Link
-						to="/accounts"
-						className="self-start rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
-					>
-						Manage accounts
-					</Link>
+					<Button asChild variant="outline" className="self-start">
+						<Link to="/accounts">Manage accounts</Link>
+					</Button>
 				</SettingsSection>
 				<SettingsSection
 					title="Categories"
 					description="Add, rename, recolor, or delete transaction categories."
 				>
-					<button
+					<Button
+						variant="outline"
 						type="button"
-						className="self-start rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+						className="self-start"
 						onClick={() => setCategoriesOpen(true)}
 					>
 						Manage categories
-					</button>
+					</Button>
 				</SettingsSection>
 				<PreferenceSections onCustomizeWidgets={() => setCustomizing(true)} />
 				<SettingsSection title="Data" description="Download every transaction as a CSV file.">

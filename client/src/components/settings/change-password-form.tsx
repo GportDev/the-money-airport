@@ -1,6 +1,8 @@
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function ChangePasswordForm() {
 	const [currentPassword, setCurrentPassword] = useState("");
@@ -25,9 +27,8 @@ export function ChangePasswordForm() {
 		<form className="flex max-w-sm flex-col gap-3" onSubmit={(event) => void onSubmit(event)}>
 			<label className="flex flex-col gap-1 text-sm" htmlFor="current-password">
 				Current password
-				<input
+				<Input
 					id="current-password"
-					className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 					type="password"
 					autoComplete="current-password"
 					value={currentPassword}
@@ -37,9 +38,8 @@ export function ChangePasswordForm() {
 			</label>
 			<label className="flex flex-col gap-1 text-sm" htmlFor="new-password">
 				New password
-				<input
+				<Input
 					id="new-password"
-					className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 					type="password"
 					autoComplete="new-password"
 					value={newPassword}
@@ -47,13 +47,9 @@ export function ChangePasswordForm() {
 					required
 				/>
 			</label>
-			<button
-				className="self-start rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-				type="submit"
-				disabled={isSaving}
-			>
+			<Button className="self-start" type="submit" disabled={isSaving}>
 				Change password
-			</button>
+			</Button>
 		</form>
 	);
 }

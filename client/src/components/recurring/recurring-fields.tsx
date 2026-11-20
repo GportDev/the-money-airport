@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { CADENCE_OPTIONS, type RecurringDraft } from "@/lib/recurring";
 
@@ -13,9 +14,8 @@ export function RecurringFields({ draft, onChange, error }: Props) {
 		<>
 			<label className="flex flex-col gap-1 text-sm" htmlFor="recurring-amount">
 				Amount
-				<input
+				<Input
 					id="recurring-amount"
-					className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 					type="number"
 					inputMode="decimal"
 					min="0.01"
@@ -39,9 +39,8 @@ export function RecurringFields({ draft, onChange, error }: Props) {
 			</div>
 			<label className="flex flex-col gap-1 text-sm" htmlFor="recurring-next-date">
 				Next date
-				<input
+				<Input
 					id="recurring-next-date"
-					className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 					type="date"
 					value={draft.nextDate}
 					onChange={(event) => onChange({ ...draft, nextDate: event.target.value })}

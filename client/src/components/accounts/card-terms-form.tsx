@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -58,9 +60,8 @@ export function CardTermsForm({ account, card }: Props) {
 			<div className="grid grid-cols-2 gap-3">
 				<label className="flex flex-col gap-1" htmlFor="card-apr">
 					APR (%)
-					<input
+					<Input
 						id="card-apr"
-						className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 						type="number"
 						inputMode="decimal"
 						min="0"
@@ -89,9 +90,8 @@ export function CardTermsForm({ account, card }: Props) {
 				</div>
 				<label className="flex flex-col gap-1" htmlFor="card-close-day">
 					Statement close day
-					<input
+					<Input
 						id="card-close-day"
-						className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 						type="number"
 						min="1"
 						max="31"
@@ -101,9 +101,8 @@ export function CardTermsForm({ account, card }: Props) {
 				</label>
 				<label className="flex flex-col gap-1" htmlFor="card-due-day">
 					Payment due day
-					<input
+					<Input
 						id="card-due-day"
-						className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 						type="number"
 						min="1"
 						max="31"
@@ -114,9 +113,8 @@ export function CardTermsForm({ account, card }: Props) {
 				{rule === "fixed" ? (
 					<label className="flex flex-col gap-1" htmlFor="card-fixed">
 						Fixed amount
-						<input
+						<Input
 							id="card-fixed"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							type="number"
 							inputMode="decimal"
 							min="0"
@@ -127,13 +125,9 @@ export function CardTermsForm({ account, card }: Props) {
 					</label>
 				) : null}
 			</div>
-			<button
-				type="submit"
-				disabled={update.isPending}
-				className="self-start rounded-md border border-border px-3 py-2 transition-colors hover:bg-foreground/5 disabled:opacity-60"
-			>
+			<Button variant="outline" type="submit" disabled={update.isPending} className="self-start">
 				Save card terms
-			</button>
+			</Button>
 		</form>
 	);
 }
