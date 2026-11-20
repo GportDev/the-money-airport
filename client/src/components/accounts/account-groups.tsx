@@ -43,10 +43,10 @@ export function AccountGroups({
 							<span className="flex items-center gap-2 text-sm text-muted-foreground">
 								<Amount>{formatMoney(summary?.total ?? 0, baseCurrency)}</Amount>
 								{change !== 0 ? (
-									<span>
+									<Amount>
 										{change > 0 ? "+" : ""}
 										{formatMoney(change, baseCurrency)}
-									</span>
+									</Amount>
 								) : null}
 							</span>
 						</div>

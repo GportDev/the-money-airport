@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { CategoryCombobox } from "@/components/transactions/category-combobox";
+import { Button } from "@/components/ui/button";
 import {
 	Sheet,
 	SheetContent,
@@ -61,13 +62,9 @@ export function BulkCategorizeDrawer({
 							{error}
 						</p>
 					) : null}
-					<button
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
-						type="submit"
-						disabled={bulk.isPending}
-					>
+					<Button type="submit" disabled={bulk.isPending}>
 						Apply
-					</button>
+					</Button>
 				</form>
 			</SheetContent>
 		</Sheet>

@@ -2,7 +2,9 @@ import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { authClient } from "@/auth/auth-client";
 import { BrandLockup } from "@/components/brand/brand-lockup";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export function ForgotPasswordPage() {
 	const [email, setEmail] = useState("");
@@ -35,9 +37,8 @@ export function ForgotPasswordPage() {
 						<form className="flex flex-col gap-3" onSubmit={onSubmit}>
 							<label className="flex flex-col gap-1 text-sm" htmlFor="email">
 								Email
-								<input
+								<Input
 									id="email"
-									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									type="email"
 									autoComplete="email"
 									value={email}
@@ -50,12 +51,7 @@ export function ForgotPasswordPage() {
 									{error}
 								</p>
 							) : null}
-							<button
-								className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-								type="submit"
-							>
-								Send reset link
-							</button>
+							<Button type="submit">Send reset link</Button>
 						</form>
 					)}
 					<p className="mt-4 text-sm text-muted-foreground">

@@ -1,6 +1,8 @@
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Props = { name: string; email: string };
 
@@ -25,9 +27,8 @@ export function ProfileNameForm({ name: savedName, email }: Props) {
 		<form className="flex max-w-sm flex-col gap-3" onSubmit={(event) => void onSubmit(event)}>
 			<label className="flex flex-col gap-1 text-sm" htmlFor="profile-name">
 				Name
-				<input
+				<Input
 					id="profile-name"
-					className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 					autoComplete="name"
 					value={name}
 					onChange={(event) => setName(event.target.value)}
@@ -43,13 +44,14 @@ export function ProfileNameForm({ name: savedName, email }: Props) {
 					readOnly
 				/>
 			</label>
-			<button
-				className="self-start rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5 disabled:opacity-60"
+			<Button
+				variant="outline"
+				className="self-start"
 				type="submit"
 				disabled={isSaving || trimmed === "" || trimmed === savedName}
 			>
 				Save name
-			</button>
+			</Button>
 		</form>
 	);
 }

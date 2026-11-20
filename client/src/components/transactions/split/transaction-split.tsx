@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { SplitEditor } from "@/components/transactions/split/split-editor";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
 import { formatSignedMoney } from "@/lib/format";
 import type { TransactionDetail } from "@/types";
 
@@ -20,14 +21,10 @@ export function TransactionSplit({ transaction }: Props) {
 					{split ? `Split into ${split.parts.length} parts` : "Split"}
 				</h3>
 				{isEditing ? null : (
-					<button
-						type="button"
-						className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-sm transition-colors hover:bg-foreground/5"
-						onClick={() => setIsEditing(true)}
-					>
+					<Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
 						<Split aria-hidden className="size-3.5" />
 						{split ? "Edit split" : "Split transaction"}
-					</button>
+					</Button>
 				)}
 			</div>
 			{isEditing ? (

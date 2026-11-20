@@ -1,6 +1,7 @@
 import { Landmark } from "lucide-react";
 import type { ReactNode } from "react";
 import { AccountsSkeleton } from "@/components/accounts/accounts-skeleton";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QueryError } from "@/components/ui/query-error";
 import type { BankAccount } from "@/types";
@@ -38,13 +39,9 @@ export function AccountsState({ accounts, onAdd, children }: Props) {
 					title="No accounts yet"
 					description="Connect a bank or add an account by hand to track your net worth."
 					action={
-						<button
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-							type="button"
-							onClick={onAdd}
-						>
+						<Button type="button" onClick={onAdd}>
 							Add your first account
-						</button>
+						</Button>
 					}
 				/>
 			) : null}

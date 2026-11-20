@@ -2,6 +2,7 @@ import { Drawer } from "@base-ui/react/drawer";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
 import { useEffect, useRef, useState } from "react";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 /**
@@ -94,7 +95,7 @@ function SheetContent({
 						"pointer-events-auto relative flex h-full w-3/4 flex-col border-l border-border bg-background shadow-2xl outline-none sm:max-w-sm",
 						// Base UI's side-drawer recipe: follow the finger while swiping, slide fully
 						// out on enter/exit, and finish a flick at the speed it was thrown.
-						"[transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
+						"[transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-drawer",
 						"data-[swiping]:select-none data-[starting-style]:[transform:translateX(calc(100%+2px))] data-[ending-style]:[transform:translateX(calc(100%+2px))] data-[ending-style]:duration-[calc(var(--drawer-swipe-strength,1)*300ms)]",
 						"motion-reduce:transition-none",
 						className,
@@ -103,8 +104,13 @@ function SheetContent({
 				>
 					<Drawer.Content className="flex min-h-0 flex-1 flex-col gap-4">{children}</Drawer.Content>
 					{showCloseButton ? (
-						<Drawer.Close className="absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden">
-							<XIcon className="size-4" />
+						<Drawer.Close
+							className={cn(
+								buttonVariants({ variant: "ghost", size: "icon-sm" }),
+								"absolute top-3 right-3 text-muted-foreground hover:text-foreground",
+							)}
+						>
+							<XIcon aria-hidden className="size-4" />
 							<span className="sr-only">Close</span>
 						</Drawer.Close>
 					) : null}

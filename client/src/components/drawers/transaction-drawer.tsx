@@ -5,6 +5,8 @@ import { CategoryIcon } from "@/components/transactions/category-icon";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { TransactionSplit } from "@/components/transactions/split/transaction-split";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { QueryError } from "@/components/ui/query-error";
 import {
 	Sheet,
@@ -179,9 +181,8 @@ function EditForm({
 					<>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-name">
 							Name
-							<input
+							<Input
 								id="transaction-name"
-								className={fieldClass}
 								value={name}
 								onChange={(event) => setName(event.target.value)}
 								required
@@ -189,9 +190,8 @@ function EditForm({
 						</label>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-amount">
 							Amount (negative for spend)
-							<input
+							<Input
 								id="transaction-amount"
-								className={fieldClass}
 								inputMode="decimal"
 								value={amount}
 								onChange={(event) => setAmount(event.target.value)}
@@ -200,10 +200,9 @@ function EditForm({
 						</label>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-date">
 							Date
-							<input
+							<Input
 								id="transaction-date"
 								type="date"
-								className={fieldClass}
 								value={date}
 								onChange={(event) => setDate(event.target.value)}
 								required
@@ -262,13 +261,9 @@ function EditForm({
 						{error}
 					</p>
 				) : null}
-				<button
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
-					type="submit"
-					disabled={update.isPending}
-				>
+				<Button type="submit" disabled={update.isPending}>
 					Save
-				</button>
+				</Button>
 			</form>
 			<TransactionSplit transaction={transaction} />
 			<AssignToFund transaction={transaction} />
@@ -302,13 +297,9 @@ function EditForm({
 			) : null}
 			{transaction.isManual && onDelete ? (
 				<SheetFooter>
-					<button
-						className="rounded-md border border-border px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/10"
-						type="button"
-						onClick={() => onDelete(transaction)}
-					>
+					<Button variant="danger-outline" type="button" onClick={() => onDelete(transaction)}>
 						Delete transaction
-					</button>
+					</Button>
 				</SheetFooter>
 			) : null}
 		</>
@@ -360,9 +351,8 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 			<form className="flex flex-col gap-3 px-4" onSubmit={onSubmit}>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-name">
 					Name
-					<input
+					<Input
 						id="new-transaction-name"
-						className={fieldClass}
 						value={name}
 						onChange={(event) => setName(event.target.value)}
 						required
@@ -391,9 +381,8 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 				</fieldset>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-amount">
 					Amount
-					<input
+					<Input
 						id="new-transaction-amount"
-						className={fieldClass}
 						inputMode="decimal"
 						placeholder="0.00"
 						value={amount}
@@ -403,10 +392,9 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 				</label>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-date">
 					Date
-					<input
+					<Input
 						id="new-transaction-date"
 						type="date"
-						className={fieldClass}
 						value={date}
 						onChange={(event) => setDate(event.target.value)}
 						required
@@ -452,13 +440,9 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 						{error}
 					</p>
 				) : null}
-				<button
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
-					type="submit"
-					disabled={create.isPending}
-				>
+				<Button type="submit" disabled={create.isPending}>
 					Add
-				</button>
+				</Button>
 			</form>
 		</>
 	);

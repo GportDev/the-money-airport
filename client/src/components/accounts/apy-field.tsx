@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/input";
+
 type Props = {
 	value: string;
 	onChange: (value: string) => void;
@@ -7,9 +9,8 @@ export function ApyField({ value, onChange }: Props) {
 	return (
 		<label className="flex flex-col gap-1 text-sm" htmlFor="account-apy">
 			APY (%)
-			<input
+			<Input
 				id="account-apy"
-				className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 				type="number"
 				inputMode="decimal"
 				min="0"

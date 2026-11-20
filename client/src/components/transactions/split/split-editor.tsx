@@ -3,6 +3,7 @@ import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { SplitPartRow } from "@/components/transactions/split/split-part-row";
 import { SplitRemaining } from "@/components/transactions/split/split-remaining";
+import { Button } from "@/components/ui/button";
 import { useSplitTransaction, useUnsplitTransaction } from "@/hooks/use-transactions";
 import {
 	initialSplitDrafts,
@@ -74,44 +75,31 @@ export function SplitEditor({ transaction, onDone }: Props) {
 					/>
 				))}
 			</ul>
-			<button
-				type="button"
-				className="flex items-center gap-1.5 self-start rounded-md px-2 py-1 text-primary transition-colors hover:bg-primary/10"
-				onClick={addDraft}
-			>
-				<Plus aria-hidden className="size-4" />
+			<Button variant="ghost" size="sm" className="self-start" onClick={addDraft}>
+				<Plus aria-hidden className="size-3.5" />
 				Add part
-			</button>
+			</Button>
 			<SplitRemaining
 				total={total}
 				remaining={remainingCents(total, drafts)}
 				currency={transaction.isoCurrencyCode}
 			/>
 			<div className="flex gap-2">
-				<button
-					className="flex-1 rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-					type="submit"
-					disabled={!isComplete || split.isPending}
-				>
+				<Button type="submit" className="flex-1" disabled={!isComplete || split.isPending}>
 					Save split
-				</button>
+				</Button>
 				{transaction.split ? (
-					<button
-						className="rounded-md border border-border px-3 py-2 text-negative transition-colors hover:bg-negative/10 disabled:opacity-60"
-						type="button"
+					<Button
+						variant="danger-outline"
 						disabled={unsplit.isPending}
 						onClick={() => void onUnsplit()}
 					>
 						Unsplit
-					</button>
+					</Button>
 				) : null}
-				<button
-					className="rounded-md border border-border px-3 py-2 transition-colors hover:bg-foreground/5"
-					type="button"
-					onClick={onDone}
-				>
+				<Button variant="outline" onClick={onDone}>
 					Cancel
-				</button>
+				</Button>
 			</div>
 		</form>
 	);

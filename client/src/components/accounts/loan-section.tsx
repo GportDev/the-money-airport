@@ -2,6 +2,8 @@ import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useUpdateAccount } from "@/hooks/use-accounts";
 import { useAmortization, useSetLoanTerms } from "@/hooks/use-liabilities";
 import { bpsToPercentText, monthName, percentTextToBps } from "@/lib/debt";
@@ -39,9 +41,8 @@ export function LoanSection({ account }: Props) {
 		return (
 			<label className="flex flex-col gap-1" htmlFor={`loan-${key}`}>
 				{label}
-				<input
+				<Input
 					id={`loan-${key}`}
-					className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 					type={type}
 					step={type === "number" ? "0.01" : undefined}
 					min={type === "number" ? "0" : undefined}
@@ -106,13 +107,9 @@ export function LoanSection({ account }: Props) {
 				{field("paymentDay", "Payment day")}
 				{field("scheduled", "Scheduled payment")}
 				{field("extra", "Extra monthly payment")}
-				<button
-					type="submit"
-					disabled={isBusy}
-					className="col-span-2 self-start rounded-md border border-border px-3 py-2 transition-colors hover:bg-foreground/5 disabled:opacity-60"
-				>
+				<Button variant="outline" type="submit" disabled={isBusy} className="col-span-2 self-start">
 					Save loan terms
-				</button>
+				</Button>
 			</form>
 			<Link
 				to="/forecast?tab=debt"

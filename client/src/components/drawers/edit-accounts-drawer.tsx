@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { AccountChecklist } from "@/components/goals/account-checklist";
+import { Button } from "@/components/ui/button";
 import {
 	Select,
 	SelectContent,
@@ -110,14 +111,9 @@ export function EditAccountsDrawer({ type, onClose }: Props) {
 					</div>
 				)}
 				<SheetFooter>
-					<button
-						type="button"
-						disabled={!goal || save.isPending}
-						onClick={() => void onSave()}
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-					>
+					<Button type="button" disabled={!goal || save.isPending} onClick={() => void onSave()}>
 						{save.isPending ? "Saving…" : "Save accounts"}
-					</button>
+					</Button>
 				</SheetFooter>
 			</SheetContent>
 		</Sheet>

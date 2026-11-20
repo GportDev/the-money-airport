@@ -97,11 +97,11 @@ function StackedBars({
 				{rows.map((row) => (
 					<li key={row.group} className="flex justify-between text-xs text-muted-foreground">
 						<span>{labelFor(row.group)}</span>
-						<span>
+						<Amount>
 							{unit === "percent"
 								? `${Math.round((row.total / widthTotal) * 100)}%`
 								: formatMoney(row.total, currency)}
-						</span>
+						</Amount>
 					</li>
 				))}
 			</ul>

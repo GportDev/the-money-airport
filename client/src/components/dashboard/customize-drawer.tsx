@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { WIDGET_LABELS } from "@/components/dashboard/widgets";
+import { Button } from "@/components/ui/button";
 import {
 	Sheet,
 	SheetContent,
@@ -110,21 +111,17 @@ export function CustomizeDrawer({
 					</p>
 				) : null}
 				<div className="flex gap-2 px-4">
-					<button
-						type="button"
-						className="flex-1 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
-						onClick={() => close()}
-					>
+					<Button variant="outline" type="button" className="flex-1" onClick={() => close()}>
 						Cancel
-					</button>
-					<button
+					</Button>
+					<Button
 						type="button"
-						className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
+						className="flex-1"
 						disabled={update.isPending}
 						onClick={() => void save()}
 					>
 						Save
-					</button>
+					</Button>
 				</div>
 			</SheetContent>
 		</Sheet>

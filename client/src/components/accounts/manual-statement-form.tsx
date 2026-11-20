@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useCreateStatement } from "@/hooks/use-liabilities";
 import { majorUnitsToCents } from "@/lib/format";
 
@@ -53,9 +55,8 @@ export function ManualStatementForm({ accountId, onDone }: Props) {
 			{FIELDS.map((field) => (
 				<label key={field.id} className="flex flex-col gap-1" htmlFor={field.id}>
 					{field.label}
-					<input
+					<Input
 						id={field.id}
-						className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 						type={field.type}
 						step={field.type === "number" ? "0.01" : undefined}
 						min={field.type === "number" ? "0" : undefined}
@@ -65,13 +66,9 @@ export function ManualStatementForm({ accountId, onDone }: Props) {
 					/>
 				</label>
 			))}
-			<button
-				type="submit"
-				disabled={create.isPending}
-				className="col-span-2 self-start rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-			>
+			<Button type="submit" disabled={create.isPending} className="col-span-2 self-start">
 				Add statement
-			</button>
+			</Button>
 		</form>
 	);
 }

@@ -6,6 +6,7 @@ import { InvestmentRangeToggle } from "@/components/investments/investment-range
 import { InvestmentsSkeleton } from "@/components/investments/investments-skeleton";
 import { PortfolioSummary } from "@/components/investments/portfolio-summary";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QueryError } from "@/components/ui/query-error";
 import { useInvestments } from "@/hooks/use-investments";
@@ -51,12 +52,9 @@ export function InvestmentsPage() {
 					title="No investment accounts yet."
 					description="Connect a brokerage or retirement account, or add one by hand, to see it here."
 					action={
-						<Link
-							to="/accounts"
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-						>
-							Go to Accounts
-						</Link>
+						<Button asChild>
+							<Link to="/accounts">Go to Accounts</Link>
+						</Button>
 					}
 				/>
 			) : (

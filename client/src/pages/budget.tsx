@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { BudgetCategoryDrawer } from "@/components/drawers/budget-category-drawer";
 import { MonthNavigator } from "@/components/layout/month-navigator";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { QueryError } from "@/components/ui/query-error";
 import { useBudgetMonth, useCopyPreviousBudget } from "@/hooks/use-budgets";
 import { useUpdateSettings } from "@/hooks/use-dashboard";
@@ -130,10 +131,11 @@ export function BudgetPage() {
 								/>
 							))}
 					</section>
-					<button
+					<Button
+						variant="outline"
 						type="button"
 						aria-pressed={isUnbudgetedShown}
-						className="self-start rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+						className="self-start"
 						onClick={() =>
 							patchParams((next) => {
 								if (isUnbudgetedShown) next.delete("unbudgeted");
@@ -142,7 +144,7 @@ export function BudgetPage() {
 						}
 					>
 						{isUnbudgetedShown ? "Hide unbudgeted" : "Show unbudgeted"}
-					</button>
+					</Button>
 					{isUnbudgetedShown ? (
 						<UnbudgetedList rows={data.unbudgeted} currency={currency} onOpen={setOpenRow} />
 					) : null}

@@ -8,6 +8,9 @@ import { CreditSection } from "@/components/accounts/credit-section";
 import { DebtPlanToggle } from "@/components/accounts/debt-plan-toggle";
 import { LoanSection } from "@/components/accounts/loan-section";
 import { Sparkline } from "@/components/accounts/sparkline";
+import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Sheet,
 	SheetContent,
@@ -110,9 +113,8 @@ export function AccountDrawer({
 				<form className="flex flex-col gap-3 px-4" onSubmit={onSubmit}>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="account-name">
 						Name
-						<input
+						<Input
 							id="account-name"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={name}
 							onChange={(event) => setName(event.target.value)}
 							required
@@ -154,9 +156,8 @@ export function AccountDrawer({
 							</label>
 							<label className="flex flex-col gap-1 text-sm" htmlFor="account-currency">
 								Currency
-								<input
+								<Input
 									id="account-currency"
-									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									value={currency}
 									onChange={(event) => setCurrency(event.target.value)}
 									required
@@ -166,9 +167,8 @@ export function AccountDrawer({
 					)}
 					<label className="flex flex-col gap-1 text-sm" htmlFor="account-balance">
 						Balance
-						<input
+						<Input
 							id="account-balance"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={balance}
 							onChange={(event) => setBalance(event.target.value)}
 							required
@@ -176,14 +176,14 @@ export function AccountDrawer({
 					</label>
 					{isEdit && account?.availableBalance != null ? (
 						<p className="text-sm text-muted-foreground">
-							Available {formatMoney(account.availableBalance, account.isoCurrencyCode)}
+							Available{" "}
+							<Amount>{formatMoney(account.availableBalance, account.isoCurrencyCode)}</Amount>
 						</p>
 					) : null}
 					<label className="flex flex-col gap-1 text-sm" htmlFor="account-limit">
 						Credit limit
-						<input
+						<Input
 							id="account-limit"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={creditLimit}
 							onChange={(event) => setCreditLimit(event.target.value)}
 						/>
@@ -207,36 +207,23 @@ export function AccountDrawer({
 						</label>
 					) : null}
 					<SheetFooter>
-						<button
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-							type="submit"
-						>
-							Save
-						</button>
+						<Button type="submit">Save</Button>
 						{isEdit && account?.source === "manual" && onDelete ? (
-							<button
-								className="rounded-md border border-negative px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/10"
-								type="button"
-								onClick={onDelete}
-							>
+							<Button variant="danger-outline" type="button" onClick={onDelete}>
 								Delete
-							</button>
+							</Button>
 						) : null}
 						{isEdit && account?.source === "plaid" && onDisconnect ? (
-							<button
-								className="rounded-md border border-negative px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/10"
-								type="button"
-								onClick={onDisconnect}
-							>
+							<Button variant="danger-outline" type="button" onClick={onDisconnect}>
 								Disconnect
-							</button>
+							</Button>
 						) : null}
 						{isEdit &&
 						account?.plaidItemId &&
 						account.plaidItemStatus === "disconnected" &&
 						onReconnected ? (
-							<button
-								className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+							<Button
+								variant="outline"
 								type="button"
 								onClick={() => {
 									if (!account.plaidItemId) {
@@ -246,7 +233,7 @@ export function AccountDrawer({
 								}}
 							>
 								Reconnect
-							</button>
+							</Button>
 						) : null}
 						{isEdit && account?.plaidItemId && account.errorCode === "ITEM_LOGIN_REQUIRED" ? (
 							<ConnectPlaidButton

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import { Button } from "@/components/ui/button";
 
 type Props = { next: string };
 
@@ -26,8 +27,9 @@ export function GoogleSignInButton({ next }: Props) {
 	}
 
 	return (
-		<button
-			className="mt-3 w-full rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5 disabled:opacity-60"
+		<Button
+			variant="outline"
+			className="mt-3 w-full"
 			type="button"
 			disabled={isRedirecting}
 			onClick={() => {
@@ -35,6 +37,6 @@ export function GoogleSignInButton({ next }: Props) {
 			}}
 		>
 			{isRedirecting ? "Redirecting to Google…" : "Continue with Google"}
-		</button>
+		</Button>
 	);
 }

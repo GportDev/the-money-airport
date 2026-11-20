@@ -19,9 +19,9 @@ export function MonthDayGroup({ day, currency, isShort }: Props) {
 					{formatLongDate(day.date)}
 				</h3>
 				<Amount className="text-muted-foreground">{formatSignedMoney(day.net, currency)}</Amount>
-				<Amount className={isShort ? "ml-auto text-negative" : "ml-auto text-muted-foreground"}>
-					balance {formatMoney(day.balanceAfter, currency)}
-				</Amount>
+				<span className={isShort ? "ml-auto text-negative" : "ml-auto text-muted-foreground"}>
+					balance <Amount>{formatMoney(day.balanceAfter, currency)}</Amount>
+				</span>
 			</header>
 			<ul className="divide-y divide-border">
 				{day.items.map((item) => (

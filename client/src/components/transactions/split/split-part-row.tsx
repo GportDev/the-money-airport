@@ -1,5 +1,7 @@
 import { X } from "lucide-react";
 import { CategoryCombobox } from "@/components/transactions/category-combobox";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { SplitDraft } from "@/lib/split";
 
 type Props = {
@@ -18,25 +20,26 @@ export function SplitPartRow({ draft, index, canRemove, onChange, onRemove }: Pr
 				aria-label={`${label} category`}
 				value={draft.categoryId}
 				onValueChange={(categoryId) => onChange({ ...draft, categoryId })}
-				className="min-w-0 flex-1 rounded-md border border-border bg-card px-3 py-2 hover:border-foreground/30"
+				className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-3 hover:border-foreground/30"
 			/>
-			<input
+			<Input
 				aria-label={`${label} amount`}
-				className="w-24 rounded-md border border-border bg-card px-3 py-2 text-right tabular-nums transition-colors hover:border-foreground/30"
+				className="w-24 text-right tabular-nums"
 				inputMode="decimal"
 				placeholder="0.00"
 				value={draft.amount}
 				onChange={(event) => onChange({ ...draft, amount: event.target.value })}
 			/>
-			<button
-				type="button"
+			<Button
+				variant="ghost"
+				size="icon"
 				aria-label={`Remove ${label.toLowerCase()}`}
-				className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground disabled:invisible"
+				className="text-muted-foreground hover:text-foreground disabled:invisible"
 				disabled={!canRemove}
 				onClick={onRemove}
 			>
 				<X aria-hidden className="size-4" />
-			</button>
+			</Button>
 		</li>
 	);
 }

@@ -51,12 +51,12 @@ export function CategoryIconSelect({ labelId, value, color, onValueChange }: Pro
 					sideOffset={4}
 					className="z-50 outline-none"
 				>
-					<Select.Popup className="max-h-[min(20rem,var(--available-height))] min-w-(--anchor-width) origin-[var(--transform-origin)] overflow-y-auto rounded-lg border border-border bg-card p-1 text-sm shadow-lg transition-[opacity,scale] duration-150 ease-out data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0 motion-reduce:transition-none">
+					<Select.Popup className="max-h-[min(20rem,var(--available-height))] min-w-(--anchor-width) origin-(--transform-origin) overflow-y-auto rounded-lg border border-border bg-card p-1 text-sm shadow-lg data-[open]:animate-pop-in">
 						{ICON_KEYS.map((key) => (
 							<Select.Item
 								key={key}
 								value={key}
-								className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 outline-none select-none data-[highlighted]:bg-foreground/5"
+								className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 outline-none transition-colors select-none data-[highlighted]:bg-foreground/5"
 							>
 								<CategoryIcon icon={key} color={color} />
 								<Select.ItemText className="flex-1 truncate">{iconLabel(key)}</Select.ItemText>

@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/input";
 import { REPORT_PRESETS, type ReportPreset } from "@/lib/report-range";
 import type { ReportRange } from "@/types";
 
@@ -32,10 +33,9 @@ export function ReportRangePicker({ preset, range, onPresetChange, onCustomChang
 					<label className="sr-only" htmlFor="report-from">
 						From
 					</label>
-					<input
+					<Input
 						id="report-from"
 						type="date"
-						className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30"
 						value={range.dateFrom}
 						max={range.dateTo}
 						onChange={(event) =>
@@ -46,10 +46,9 @@ export function ReportRangePicker({ preset, range, onPresetChange, onCustomChang
 					<label className="sr-only" htmlFor="report-to">
 						To
 					</label>
-					<input
+					<Input
 						id="report-to"
 						type="date"
-						className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30"
 						value={range.dateTo}
 						min={range.dateFrom}
 						onChange={(event) =>

@@ -77,7 +77,7 @@ export function CategoryCombobox({
 					    invisible popup mounted over the page. */}
 					<Combobox.Popup
 						aria-label="Categories"
-						className="flex max-h-[min(24rem,var(--available-height))] w-64 origin-[var(--transform-origin)] flex-col overflow-hidden rounded-lg border border-border bg-card text-sm shadow-lg transition-[opacity,scale] duration-150 ease-out data-[starting-style]:scale-95 data-[starting-style]:opacity-0 motion-reduce:transition-none"
+						className="flex max-h-[min(24rem,var(--available-height))] w-64 origin-(--transform-origin) flex-col overflow-hidden rounded-lg border border-border bg-card text-sm shadow-lg data-[open]:animate-pop-in"
 					>
 						<div className="flex items-center gap-2 border-b border-border px-3">
 							<Search aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
@@ -101,7 +101,7 @@ export function CategoryCombobox({
 											<Combobox.Item
 												key={item.id}
 												value={item}
-												className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 outline-none select-none data-[highlighted]:bg-foreground/5"
+												className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 outline-none transition-colors select-none data-[highlighted]:bg-foreground/5"
 											>
 												<CategoryIcon icon={item.icon} color={item.color} />
 												<span className="flex-1 truncate">{item.name}</span>

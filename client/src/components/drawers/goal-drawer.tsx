@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { GoalFundingFields } from "@/components/goals/goal-funding-fields";
 import { GoalIconFields } from "@/components/goals/goal-icon-fields";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import {
 	Sheet,
@@ -116,18 +118,12 @@ export function GoalDrawer({ goal, defaultType, onClose }: Props) {
 					)}
 					<label className="flex flex-col gap-1 text-sm" htmlFor="goal-name">
 						Name
-						<input
-							id="goal-name"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
-							value={name}
-							onChange={(event) => setName(event.target.value)}
-						/>
+						<Input id="goal-name" value={name} onChange={(event) => setName(event.target.value)} />
 					</label>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="goal-target">
 						Target
-						<input
+						<Input
 							id="goal-target"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							type="number"
 							inputMode="decimal"
 							min="0"
@@ -139,9 +135,8 @@ export function GoalDrawer({ goal, defaultType, onClose }: Props) {
 					</label>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="goal-date">
 						Target date
-						<input
+						<Input
 							id="goal-date"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							type="date"
 							value={targetDate}
 							onChange={(event) => setTargetDate(event.target.value)}
@@ -168,23 +163,18 @@ export function GoalDrawer({ goal, defaultType, onClose }: Props) {
 					) : null}
 				</form>
 				<SheetFooter>
-					<button
-						form="goal-form"
-						type="submit"
-						disabled={isBusy}
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-					>
+					<Button form="goal-form" type="submit" disabled={isBusy}>
 						{goal ? "Save goal" : "Create goal"}
-					</button>
+					</Button>
 					{goal ? (
-						<button
+						<Button
+							variant="danger-outline"
 							type="button"
 							disabled={isBusy}
 							onClick={() => setDeleteOpen(true)}
-							className="rounded-md border border-border px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/5 disabled:opacity-60"
 						>
 							Delete goal
-						</button>
+						</Button>
 					) : null}
 				</SheetFooter>
 				{isDeleteOpen && goal ? (

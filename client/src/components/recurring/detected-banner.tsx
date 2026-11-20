@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
 import { useCreateRecurring } from "@/hooks/use-recurring";
 import { formatMoney } from "@/lib/format";
 import { cadenceLabel } from "@/lib/recurring";
@@ -40,7 +41,7 @@ export function DetectedBanner({ candidates }: Props) {
 	return (
 		<section
 			aria-labelledby="recurring-detected-heading"
-			className="rounded-xl border border-primary/30 bg-primary/5"
+			className="rounded-xl border border-border bg-primary/5"
 		>
 			<div className="px-3 py-3">
 				<h2 id="recurring-detected-heading" className="text-sm font-medium">
@@ -48,7 +49,7 @@ export function DetectedBanner({ candidates }: Props) {
 				</h2>
 				<p className="text-xs text-muted-foreground">From your Transaction history.</p>
 			</div>
-			<ul className="divide-y divide-border border-t border-primary/20">
+			<ul className="divide-y divide-border border-t border-border">
 				{candidates.map((candidate) => (
 					<li
 						key={`${candidate.merchantName}-${candidate.account?.id ?? "none"}`}
@@ -63,24 +64,25 @@ export function DetectedBanner({ candidates }: Props) {
 						</span>
 						<Amount>{formatMoney(candidate.amount, candidate.isoCurrencyCode)}</Amount>
 						<span className="flex gap-2">
-							<button
+							<Button
+								variant="outline"
+								size="sm"
 								type="button"
 								disabled={create.isPending}
 								onClick={() => void onTrack(candidate, false)}
 								aria-label={`Dismiss ${candidate.merchantName}`}
-								className="rounded-md border border-border px-2.5 py-1.5 text-xs transition-colors hover:bg-foreground/5 disabled:opacity-60"
 							>
 								Dismiss
-							</button>
-							<button
+							</Button>
+							<Button
+								size="sm"
 								type="button"
 								disabled={create.isPending}
 								onClick={() => void onTrack(candidate, true)}
 								aria-label={`Add ${candidate.merchantName}`}
-								className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
 							>
 								Add
-							</button>
+							</Button>
 						</span>
 					</li>
 				))}

@@ -7,6 +7,7 @@ import { DetectedBanner } from "@/components/recurring/detected-banner";
 import { RecurringList } from "@/components/recurring/recurring-list";
 import { RecurringSkeleton } from "@/components/recurring/recurring-skeleton";
 import { RecurringSummary } from "@/components/recurring/recurring-summary";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QueryError } from "@/components/ui/query-error";
 import { useRecurring, useRecurringCandidates } from "@/hooks/use-recurring";
@@ -42,13 +43,9 @@ export function RecurringPage() {
 					title="No recurring bills yet"
 					description="Add a bill or subscription, or connect an account so we can find them."
 					action={
-						<button
-							type="button"
-							onClick={() => setDrawer("new")}
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-						>
+						<Button type="button" onClick={() => setDrawer("new")}>
 							Add recurring
-						</button>
+						</Button>
 					}
 				/>
 			);
@@ -64,13 +61,9 @@ export function RecurringPage() {
 	return (
 		<>
 			<PageHeader title="Recurring">
-				<button
-					type="button"
-					onClick={() => setDrawer("new")}
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-				>
+				<Button type="button" onClick={() => setDrawer("new")}>
 					Add
-				</button>
+				</Button>
 			</PageHeader>
 			<div className="flex flex-col gap-4">
 				{data ? <RecurringSummary month={data} /> : null}

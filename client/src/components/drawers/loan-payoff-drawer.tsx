@@ -4,6 +4,8 @@ import { AmortizationChart } from "@/components/debt/amortization-chart";
 import { AmortizationYearList } from "@/components/debt/amortization-year-list";
 import { ScenarioCard } from "@/components/debt/scenario-card";
 import { SummaryStat } from "@/components/forecast/summary-stat";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Sheet,
 	SheetContent,
@@ -108,9 +110,8 @@ export function LoanPayoffDrawer({ account, onClose }: Props) {
 						>
 							<label className="flex flex-1 flex-col gap-1" htmlFor="payoff-custom">
 								Custom extra
-								<input
+								<Input
 									id="payoff-custom"
-									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									type="number"
 									inputMode="decimal"
 									min="0"
@@ -119,12 +120,9 @@ export function LoanPayoffDrawer({ account, onClose }: Props) {
 									onChange={(event) => setCustom(event.target.value)}
 								/>
 							</label>
-							<button
-								type="submit"
-								className="rounded-md border border-border px-3 py-2 transition-colors hover:bg-foreground/5"
-							>
+							<Button variant="outline" type="submit">
 								Compare
-							</button>
+							</Button>
 						</form>
 						<AmortizationChart schedule={data.schedule} currency={currency} />
 						<AmortizationYearList schedule={data.schedule} currency={currency} />
