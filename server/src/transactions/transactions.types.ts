@@ -1,3 +1,5 @@
+import type { BetterCard } from "../card-benefits/card-benefits.types";
+
 export const TRANSFER_TAGS = ["transfer", "savings_transfer"] as const;
 export type TransferTag = (typeof TRANSFER_TAGS)[number];
 
@@ -23,6 +25,8 @@ export type TransactionListItem = {
 		mask: string | null;
 		institutionLogo: string | null;
 	} | null;
+	/** The User's other card that would have earned more; null when this one was the best. */
+	betterCard: BetterCard | null;
 };
 
 export type TransactionDetail = TransactionListItem & {

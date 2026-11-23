@@ -54,6 +54,38 @@ _Avoid_: card settings, card config
 One closed billing period of a credit BankAccount: period start/end, statement balance, minimum payment, due date. From Plaid Liabilities or entered by the User. Charges after the last close are the **current period spend** (unbilled).
 _Avoid_: invoice, bill (for a card), month (when you mean the statement period)
 
+**Card product**:
+The issuer's product a credit BankAccount is, e.g. a named cash-back or travel card. The User picks it from presets kept in the repo; each preset is derived from the issuer's benefits page.
+_Avoid_: card type (that is the BankAccount type), card tier
+
+**Card benefits**:
+What a Card product gives back: a Reward currency with a unit value, a base rate, Earn rules, Benefit credits, perks, and the annual fee. Stored per credit BankAccount when the User picks a Card product.
+_Avoid_: rewards program (alone), perks (when you mean all of it)
+
+**Reward currency**:
+What a card pays rewards in: `cash_back`, `points`, or `miles`. Points and miles carry a **unit value** (cents per unit) so they can be shown as an estimate in Money.
+_Avoid_: reward type, point type
+
+**Reward category**:
+The merchant type an Earn rule or Benefit credit pays on (dining, groceries, gas, travel, transit, streaming, entertainment, drugstores, online shopping, other). Mapped from the Plaid category at read. It is not the User's Category.
+_Avoid_: Category (that is the User's bucket), MCC
+
+**Earn rule**:
+A rate a card pays on a Reward category or merchant, with an optional spend cap per calendar period. Spend past the cap, and spend no rule matches, earns the base rate.
+_Avoid_: multiplier (alone), bonus category as a stored total
+
+**Benefit credit**:
+A statement credit a card gives per calendar period (month, quarter, half year, year) on matching purchases, e.g. a monthly dining credit. Used and remaining are computed at read.
+_Avoid_: cashback (that is a Reward currency), coupon
+
+**Rewards earned**:
+The units and estimated Money a card earned on its Transactions in a period, computed at read from Card benefits. Never stored. Transfers earn nothing; refunds subtract.
+_Avoid_: points balance (the issuer's number, which the app does not know)
+
+**Better card**:
+The User's other visible credit BankAccount, in the same currency, that would have earned more estimated value on a card Transaction. Compared by Earn rule rate, caps ignored. Only purchases on a credit BankAccount are compared.
+_Avoid_: recommended card, best card as a stored field
+
 **Payment rule**:
 How the plan pays a card each period: `statement_balance` (pay in full), `new_charges` (pay the current period spend, at least the minimum), `minimum`, or `fixed` (a set amount, at least the minimum). Payback lump sums come on top.
 _Avoid_: autopay (the bank feature, which the app does not control)

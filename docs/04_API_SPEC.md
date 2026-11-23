@@ -111,6 +111,8 @@ interface DashboardPayload {
 | POST | `/accounts/:id/statements` | `{ periodStart, periodEnd, statementBalance, minimumPayment?, dueDate? }` | `{ data: CardStatement }` | Manual Statement |
 | PUT | `/accounts/:id/loan-terms` | `{ principal?, termMonths?, firstPaymentDate?, paymentDay?, scheduledPayment?, extraPayment? }` | `{ data: LoanTerms }` | Loan only |
 | GET | `/accounts/:id/amortization` | `?extra=<cents>` | `{ data: Amortization }` | Loan only; computed |
+| PUT | `/accounts/:id/card-benefits` | `{ presetKey }` or `{ benefits: CardBenefitsInput }` | `{ data: CardBenefits }` | Credit only; see Credit Cards |
+| DELETE | `/accounts/:id/card-benefits` | — | `{ data: null }` | Credit only |
 
 ```typescript
 interface Account {
@@ -221,6 +223,116 @@ interface NetWorthResponse {
 
 ---
 
+## Credit Cards — `/api/credit-cards`
+
+| Method | Path | Query/Body | Response |
+|--------|------|-----------|----------|
+| GET | `/credit-cards` | — | `{ data: CreditCard[] }` | Visible credit BankAccounts, by name |
+| GET | `/credit-cards/presets` | — | `{ data: CardPresetSummary[] }` | Card products kept in the repo |
+| PUT | `/accounts/:id/card-benefits` | `{ presetKey }` or `{ benefits: CardBenefitsInput }` | `{ data: CardBenefits }` | Upsert. Exactly one of the two keys |
+| DELETE | `/accounts/:id/card-benefits` | — | `{ data: null }` | |
+
+`PUT` and `DELETE` answer 404 for another User's BankAccount and 400 for one that is not credit. An unknown `presetKey` is 400.
+
+Limits: `productName` 1–80 chars; `unitValue` 1–1000 (stored as 100 for `cash_back`); `baseRatePer100` and `ratePer100` 0–10000; at most 20 `earnRules`, 20 `credits`, 30 `perks`; labels 1–60 chars; at most 20 `merchants` per Earn rule or Benefit credit, each 1–60 chars; an Earn rule or Benefit credit needs at least one category or merchant; `cap.amount` and a credit's `amount` are positive; `annualFee` is ≥ 0 or null.
+
+```typescript
+type RewardCurrency = "cash_back" | "points" | "miles";
+type RewardCategory =
+  | "dining" | "groceries" | "gas" | "travel" | "transit"
+  | "streaming" | "entertainment" | "drugstores" | "online_shopping" | "other";
+
+interface EarnRule {
+  label: string;
+  ratePer100: number;              // units per $100: 200 = 2% cash back, 300 = 3 points per dollar
+  categories: RewardCategory[];
+  merchants: string[];             // case-insensitive whole words or phrases in merchantName ?? name
+  cap: { amount: number; period: "month" | "quarter" | "year" } | null; // native cents per calendar period
+}
+
+interface BenefitCredit {
+  label: string;
+  amount: number;                  // native cents per calendar period
+  period: "month" | "quarter" | "half_year" | "year";
+  categories: RewardCategory[];
+  merchants: string[];
+}
+
+interface CardBenefitsInput {
+  productName: string;
+  rewardCurrency: RewardCurrency;
+  unitValue: number;               // hundredths of a cent per unit: 125 = 1.25¢
+  baseRatePer100: number;
+  earnRules: EarnRule[];
+  credits: BenefitCredit[];
+  perks: { label: string; description: string | null }[];
+  annualFee: number | null;        // native cents
+}
+
+interface CardBenefits extends CardBenefitsInput {
+  presetKey: string | null;        // null when entered through the API
+}
+
+interface CardPresetSummary { key: string; issuer: string; productName: string }
+
+interface RewardsPeriod {
+  from: string;
+  to: string;
+  spend: number;                   // native cents, purchases net of refunds, Transfers left out
+  units: number;                   // cents for cash back, else points or miles
+  value: number;                   // estimated native cents
+  byRule: { label: string; ratePer100: number; spend: number; units: number; value: number }[];
+}
+
+interface CreditCard {
+  id: string;
+  name: string;
+  officialName: string | null;
+  mask: string | null;
+  institutionName: string | null;
+  institutionLogo: string | null;
+  isoCurrencyCode: string;
+  currentBalance: number;
+  availableCredit: number | null;  // availableBalance, else limit − balance
+  creditLimit: number | null;
+  utilization: number | null;      // 0..1
+  aprBps: number | null;
+  billingPeriod: {
+    periodStart: string;           // day after the latest Statement closes, else today − 30 days
+    closesOn: string | null;       // next statementCloseDay (or the latest close's day), today included
+    dueOn: string | null;          // latest Statement dueDate if not past, else next paymentDueDay
+    spend: number;                 // native, charges net of refunds since periodStart
+    latestStatement: CardStatement | null;
+  };
+  benefits: CardBenefits | null;
+  rewards: {                       // null until the card has Card benefits
+    month: RewardsPeriod;          // first of the month through today
+    year: RewardsPeriod;           // January 1 through today
+    credits: (BenefitCredit & {    // the calendar period containing today
+      periodStart: string;
+      periodEnd: string;
+      used: number;                // min(amount, net matching spend), never below 0
+      remaining: number;
+    })[];
+  } | null;
+}
+
+interface BetterCard {
+  accountId: string;
+  name: string;
+  mask: string | null;
+  extraValue: number;              // estimated native cents, always > 0
+}
+```
+
+**Reward category** of a Transaction comes from `plaidPfcDetailed`, else `plaidPfcPrimary`, else `other`: `FOOD_AND_DRINK_GROCERIES` → groceries; `FOOD_AND_DRINK_BEER_WINE_AND_LIQUOR` → other; other `FOOD_AND_DRINK*` → dining; `TRANSPORTATION_GAS` → gas; other `TRANSPORTATION*` → transit; `TRAVEL*` → travel; `ENTERTAINMENT_TV_AND_MOVIES`, `ENTERTAINMENT_MUSIC_AND_AUDIO` → streaming; other `ENTERTAINMENT*` → entertainment; `MEDICAL_PHARMACIES_AND_SUPPLEMENTS` → drugstores; `GENERAL_MERCHANDISE_ONLINE_MARKETPLACES` → online_shopping; everything else → other. An Earn rule or Benefit credit matches when one of its merchants is in the Transaction's merchant or name, or its categories include the Reward category.
+
+**Rewards earned** count the card's non-Transfer Transactions; spend = −amount, so a refund is negative spend. A purchase earns its highest-rate matching Earn rule; the part under that rule's cap for its calendar period earns the rule rate and the rest the base rate; a purchase no rule matches earns the base rate. A refund subtracts at its best matching rule's rate and gives no cap room back. Per `byRule` line: `units = max(0, round(spend × ratePer100 / 10000))`, `value = round(units × unitValue / 100)`; period totals are the sums of the lines. `byRule` lists only lines with spend, the base rate as "Everything else", by value descending.
+
+**Better card** (`TransactionListItem.betterCard`) is set only for a purchase (amount < 0, not a Transfer) on a credit BankAccount. Candidates are the User's other visible credit BankAccounts with Card benefits in the Transaction's currency. A card's value is `round(round(|amount| × best matching rate / 10000) × unitValue / 100)`, caps ignored; the paying card without Card benefits is worth 0. The highest-value candidate is returned when it beats the paying card by at least 1 cent (ties by name), with `extraValue` the difference.
+
+---
+
 ## Transactions — `/api/transactions`
 
 | Method | Path | Query/Body | Response |
@@ -255,6 +367,7 @@ interface TransactionListItem {
   isSplit: boolean; // true for every part of a split
   category: { id: string; name: string; icon: string; color: string } | null;
   account: { id: string; name: string; mask: string | null; institutionLogo: string | null } | null;
+  betterCard: BetterCard | null; // the User's other card that would have earned more; see Credit Cards
 }
 
 interface TransactionDetail extends TransactionListItem {

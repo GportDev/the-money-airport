@@ -11,6 +11,11 @@ export function formatMoney(cents: number, currency = "USD") {
 	}
 }
 
+/** Money, or an em dash when the value is unknown. */
+export function formatOptionalMoney(cents: number | null, currency = "USD") {
+	return cents === null ? "—" : formatMoney(cents, currency);
+}
+
 export function majorUnitsToCents(value: string) {
 	return Math.round(Number(value) * 100);
 }

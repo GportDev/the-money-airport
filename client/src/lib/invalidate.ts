@@ -4,6 +4,7 @@ import type { QueryClient } from "@tanstack/react-query";
 export function invalidateLedger(client: QueryClient) {
 	return Promise.all([
 		client.invalidateQueries({ queryKey: ["accounts"] }),
+		client.invalidateQueries({ queryKey: ["credit-cards"] }),
 		client.invalidateQueries({ queryKey: ["transactions"] }),
 		client.invalidateQueries({ queryKey: ["cash-flow"] }),
 		client.invalidateQueries({ queryKey: ["dashboard"] }),

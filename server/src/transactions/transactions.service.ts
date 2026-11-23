@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { and, asc, desc, eq, gte, inArray, lte, ne, or, type SQL, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { type BetterCardFinder, betterCardFinder } from "../card-benefits/better-card-finder";
 import { CategoriesService } from "../categories/categories.service";
 import { SAVINGS_TRANSFER } from "../categories/category-defaults";
 import { DATABASE } from "../db/db.module";
@@ -81,7 +82,8 @@ export class TransactionsService {
 			.where(and(...where))
 			.orderBy(...order)
 			.limit(filters.limit + 1);
-		const page = rows.slice(0, filters.limit).map(toListItem);
+		const betterCard = await betterCardFinder(this.db, userId);
+		const page = rows.slice(0, filters.limit).map((row) => toListItem(row, betterCard));
 		const last = page.at(-1);
 		return {
 			data: page,
@@ -111,12 +113,13 @@ export class TransactionsService {
 			)
 			.orderBy(desc(transaction.date), desc(transaction.id))
 			.limit(SIMILAR_LIMIT);
+		const betterCard = await betterCardFinder(this.db, userId);
 		return {
-			...toListItem(row),
+			...toListItem(row, betterCard),
 			notes: row.tx.notes,
 			plaidPfcPrimary: row.tx.plaidPfcPrimary,
 			fundEntry: await this.fundEntries.forTransaction(userId, id),
-			similar: similar.map(toListItem),
+			similar: similar.map((item) => toListItem(item, betterCard)),
 			split: await this.splits.forTransaction(userId, row.tx),
 		};
 	}
@@ -317,7 +320,7 @@ type ItemRow = {
 	hasSplitParts: boolean;
 };
 
-function toListItem(row: ItemRow): TransactionListItem {
+function toListItem(row: ItemRow, betterCard: BetterCardFinder): TransactionListItem {
 	return {
 		id: row.tx.id,
 		date: row.tx.date,
@@ -332,6 +335,7 @@ function toListItem(row: ItemRow): TransactionListItem {
 		isSplit: row.tx.splitParentId !== null || row.hasSplitParts,
 		category: row.category,
 		account: row.account ? { ...row.account, institutionLogo: row.institutionLogo } : null,
+		betterCard: betterCard(row.tx),
 	};
 }
 

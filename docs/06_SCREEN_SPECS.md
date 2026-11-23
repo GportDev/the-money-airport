@@ -31,7 +31,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 
 - Sidebar: 240px. Collapses to icon-only (64px). Active item: tinted background + accent border.
 - Top chrome: search, notifications, settings gear, sidebar toggle. Settings is **not** a primary nav item.
-- Right panel: ~320px. Present on Accounts, Budget, Goals. Hidden on Dashboard, Transactions, Cash Flow, Reports, Recurring, Investments, Forecasting.
+- Right panel: ~320px. Present on Accounts, Budget, Goals. Hidden on Dashboard, Credit Cards, Transactions, Cash Flow, Reports, Recurring, Investments, Forecasting.
 - Drawers: ~400–480px Sheet from the right. Do not cover the left nav. One at a time.
 - No dense cell grids, click-to-edit cells, or column-letter headers.
 
@@ -441,6 +441,40 @@ Vertical stacked sections (cards), no sub-nav:
 
 - Disconnect uses a **confirm dialog**, then sets the Plaid item `disconnected` and **keeps** BankAccounts and Transactions.
 - Change password is a small form on the page or a confirm-style dialog.
+
+---
+
+## S12 — Credit Cards
+
+**Route:** `/credit-cards` (sidebar, after Accounts)
+
+### Layout
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Credit Cards                                                │
+│                                                              │
+│  ┌ Travel Rewards ─────┐  ┌ Benefits ─────────────────────┐  │
+│  │ $1,842.50           │  │ Card product [ preset      ▾] │  │
+│  │ Available   Limit   │  │ This month    Year to date    │  │
+│  │ Usage ▓▓░░░░░░ 23%  │  │ Earn rule  Rate  Spend  Earned│  │
+│  │ APR        24.99%   │  │ Benefit credits ▓▓▓▓░ $10/$15 │  │
+│  │ Period  Oct 18–Dec 3│  │ Perks · Annual fee            │  │
+│  │ Rewards 936 pts≈$11 │  └───────────────────────────────┘  │
+│  └─────────────────────┘  ┌ Billing period ───────────────┐  │
+│  ┌ Everyday Cash ──────┐  │ ‹  Oct 18 – Nov 17 · open   › │  │
+│  │ ...                 │  │ Cafe   [Better with X] -$23.00│  │
+│  └─────────────────────┘  └───────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Behavior
+
+- Left column: one tile per visible credit BankAccount, in name order: current balance, available credit, limit, usage, APR, open billing period, and Rewards earned this month. Pressing a tile selects it (`?card=<id>`); the first card is the default.
+- Benefits: the Card product picker lists the presets and saves on change (toast). With Card benefits: Rewards earned this month and year to date, the Earn rule breakdown, Benefit credits used in the current period, perks, and the annual fee. Without: a prompt to pick a Card product.
+- Billing period: the selected card's Transactions for the open period, with previous / next Statement navigation and the period total.
+- **Better card:** a purchase that another of the User's cards would have earned more on shows `Better with <card>` here and in the Transactions feed (credit card purchases only).
+- No credit cards: empty state linking to Accounts.
 
 ---
 

@@ -11,7 +11,7 @@ import { notTransfer, statementDto } from "./liability-details";
 import { ownedAccountOfGroup } from "./owned-account";
 
 /** The open period with no Statement yet looks back this far. */
-const OPEN_PERIOD_FALLBACK_DAYS = 30;
+export const OPEN_PERIOD_FALLBACK_DAYS = 30;
 const PERIOD_TRANSACTION_LIMIT = 200;
 export const OPEN_PERIOD = "open";
 

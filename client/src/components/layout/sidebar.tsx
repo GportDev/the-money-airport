@@ -1,5 +1,6 @@
 import {
 	ArrowLeftRight,
+	CreditCard,
 	Landmark,
 	LayoutDashboard,
 	LineChart,
@@ -21,6 +22,7 @@ const NAV_ICONS = {
 	Dashboard: LayoutDashboard,
 	"Cash Flow": ArrowLeftRight,
 	Accounts: Landmark,
+	"Credit Cards": CreditCard,
 	Transactions: List,
 	Reports: PieChart,
 	Budget: Wallet,

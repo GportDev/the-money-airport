@@ -5,6 +5,7 @@ import { AccountsModule } from "./accounts/accounts.module";
 import { AuthModule } from "./auth/auth.module";
 import { BillingModule } from "./billing/billing.module";
 import { BudgetsModule } from "./budgets/budgets.module";
+import { CardBenefitsModule } from "./card-benefits/card-benefits.module";
 import { CashFlowModule } from "./cash-flow/cash-flow.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
@@ -47,6 +48,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		InvestmentsModule,
 		ForecastModule,
 		LiabilitiesModule,
+		CardBenefitsModule,
 		ExportModule,
 	],
 })

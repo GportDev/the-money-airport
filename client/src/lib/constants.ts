@@ -2,6 +2,7 @@ export const NAV_ITEMS = [
 	{ name: "Dashboard", path: "/" },
 	{ name: "Cash Flow", path: "/cash-flow" },
 	{ name: "Accounts", path: "/accounts" },
+	{ name: "Credit Cards", path: "/credit-cards" },
 	{ name: "Transactions", path: "/transactions" },
 	{ name: "Reports", path: "/reports" },
 	{ name: "Budget", path: "/budget" },
