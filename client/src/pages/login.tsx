@@ -5,7 +5,9 @@ import { safeNextPath } from "@/auth/safe-next-path";
 import { useOAuthErrorToast } from "@/auth/use-oauth-error-toast";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { BrandLockup } from "@/components/brand/brand-lockup";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export function LoginPage() {
 	useOAuthErrorToast();
@@ -37,9 +39,8 @@ export function LoginPage() {
 					<form className="flex flex-col gap-3" onSubmit={onSubmit}>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="email">
 							Email
-							<input
+							<Input
 								id="email"
-								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 								type="email"
 								autoComplete="email"
 								value={email}
@@ -49,9 +50,8 @@ export function LoginPage() {
 						</label>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="password">
 							Password
-							<input
+							<Input
 								id="password"
-								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 								type="password"
 								autoComplete="current-password"
 								value={password}
@@ -64,12 +64,7 @@ export function LoginPage() {
 								{error}
 							</p>
 						) : null}
-						<button
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-							type="submit"
-						>
-							Log in
-						</button>
+						<Button type="submit">Log in</Button>
 					</form>
 					<GoogleSignInButton next={next} />
 					<p className="mt-4 text-sm text-muted-foreground">

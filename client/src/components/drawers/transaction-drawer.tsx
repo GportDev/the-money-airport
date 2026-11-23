@@ -1,8 +1,12 @@
 import { type FormEvent, useState } from "react";
 import { AssignToFund } from "@/components/transactions/assign-to-fund";
+import { CategoryCombobox } from "@/components/transactions/category-combobox";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
+import { TransactionSplit } from "@/components/transactions/split/transaction-split";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { QueryError } from "@/components/ui/query-error";
 import {
 	Sheet,
@@ -58,7 +62,6 @@ export function TransactionDrawer({
 					<EditForm
 						key={detail.data.id}
 						transaction={detail.data}
-						categories={categories.data ?? []}
 						onDone={() => close()}
 						onDelete={onDelete}
 						onOpenSimilar={onOpenSimilar}
@@ -98,53 +101,13 @@ function TransactionDetailSkeleton() {
 	);
 }
 
-function CategorySelect({
-	id,
-	value,
-	onChange,
-	categories,
-}: {
-	id: string;
-	value: string;
-	onChange: (value: string) => void;
-	categories: Category[];
-}) {
-	const income = categories.filter((category) => category.kind === "income");
-	const expense = categories.filter((category) => category.kind === "expense");
-	return (
-		<select
-			id={id}
-			className={fieldClass}
-			value={value}
-			onChange={(event) => onChange(event.target.value)}
-		>
-			<optgroup label="Expense">
-				{expense.map((category) => (
-					<option key={category.id} value={category.id}>
-						{category.name}
-					</option>
-				))}
-			</optgroup>
-			<optgroup label="Income">
-				{income.map((category) => (
-					<option key={category.id} value={category.id}>
-						{category.name}
-					</option>
-				))}
-			</optgroup>
-		</select>
-	);
-}
-
 function EditForm({
 	transaction,
-	categories,
 	onDone,
 	onDelete,
 	onOpenSimilar,
 }: {
 	transaction: TransactionDetail;
-	categories: Category[];
 	onDone: () => void;
 	onDelete?: (transaction: TransactionDetail) => void;
 	onOpenSimilar?: (id: string) => void;
@@ -161,6 +124,8 @@ function EditForm({
 	const [error, setError] = useState<string | null>(null);
 	const title = transaction.merchantName ?? transaction.name;
 	const wasTransfer = transaction.tags.length > 0;
+	// The ledger fields of a split part are fixed; unsplit to change them.
+	const canEditLedger = transaction.isManual && !transaction.split;
 
 	async function onSubmit(event: FormEvent) {
 		event.preventDefault();
@@ -171,7 +136,7 @@ function EditForm({
 				...(categoryId !== transaction.category?.id ? { categoryId } : {}),
 				notes: notes.trim() === "" ? null : notes,
 				...(isTransfer !== wasTransfer ? { tags: isTransfer ? ["transfer"] : [] } : {}),
-				...(transaction.isManual
+				...(canEditLedger
 					? {
 							name,
 							amount: majorUnitsToCents(amount),
@@ -212,13 +177,12 @@ function EditForm({
 				</p>
 			</SheetHeader>
 			<form className="flex flex-col gap-3 px-4" onSubmit={onSubmit}>
-				{transaction.isManual ? (
+				{canEditLedger ? (
 					<>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-name">
 							Name
-							<input
+							<Input
 								id="transaction-name"
-								className={fieldClass}
 								value={name}
 								onChange={(event) => setName(event.target.value)}
 								required
@@ -226,9 +190,8 @@ function EditForm({
 						</label>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-amount">
 							Amount (negative for spend)
-							<input
+							<Input
 								id="transaction-amount"
-								className={fieldClass}
 								inputMode="decimal"
 								value={amount}
 								onChange={(event) => setAmount(event.target.value)}
@@ -237,10 +200,9 @@ function EditForm({
 						</label>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-date">
 							Date
-							<input
+							<Input
 								id="transaction-date"
 								type="date"
-								className={fieldClass}
 								value={date}
 								onChange={(event) => setDate(event.target.value)}
 								required
@@ -266,11 +228,11 @@ function EditForm({
 				) : null}
 				<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-category">
 					Category
-					<CategorySelect
+					<CategoryCombobox
 						id="transaction-category"
 						value={categoryId}
-						onChange={setCategoryId}
-						categories={categories}
+						onValueChange={setCategoryId}
+						className={fieldClass}
 					/>
 				</label>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-notes">
@@ -299,14 +261,11 @@ function EditForm({
 						{error}
 					</p>
 				) : null}
-				<button
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
-					type="submit"
-					disabled={update.isPending}
-				>
+				<Button type="submit" disabled={update.isPending}>
 					Save
-				</button>
+				</Button>
 			</form>
+			<TransactionSplit transaction={transaction} />
 			<AssignToFund transaction={transaction} />
 			{transaction.similar.length > 0 ? (
 				<section aria-labelledby="similar-heading" className="flex flex-col gap-2 px-4">
@@ -338,13 +297,9 @@ function EditForm({
 			) : null}
 			{transaction.isManual && onDelete ? (
 				<SheetFooter>
-					<button
-						className="rounded-md border border-border px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/10"
-						type="button"
-						onClick={() => onDelete(transaction)}
-					>
+					<Button variant="danger-outline" type="button" onClick={() => onDelete(transaction)}>
 						Delete transaction
-					</button>
+					</Button>
 				</SheetFooter>
 			) : null}
 		</>
@@ -396,9 +351,8 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 			<form className="flex flex-col gap-3 px-4" onSubmit={onSubmit}>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-name">
 					Name
-					<input
+					<Input
 						id="new-transaction-name"
-						className={fieldClass}
 						value={name}
 						onChange={(event) => setName(event.target.value)}
 						required
@@ -427,9 +381,8 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 				</fieldset>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-amount">
 					Amount
-					<input
+					<Input
 						id="new-transaction-amount"
-						className={fieldClass}
 						inputMode="decimal"
 						placeholder="0.00"
 						value={amount}
@@ -439,10 +392,9 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 				</label>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-date">
 					Date
-					<input
+					<Input
 						id="new-transaction-date"
 						type="date"
-						className={fieldClass}
 						value={date}
 						onChange={(event) => setDate(event.target.value)}
 						required
@@ -466,11 +418,11 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 				</label>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-category">
 					Category
-					<CategorySelect
+					<CategoryCombobox
 						id="new-transaction-category"
-						value={categoryId || uncategorized?.id || ""}
-						onChange={setCategoryId}
-						categories={categories}
+						value={categoryId || uncategorized?.id || null}
+						onValueChange={setCategoryId}
+						className={fieldClass}
 					/>
 				</label>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="new-transaction-notes">
@@ -488,13 +440,9 @@ function AddForm({ categories, onDone }: { categories: Category[]; onDone: () =>
 						{error}
 					</p>
 				) : null}
-				<button
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60 transition-colors hover:bg-primary/85"
-					type="submit"
-					disabled={create.isPending}
-				>
+				<Button type="submit" disabled={create.isPending}>
 					Add
-				</button>
+				</Button>
 			</form>
 		</>
 	);

@@ -3,7 +3,9 @@ import { Link } from "react-router";
 import { authClient } from "@/auth/auth-client";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { BrandLockup } from "@/components/brand/brand-lockup";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export function SignupPage() {
 	const [name, setName] = useState("");
@@ -33,9 +35,8 @@ export function SignupPage() {
 					<form className="flex flex-col gap-3" onSubmit={onSubmit}>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="name">
 							Name
-							<input
+							<Input
 								id="name"
-								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 								autoComplete="name"
 								value={name}
 								onChange={(event) => setName(event.target.value)}
@@ -44,9 +45,8 @@ export function SignupPage() {
 						</label>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="email">
 							Email
-							<input
+							<Input
 								id="email"
-								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 								type="email"
 								autoComplete="email"
 								value={email}
@@ -56,9 +56,8 @@ export function SignupPage() {
 						</label>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="password">
 							Password
-							<input
+							<Input
 								id="password"
-								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 								type="password"
 								autoComplete="new-password"
 								value={password}
@@ -71,12 +70,7 @@ export function SignupPage() {
 								{error}
 							</p>
 						) : null}
-						<button
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-							type="submit"
-						>
-							Sign up
-						</button>
+						<Button type="submit">Sign up</Button>
 					</form>
 					<GoogleSignInButton next="/" />
 					<p className="mt-4 text-sm text-muted-foreground">

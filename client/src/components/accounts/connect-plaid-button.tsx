@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { usePlaidLink } from "react-plaid-link";
 import { createLinkToken, exchangeToken } from "@/api/plaid";
+import { Button } from "@/components/ui/button";
 import { invalidateLedger } from "@/lib/invalidate";
 
 export function ConnectPlaidButton({
@@ -36,8 +37,8 @@ export function ConnectPlaidButton({
 
 	return (
 		<div className="flex flex-col gap-2">
-			<button
-				className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+			<Button
+				variant="outline"
 				type="button"
 				onClick={() => {
 					setError(null);
@@ -47,7 +48,7 @@ export function ConnectPlaidButton({
 				}}
 			>
 				{label}
-			</button>
+			</Button>
 			{error ? (
 				<p className="text-sm text-negative" role="alert">
 					{error}

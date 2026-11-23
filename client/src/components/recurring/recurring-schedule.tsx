@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
 import { useMarkRecurringPaid, useSkipRecurring } from "@/hooks/use-recurring";
 import { formatLongDate, formatMoney } from "@/lib/format";
 import { countdownLabel } from "@/lib/recurring";
@@ -46,22 +47,23 @@ export function RecurringSchedule({ item, onDone }: Props) {
 				<p className="text-xs text-muted-foreground">Last paid {formatLongDate(item.lastPaidOn)}</p>
 			) : null}
 			<div className="flex gap-2">
-				<button
+				<Button
 					type="button"
 					disabled={isBusy}
 					onClick={() => void onMarkPaid()}
-					className="flex-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
+					className="flex-1"
 				>
 					{markPaid.isPending ? "Marking…" : "Mark paid"}
-				</button>
-				<button
+				</Button>
+				<Button
+					variant="outline"
 					type="button"
 					disabled={isBusy}
 					onClick={() => void onSkip()}
-					className="flex-1 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5 disabled:opacity-60"
+					className="flex-1"
 				>
 					{skip.isPending ? "Skipping…" : "Skip"}
-				</button>
+				</Button>
 			</div>
 		</div>
 	);

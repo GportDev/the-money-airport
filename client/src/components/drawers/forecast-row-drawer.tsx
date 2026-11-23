@@ -5,6 +5,8 @@ import { FundSelect } from "@/components/forecast/fund-select";
 import { PayFromSelect } from "@/components/forecast/pay-from-select";
 import { PlanAmountsFields } from "@/components/forecast/plan-amounts-fields";
 import { RecurringSelect } from "@/components/forecast/recurring-select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Sheet,
 	SheetContent,
@@ -125,18 +127,16 @@ export function ForecastRowDrawer({ section, row, year, onClose }: Props) {
 				<form id="forecast-row-form" className="flex flex-col gap-4 px-4" onSubmit={onSubmit}>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="forecast-row-name">
 						Name
-						<input
+						<Input
 							id="forecast-row-name"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							value={name}
 							onChange={(event) => setName(event.target.value)}
 						/>
 					</label>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="forecast-row-day">
 						Day of month
-						<input
+						<Input
 							id="forecast-row-day"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							type="number"
 							min="1"
 							max="31"
@@ -167,23 +167,18 @@ export function ForecastRowDrawer({ section, row, year, onClose }: Props) {
 					) : null}
 				</form>
 				<SheetFooter>
-					<button
-						form="forecast-row-form"
-						type="submit"
-						disabled={isBusy}
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-					>
+					<Button form="forecast-row-form" type="submit" disabled={isBusy}>
 						Save item
-					</button>
+					</Button>
 					{row ? (
-						<button
+						<Button
+							variant="danger-outline"
 							type="button"
 							disabled={isBusy}
 							onClick={() => setDeleteOpen(true)}
-							className="rounded-md border border-border px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/5 disabled:opacity-60"
 						>
 							Delete item
-						</button>
+						</Button>
 					) : null}
 				</SheetFooter>
 				{isDeleteOpen && row ? (

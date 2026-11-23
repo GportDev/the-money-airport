@@ -2,6 +2,8 @@ import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Sheet,
 	SheetContent,
@@ -73,9 +75,8 @@ export function BudgetCategoryDrawer({ row, month, monthName, currency, onClose 
 				<form id="budget-category-form" className="flex flex-col gap-4 px-4" onSubmit={onSubmit}>
 					<label className="flex flex-col gap-1 text-sm" htmlFor="budget-planned">
 						Planned
-						<input
+						<Input
 							id="budget-planned"
-							className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 							type="number"
 							inputMode="decimal"
 							min="0"
@@ -98,23 +99,18 @@ export function BudgetCategoryDrawer({ row, month, monthName, currency, onClose 
 					</p>
 				</form>
 				<SheetFooter>
-					<button
-						form="budget-category-form"
-						type="submit"
-						disabled={isBusy}
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-					>
+					<Button form="budget-category-form" type="submit" disabled={isBusy}>
 						{save.isPending ? "Saving…" : "Save"}
-					</button>
+					</Button>
 					{row.id ? (
-						<button
+						<Button
+							variant="danger-outline"
 							type="button"
 							disabled={isBusy}
 							onClick={() => void onRemove()}
-							className="rounded-md border border-border px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/5 disabled:opacity-60"
 						>
 							{remove.isPending ? "Removing…" : "Remove plan"}
-						</button>
+						</Button>
 					) : null}
 				</SheetFooter>
 			</SheetContent>

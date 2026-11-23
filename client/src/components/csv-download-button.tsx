@@ -1,6 +1,7 @@
 import { Download } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 type Props = { label: string; download: () => Promise<void> };
 
@@ -21,14 +22,9 @@ export function CsvDownloadButton({ label, download }: Props) {
 	}
 
 	return (
-		<button
-			type="button"
-			disabled={isDownloading}
-			onClick={start}
-			className="flex items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5 disabled:opacity-60"
-		>
+		<Button variant="outline" type="button" disabled={isDownloading} onClick={start}>
 			<Download aria-hidden className="size-4" />
 			{label}
-		</button>
+		</Button>
 	);
 }

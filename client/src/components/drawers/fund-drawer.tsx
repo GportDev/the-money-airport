@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FundEntryForm } from "@/components/goals/fund-entry-form";
 import { FundEntryList } from "@/components/goals/fund-entry-list";
 import { Amount } from "@/components/ui/amount";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
 	Sheet,
@@ -44,24 +45,23 @@ export function FundDrawer({ goal, currency, onEdit, onClose }: Props) {
 					</p>
 				</SheetHeader>
 				<div className="flex gap-2 px-4">
-					<button
+					<Button
 						type="button"
 						aria-expanded={isFormOpen}
 						onClick={() => setFormOpen((value) => !value)}
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
 					>
 						Add entry
-					</button>
-					<button
+					</Button>
+					<Button
+						variant="outline"
 						type="button"
 						onClick={() => {
 							close();
 							onEdit();
 						}}
-						className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 					>
 						Edit goal
-					</button>
+					</Button>
 				</div>
 				{isFormOpen ? <FundEntryForm goalId={goal.id} onDone={() => setFormOpen(false)} /> : null}
 				<FundEntryList

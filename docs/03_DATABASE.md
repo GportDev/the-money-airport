@@ -262,6 +262,7 @@ All transactions from all accounts + manual entries.
 | `user_id` | `text` | FK → user.id, NOT NULL |
 | `bank_account_id` | `uuid` | FK → bank_account.id, nullable (null = manual, unassigned) |
 | `category_id` | `uuid` | FK → category.id, NOT NULL |
+| `split_parent_id` | `uuid` | FK → transaction.id, ON DELETE CASCADE, nullable; set on the extra parts of a split |
 | `plaid_transaction_id` | `text` | nullable (null = manual); unique per `(user_id, plaid_transaction_id)` |
 | `pending_transaction_id` | `text` | Plaid id of the pending row this posted row replaced |
 | `name` | `text` | NOT NULL |
@@ -284,7 +285,10 @@ All transactions from all accounts + manual entries.
 
 **Pending to posted:** when Plaid sends a posted row with `pending_transaction_id`, the existing pending row is updated in place (new Plaid id, `pending=false`), so its id, Category, notes, and tags survive. The pending id Plaid then lists in `removed` no longer matches anything.
 
+**Split:** the original row keeps the first part (its Category and amount change); every other part is a child row with `split_parent_id`, copying the parent's account, name, merchant, date, pending, and tags. The parts always add up to the original amount, so aggregates stay plain sums. When Plaid resends the parent, ingest sets its amount to Plaid's amount minus the child parts and copies account, name, merchant, date, and pending onto the children. Removing the parent removes its parts.
+
 **Indexes:**
+- `(split_parent_id)` — split lookups
 - `(user_id, date DESC)` — feed and cash-flow queries
 - `(user_id, category_id)` — budget/report queries
 - `(bank_account_id, date)` — account-specific queries

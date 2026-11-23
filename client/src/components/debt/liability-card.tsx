@@ -57,21 +57,25 @@ export function LiabilityCard({
 				) : null}
 				{statement ? (
 					<span className="text-muted-foreground">
-						Statement {formatMoney(statement.statementBalance, native)}
-						{statement.minimumPayment !== null
-							? ` · min ${formatMoney(statement.minimumPayment, native)}`
-							: ""}
+						Statement <Amount>{formatMoney(statement.statementBalance, native)}</Amount>
+						{statement.minimumPayment !== null ? (
+							<>
+								{" "}
+								· min <Amount>{formatMoney(statement.minimumPayment, native)}</Amount>
+							</>
+						) : null}
 						{statement.dueDate ? ` · due ${statement.dueDate}` : ""}
 					</span>
 				) : null}
 				<span className="text-muted-foreground">
 					{apr}
 					{ruleLabel(liability) ? ` · Pay: ${ruleLabel(liability)}` : ""} · this month{" "}
-					{formatMoney(liability.scheduledPayment, currency)} +{" "}
-					{formatMoney(liability.payback, currency)}
+					<Amount>{formatMoney(liability.scheduledPayment, currency)}</Amount> +{" "}
+					<Amount>{formatMoney(liability.payback, currency)}</Amount>
 				</span>
 				<span className="text-muted-foreground">
-					Interest next period {formatMoney(liability.projectedInterest, currency)} ·{" "}
+					Interest next period <Amount>{formatMoney(liability.projectedInterest, currency)}</Amount>{" "}
+					·{" "}
 					{liability.payoffMonth
 						? `paid off ${monthName(liability.payoffMonth)}`
 						: "not paid off in 2 years"}

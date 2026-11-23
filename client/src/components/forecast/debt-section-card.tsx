@@ -61,9 +61,9 @@ export function DebtSectionCard({ year, currency, onOpenDebt }: Props) {
 								<Amount className="w-32 text-right text-muted-foreground">
 									{formatMoney(scheduled, currency)}
 								</Amount>
-								<Amount className="w-36 text-right text-muted-foreground">
-									Payback {formatMoney(payback, currency)}
-								</Amount>
+								<span className="w-36 text-right text-muted-foreground">
+									Payback <Amount>{formatMoney(payback, currency)}</Amount>
+								</span>
 							</button>
 						</li>
 					);

@@ -2,6 +2,7 @@ import { PieChart } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { ReportsSkeleton } from "@/components/reports/reports-skeleton";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QueryError } from "@/components/ui/query-error";
 import type { BankAccount } from "@/types";
@@ -36,12 +37,9 @@ export function ReportsState({ accounts, children }: Props) {
 				title="No accounts yet"
 				description="Add an account to see spending, income, and balances over time."
 				action={
-					<Link
-						to="/accounts"
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-					>
-						Go to Accounts
-					</Link>
+					<Button asChild>
+						<Link to="/accounts">Go to Accounts</Link>
+					</Button>
 				}
 			/>
 		);

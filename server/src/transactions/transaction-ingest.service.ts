@@ -63,6 +63,10 @@ export class TransactionIngestService {
 							),
 						);
 		const existing = new Map(existingRows.map((row) => [row.plaidTransactionId, row]));
+		const splitTotals = await this.splitPartTotals(
+			userId,
+			existingRows.map((row) => row.id),
+		);
 
 		const result: IngestResult = { added: 0, modified: 0, removed: 0 };
 		await this.db.transaction(async (tx) => {
@@ -92,14 +96,35 @@ export class TransactionIngestService {
 					updatedAt: new Date(),
 				};
 				if (current) {
+					// A split parent keeps only its own part; its child parts hold the rest.
+					const childTotal = splitTotals.get(current.id);
+					const amount = item.amount - (childTotal ?? 0);
 					await tx
 						.update(transaction)
 						.set({
 							...fields,
+							amount,
 							...(current.categoryLocked ? {} : { categoryId: categoryFor(item) }),
 						})
 						.where(eq(transaction.id, current.id));
-					existing.set(item.plaidTransactionId, { ...current, ...fields });
+					if (childTotal !== undefined) {
+						await tx
+							.update(transaction)
+							.set({
+								bankAccountId: fields.bankAccountId,
+								name: fields.name,
+								merchantName: fields.merchantName,
+								merchantLogoUrl: fields.merchantLogoUrl,
+								isoCurrencyCode: fields.isoCurrencyCode,
+								date: fields.date,
+								pending: fields.pending,
+								updatedAt: fields.updatedAt,
+							})
+							.where(
+								and(eq(transaction.userId, userId), eq(transaction.splitParentId, current.id)),
+							);
+					}
+					existing.set(item.plaidTransactionId, { ...current, ...fields, amount });
 					result.modified += 1;
 				} else {
 					const [created] = await tx
@@ -131,6 +156,22 @@ export class TransactionIngestService {
 
 		await this.pairTransfers(userId);
 		return result;
+	}
+
+	/** Sum of the child parts for each split parent among `ids`. */
+	private async splitPartTotals(userId: string, ids: string[]) {
+		if (ids.length === 0) {
+			return new Map<string, number>();
+		}
+		const rows = await this.db
+			.select({
+				parentId: transaction.splitParentId,
+				total: sql<number>`sum(${transaction.amount})::int`,
+			})
+			.from(transaction)
+			.where(and(eq(transaction.userId, userId), inArray(transaction.splitParentId, ids)))
+			.groupBy(transaction.splitParentId);
+		return new Map(rows.flatMap((row) => (row.parentId ? [[row.parentId, row.total]] : [])));
 	}
 
 	/**

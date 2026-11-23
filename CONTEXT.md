@@ -124,6 +124,10 @@ _Avoid_: null category, empty category
 A dated movement of Money on a BankAccount (or a manual entry). Pending Transactions count in Budget, Spending, Cash Flow, and Reports. Amount sign: positive = income, negative = expense.
 _Avoid_: row, cell, ledger line, transfer (unless it is a Transfer)
 
+**Split**:
+A Transaction divided into parts, each with its own Category and amount, that add up to the original amount to the cent. The original keeps the first part; each other part shows as its own Transaction in the feed, marked Split.
+_Avoid_: sub-transaction, child transaction (in User-facing copy)
+
 **Transfer**:
 A pair of Transactions that moved Money between two of the User’s BankAccounts in the same currency (including a card or loan payment when both sides exist). Tagged `transfer` or `savings_transfer`. Excluded from Budget actuals, Spending, Reports income/expense, and Cash Flow totals. Still visible in the feed. Not a Zelle/Venmo to someone else.
 _Avoid_: all Plaid TRANSFER_* as Transfers; cross-currency auto-pairs in V1

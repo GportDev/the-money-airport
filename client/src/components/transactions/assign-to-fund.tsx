@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
 	Select,
 	SelectContent,
@@ -58,14 +59,14 @@ export function AssignToFund({ transaction }: Props) {
 					</SelectContent>
 				</Select>
 			</div>
-			<button
+			<Button
+				variant="outline"
 				type="button"
 				disabled={!goalId || assign.isPending}
 				onClick={() => void onAssign()}
-				className="rounded-md border border-border px-3 py-2 transition-colors hover:bg-foreground/5 disabled:opacity-60"
 			>
 				{assign.isPending ? "Assigning…" : "Assign"}
-			</button>
+			</Button>
 		</div>
 	);
 }

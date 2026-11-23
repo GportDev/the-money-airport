@@ -10,6 +10,7 @@ import { NetWorthHero } from "@/components/accounts/net-worth-hero";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { AccountDrawer } from "@/components/drawers/account-drawer";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import {
 	useAccounts,
 	useCreateAccount,
@@ -60,15 +61,11 @@ export function AccountsPage() {
 	return (
 		<>
 			<PageHeader title="Accounts">
-				<button
-					className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
-					type="button"
-					onClick={() => setFiltersOpen(true)}
-				>
+				<Button variant="outline" type="button" onClick={() => setFiltersOpen(true)}>
 					Filters
-				</button>
-				<button
-					className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
+				</Button>
+				<Button
+					variant="outline"
 					type="button"
 					onClick={() => {
 						toast.promise(
@@ -82,14 +79,10 @@ export function AccountsPage() {
 					}}
 				>
 					Refresh all
-				</button>
-				<button
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-					type="button"
-					onClick={() => setChooser(true)}
-				>
+				</Button>
+				<Button type="button" onClick={() => setChooser(true)}>
 					Add account
-				</button>
+				</Button>
 			</PageHeader>
 			<AccountsState accounts={accounts} onAdd={() => setChooser(true)}>
 				<div className="flex flex-col gap-6">
@@ -159,13 +152,9 @@ export function AccountsPage() {
 								))}
 							</select>
 						</label>
-						<button
-							className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
-							type="button"
-							onClick={() => setFiltersOpen(false)}
-						>
+						<Button variant="outline" type="button" onClick={() => setFiltersOpen(false)}>
 							Done
-						</button>
+						</Button>
 					</div>
 				</div>
 			) : null}
@@ -177,8 +166,7 @@ export function AccountsPage() {
 				>
 					<div className="flex w-72 flex-col gap-2 rounded-xl border border-border bg-card p-4">
 						<ConnectPlaidButton onDone={() => setChooser(false)} />
-						<button
-							className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
+						<Button
 							type="button"
 							onClick={() => {
 								setChooser(false);
@@ -186,7 +174,7 @@ export function AccountsPage() {
 							}}
 						>
 							Add manually
-						</button>
+						</Button>
 					</div>
 				</div>
 			) : null}

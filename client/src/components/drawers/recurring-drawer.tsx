@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RecurringFields } from "@/components/recurring/recurring-fields";
 import { RecurringSchedule } from "@/components/recurring/recurring-schedule";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Sheet,
@@ -89,22 +90,17 @@ export function RecurringDrawer({ item, onClose }: Props) {
 					</label>
 				</form>
 				<SheetFooter>
-					<button
-						form="recurring-form"
-						type="submit"
-						disabled={isBusy}
-						className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85 disabled:opacity-60"
-					>
+					<Button form="recurring-form" type="submit" disabled={isBusy}>
 						{update.isPending ? "Saving…" : "Save"}
-					</button>
-					<button
+					</Button>
+					<Button
+						variant="danger-outline"
 						type="button"
 						disabled={isBusy}
 						onClick={() => setDeleteOpen(true)}
-						className="rounded-md border border-border px-3 py-2 text-sm text-negative transition-colors hover:bg-negative/5 disabled:opacity-60"
 					>
 						{remove.isPending ? "Deleting…" : "Delete"}
-					</button>
+					</Button>
 				</SheetFooter>
 				{isDeleteOpen ? (
 					<ConfirmDialog

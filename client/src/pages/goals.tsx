@@ -7,6 +7,7 @@ import { GoalDrawer } from "@/components/drawers/goal-drawer";
 import { GoalList } from "@/components/goals/goal-list";
 import { GoalsSkeleton } from "@/components/goals/goals-skeleton";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { QueryError } from "@/components/ui/query-error";
 import { useGoals } from "@/hooks/use-goals";
 import {
@@ -48,22 +49,18 @@ export function GoalsPage() {
 	return (
 		<>
 			<PageHeader title="Goals">
-				<button
+				<Button
+					variant="outline"
 					type="button"
 					onClick={() =>
 						patchParams((next) => next.set(GOAL_EDIT_ACCOUNTS_PARAM, GOAL_EDIT_ACCOUNTS_VALUE))
 					}
-					className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-foreground/5"
 				>
 					Edit accounts
-				</button>
-				<button
-					type="button"
-					onClick={() => setGoalDrawer("new")}
-					className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
-				>
+				</Button>
+				<Button type="button" onClick={() => setGoalDrawer("new")}>
 					Add goal
-				</button>
+				</Button>
 			</PageHeader>
 
 			<Tabs.Root
@@ -77,13 +74,13 @@ export function GoalsPage() {
 			>
 				<Tabs.List
 					aria-label="Goal type"
-					className="mb-4 inline-flex rounded-md border border-border p-0.5 text-sm"
+					className="mb-4 inline-flex rounded-md bg-foreground/5 p-0.5 text-sm"
 				>
 					{GOAL_TABS.map((option) => (
 						<Tabs.Trigger
 							key={option.value}
 							value={option.value}
-							className="rounded px-3 py-1 transition-colors hover:bg-foreground/5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+							className="rounded px-3 py-1 text-muted-foreground transition-colors hover:text-foreground data-[state=active]:bg-card data-[state=active]:font-medium data-[state=active]:text-foreground"
 						>
 							{option.label}
 						</Tabs.Trigger>

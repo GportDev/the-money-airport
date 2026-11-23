@@ -77,6 +77,8 @@ export type Category = {
 
 export type TransferTag = "transfer" | "savings_transfer";
 
+type TransactionCategory = { id: string; name: string; icon: string; color: string };
+
 export type TransactionListItem = {
 	id: string;
 	date: string;
@@ -88,7 +90,9 @@ export type TransactionListItem = {
 	pending: boolean;
 	isManual: boolean;
 	tags: string[];
-	category: { id: string; name: string; icon: string; color: string } | null;
+	/** True for every part of a split Transaction. */
+	isSplit: boolean;
+	category: TransactionCategory | null;
 	account: {
 		id: string;
 		name: string;
@@ -104,6 +108,16 @@ export type TransactionDetail = TransactionListItem & {
 	plaidPfcPrimary: string | null;
 	fundEntry: { id: string; goalId: string; goalName: string } | null;
 	similar: TransactionListItem[];
+	split: TransactionSplit | null;
+};
+
+export type SplitPartInput = { categoryId: string; amount: number };
+
+/** The parts of a split Transaction, parent part first. `total` is the original amount. */
+export type TransactionSplit = {
+	parentId: string;
+	total: number;
+	parts: { id: string; amount: number; category: TransactionCategory | null }[];
 };
 
 export type TransactionPage = {

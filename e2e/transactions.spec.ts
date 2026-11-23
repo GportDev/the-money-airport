@@ -289,7 +289,8 @@ test("Transactions page: date-grouped feed, drawer edit, filters, and Edit multi
 	await feed.getByRole("button", { name: /Joe Coffee/ }).click({ position: { x: 60, y: 12 } });
 	const drawer = page.getByRole("dialog");
 	await signedExpect(drawer.getByRole("heading", { name: "Joe Coffee" })).toBeVisible();
-	await drawer.getByLabel("Category").selectOption({ label: "Entertainment" });
+	await drawer.getByLabel("Category").click();
+	await page.getByRole("option", { name: "Entertainment" }).click();
 	await drawer.getByLabel("Notes").fill("Team coffee");
 	await drawer.getByRole("button", { name: "Save" }).click();
 	await signedExpect(drawer).toHaveCount(0);
@@ -307,7 +308,8 @@ test("Transactions page: date-grouped feed, drawer edit, filters, and Edit multi
 	await feed.getByRole("button", { name: /Uber/ }).click({ position: { x: 60, y: 12 } });
 	await feed.getByRole("button", { name: /ACH DEBIT 0042/ }).click({ position: { x: 60, y: 12 } });
 	await page.getByRole("button", { name: "Edit 2" }).click();
-	await page.getByRole("dialog").getByLabel("Category").selectOption({ label: "Transport" });
+	await page.getByRole("dialog").getByLabel("Category").click();
+	await page.getByRole("option", { name: "Transport" }).click();
 	await page.getByRole("dialog").getByRole("button", { name: "Apply" }).click();
 	await signedExpect(
 		feed.getByRole("combobox", { name: /Category for .*ACH DEBIT 0042/ }),
