@@ -111,6 +111,7 @@ Individual accounts — Plaid-linked or manual (vehicles, property, cash on hand
 | `payment_rule` | `text` | `statement_balance` \| `new_charges` \| `minimum` \| `fixed`, default `statement_balance` — credit only |
 | `fixed_payment` | `integer` | Cents, nullable — used when `payment_rule = fixed` |
 | `overridden_fields` | `text[]` | Card-term columns the User set by hand; Plaid Liabilities sync skips them |
+| `sort_order` | `integer` | Nullable. The User's drag order on the Credit Cards page; null sorts after ordered cards |
 | `last_synced_at` | `timestamptz` | |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |

@@ -33,6 +33,27 @@
 	--animate-pop-in: pop-in 160ms var(--ease-out);
 	--animate-pop-out: pop-out 100ms var(--ease-out) forwards;
 	--animate-fade-in: fade-in 160ms var(--ease-out);
+	--animate-accordion-down: accordion-down 220ms var(--ease-out);
+	--animate-accordion-up: accordion-up 180ms var(--ease-out);
+}
+
+/* Radix measures the panel into --radix-accordion-content-height. */
+@keyframes accordion-down {
+	from {
+		height: 0;
+	}
+	to {
+		height: var(--radix-accordion-content-height);
+	}
+}
+
+@keyframes accordion-up {
+	from {
+		height: var(--radix-accordion-content-height);
+	}
+	to {
+		height: 0;
+	}
 }
 
 /* Popovers and dialogs grow from 96% so they never appear from nothing; exit is faster than
@@ -119,9 +140,13 @@ body {
 	color: var(--foreground);
 }
 
-:focus-visible {
-	outline: 2px solid var(--ring);
-	outline-offset: 2px;
+/* In the base layer so an element's `outline-none` (a search field, a highlighted menu row)
+   wins over the default ring. */
+@layer base {
+	:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
 }
 
 @utility amount {

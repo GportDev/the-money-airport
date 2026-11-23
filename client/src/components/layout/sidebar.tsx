@@ -11,12 +11,16 @@ import {
 	TrendingUp,
 	Wallet,
 } from "lucide-react";
-import { NavLink } from "react-router";
-import { authClient } from "@/auth/auth-client";
-import { useSession } from "@/auth/use-session";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { BrandMark } from "@/components/brand/brand-mark";
+import { SidebarAccount } from "@/components/layout/sidebar-account";
+import { SidebarNavLink } from "@/components/layout/sidebar-nav-link";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { cn } from "@/lib/cn";
 import { NAV_ITEMS } from "@/lib/constants";
+
+/** Tailwind's `xl`: below it the sidebar stays compact even when expanded. */
+const WIDE_QUERY = "(min-width: 80rem)";
 
 const NAV_ICONS = {
 	Dashboard: LayoutDashboard,
@@ -33,60 +37,32 @@ const NAV_ICONS = {
 } as const;
 
 export function Sidebar({ collapsed }: { collapsed: boolean }) {
-	const { data } = useSession();
-	const name = data?.user.name;
+	const isWide = useMediaQuery(WIDE_QUERY);
+	const isCompact = collapsed || !isWide;
 
-	async function logOut() {
-		await authClient.signOut();
-		window.location.assign("/login");
-	}
 	return (
 		<aside
 			aria-label="Workspace"
-			className={`relative flex h-full shrink-0 flex-col overflow-x-hidden overflow-y-auto border-r border-border bg-card ${collapsed ? "w-16" : "w-16 xl:w-60"}`}
+			className={cn(
+				"relative flex h-full shrink-0 flex-col overflow-x-hidden overflow-y-auto border-r border-border bg-card transition-[width] duration-200 ease-out motion-reduce:transition-none",
+				isCompact ? "w-16" : "w-60",
+			)}
 		>
-			<div className="flex h-14 shrink-0 items-center border-b border-border px-3">
-				<BrandLockup className={`h-10 ${collapsed ? "hidden" : "hidden xl:block"}`} />
-				<BrandMark className={collapsed ? "block" : "xl:hidden"} />
+			<div className="flex h-14 shrink-0 items-center border-b border-border px-3.75">
+				{isCompact ? <BrandMark /> : <BrandLockup className="h-10" />}
 			</div>
 			<nav aria-label="Primary" className="flex flex-1 flex-col gap-1 p-2">
-				{NAV_ITEMS.map((item) => {
-					const Icon = NAV_ICONS[item.name];
-					return (
-						<NavLink
-							key={item.path}
-							to={item.path}
-							end={item.path === "/"}
-							aria-label={item.name}
-							className={({ isActive }) =>
-								`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
-									isActive
-										? "bg-muted font-medium text-foreground"
-										: "text-muted-foreground hover:bg-muted hover:text-foreground"
-								}`
-							}
-						>
-							<Icon aria-hidden className="size-4 shrink-0" />
-							<span className={collapsed ? "sr-only" : "hidden xl:inline"}>{item.name}</span>
-						</NavLink>
-					);
-				})}
+				{NAV_ITEMS.map((item) => (
+					<SidebarNavLink
+						key={item.path}
+						name={item.name}
+						path={item.path}
+						icon={NAV_ICONS[item.name]}
+						isCompact={isCompact}
+					/>
+				))}
 			</nav>
-			<div className="mt-auto border-t border-border p-3">
-				<p className="mb-2 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-					Free
-				</p>
-				{name ? <p className="truncate text-sm text-foreground">{name}</p> : null}
-				<button
-					className="truncate text-sm text-muted-foreground transition-colors hover:text-foreground"
-					type="button"
-					onClick={() => {
-						void logOut();
-					}}
-				>
-					Profile
-				</button>
-			</div>
+			<SidebarAccount />
 		</aside>
 	);
 }

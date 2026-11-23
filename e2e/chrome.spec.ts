@@ -12,10 +12,16 @@ const withoutPanel = [
 	"/settings",
 ];
 
-test("footer shows Free and profile, not Trial or assistant chrome", async ({ page }) => {
+test("footer shows the Free plan over the profile avatar, not Trial or assistant chrome", async ({
+	page,
+}) => {
 	await page.goto("/");
-	await expect(page.getByText("Free", { exact: true })).toBeVisible();
-	await expect(page.getByText("Profile", { exact: true })).toBeVisible();
+	const sidebar = page.getByRole("complementary", { name: "Workspace" });
+	await expect(sidebar.getByText("Free", { exact: true })).toBeVisible();
+	const avatar = sidebar.getByRole("button", { name: "Profile" });
+	await expect(avatar).toHaveText("G");
+	await avatar.hover();
+	await expect(page.getByRole("tooltip")).toHaveText("Gabriel");
 	await expect(page.getByText("Trial")).toHaveCount(0);
 	await expect(page.getByText("AI Assistant")).toHaveCount(0);
 	await expect(page.getByText("Help", { exact: true })).toHaveCount(0);
@@ -32,6 +38,34 @@ test("sidebar collapse still navigates", async ({ page }) => {
 		.getByRole("link", { name: "Accounts" })
 		.click();
 	await expect(page).toHaveURL("/accounts");
+});
+
+test("a collapsed sidebar names each item in a tooltip", async ({ page }) => {
+	await page.goto("/");
+	const nav = page.getByRole("navigation", { name: "Primary" });
+	await nav.getByRole("link", { name: "Accounts" }).hover();
+	await expect(page.getByRole("tooltip")).toHaveCount(0);
+
+	await page.getByRole("button", { name: "Collapse sidebar" }).click();
+	await nav.getByRole("link", { name: "Reports" }).hover();
+	await expect(page.getByRole("tooltip")).toHaveText("Reports");
+});
+
+test("the sidebar animates its width and centers icons when collapsed", async ({ page }) => {
+	await page.goto("/");
+	const sidebar = page.getByRole("complementary", { name: "Workspace" });
+	await expect(sidebar).toHaveCSS("transition-property", "width");
+	await page.getByRole("button", { name: "Collapse sidebar" }).click();
+	await expect(sidebar).toHaveCSS("width", "64px");
+	const link = page
+		.getByRole("navigation", { name: "Primary" })
+		.getByRole("link", { name: "Goals" });
+	const box = await link.boundingBox();
+	const icon = await link.locator("svg").boundingBox();
+	if (!box || !icon) throw new Error("Goals link not laid out");
+	const left = icon.x - box.x;
+	const right = box.x + box.width - (icon.x + icon.width);
+	expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
 });
 
 test("right summary panel only on accounts, budget, and goals", async ({ page }) => {

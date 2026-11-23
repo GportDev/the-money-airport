@@ -227,8 +227,9 @@ interface NetWorthResponse {
 
 | Method | Path | Query/Body | Response |
 |--------|------|-----------|----------|
-| GET | `/credit-cards` | — | `{ data: CreditCard[] }` | Visible credit BankAccounts, by name |
+| GET | `/credit-cards` | — | `{ data: CreditCard[] }` | Visible credit BankAccounts, in the User's saved order, then by name |
 | GET | `/credit-cards/presets` | — | `{ data: CardPresetSummary[] }` | Card products kept in the repo |
+| PUT | `/credit-cards/order` | `{ accountIds: string[] }` | `{ data: { success: true } }` | Saves the page order; ids not the User's credit cards are ignored |
 | PUT | `/accounts/:id/card-benefits` | `{ presetKey }` or `{ benefits: CardBenefitsInput }` | `{ data: CardBenefits }` | Upsert. Exactly one of the two keys |
 | DELETE | `/accounts/:id/card-benefits` | — | `{ data: null }` | |
 

@@ -2,7 +2,7 @@ import { CreditCard as CreditCardIcon } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { BenefitsPanel } from "@/components/credit-cards/benefits-panel";
 import { BillingPeriod } from "@/components/credit-cards/billing-period";
-import { CreditCardTile } from "@/components/credit-cards/credit-card-tile";
+import { CreditCardStack } from "@/components/credit-cards/credit-card-stack";
 import { CreditCardsSkeleton } from "@/components/credit-cards/credit-cards-skeleton";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -55,16 +55,7 @@ export function CreditCardsPage() {
 		}
 		return (
 			<div className="grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start">
-				<ul aria-label="Credit cards" className="flex flex-col gap-3">
-					{cards.map((card) => (
-						<CreditCardTile
-							key={card.id}
-							card={card}
-							isSelected={card.id === selected.id}
-							onSelect={() => selectCard(card.id)}
-						/>
-					))}
-				</ul>
+				<CreditCardStack cards={cards} selectedId={selected.id} onSelect={selectCard} />
 				<div className="flex min-w-0 flex-col gap-4">
 					<BenefitsPanel card={selected} />
 					<BillingPeriod

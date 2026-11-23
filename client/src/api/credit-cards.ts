@@ -19,3 +19,10 @@ export function setCardProduct({ accountId, presetKey }: { accountId: string; pr
 export function removeCardProduct(accountId: string) {
 	return api<{ success: true }>(`/accounts/${accountId}/card-benefits`, { method: "DELETE" });
 }
+
+export function reorderCreditCards(accountIds: string[]) {
+	return api<{ success: true }>("/credit-cards/order", {
+		method: "PUT",
+		body: JSON.stringify({ accountIds }),
+	});
+}

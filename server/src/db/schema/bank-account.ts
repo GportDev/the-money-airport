@@ -49,6 +49,8 @@ export const bankAccount = pgTable(
 		fixedPayment: integer("fixed_payment"),
 		// Card-term fields the User set by hand; Plaid Liabilities sync leaves them alone.
 		overriddenFields: text("overridden_fields").array().notNull().default([]),
+		// The User's drag order on the Credit Cards page. Null sorts after ordered cards.
+		sortOrder: integer("sort_order"),
 		lastSyncedAt: timestamp("last_synced_at"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),

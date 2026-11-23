@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
+import { signUp } from "./helpers/auth";
 
 const API = "http://localhost:3000/api";
 const CARDS_ROUTE = /\/api\/credit-cards$/;
@@ -81,8 +82,16 @@ function tileFor(page: Page, name: string) {
 		.filter({ hasText: name });
 }
 
+/** The card's accordion header; the grip beside it has no expanded state. */
 function selectButton(tile: Locator) {
-	return tile.getByRole("button");
+	return tile
+		.getByRole("button", { expanded: true })
+		.or(tile.getByRole("button", { expanded: false }));
+}
+
+async function expectCardOrder(page: Page, names: string[]) {
+	const headers = page.getByRole("list", { name: "Credit cards" }).getByRole("heading");
+	await expect(headers).toHaveText(names.map((name) => new RegExp(`^${name}`)));
 }
 
 function benefitsPanel(page: Page) {
@@ -120,7 +129,7 @@ test("a card tile shows balance, available credit, limit, usage, and APR", async
 
 	await page.goto("/credit-cards");
 	const tile = tileFor(page, "Visa");
-	await expect(selectButton(tile)).toHaveAttribute("aria-pressed", "true");
+	await expect(selectButton(tile)).toHaveAttribute("aria-expanded", "true");
 	await expect(tile).toContainText("$250.00");
 	await expect(tile).toContainText("Available credit");
 	await expect(tile).toContainText("$750.00");
@@ -301,20 +310,125 @@ test("selecting another tile updates the URL and the selected card's panels", as
 
 	await selectButton(tileFor(page, "Bravo")).click();
 	await expect(page).toHaveURL(new RegExp(`[?&]card=${bravo}`));
-	await expect(selectButton(tileFor(page, "Bravo"))).toHaveAttribute("aria-pressed", "true");
-	await expect(selectButton(tileFor(page, "Alpha"))).toHaveAttribute("aria-pressed", "false");
+	await expect(selectButton(tileFor(page, "Bravo"))).toHaveAttribute("aria-expanded", "true");
+	await expect(selectButton(tileFor(page, "Alpha"))).toHaveAttribute("aria-expanded", "false");
 	await expect(picker).toHaveText("Generic · Flat 2% cash back");
 	await expect(period).toContainText("Bravo only charge");
 	await expect(period).not.toContainText("Alpha only charge");
 
 	await selectButton(tileFor(page, "Alpha")).click();
 	await expect(page).toHaveURL(new RegExp(`[?&]card=${alpha}`));
-	await expect(selectButton(tileFor(page, "Alpha"))).toHaveAttribute("aria-pressed", "true");
+	await expect(selectButton(tileFor(page, "Alpha"))).toHaveAttribute("aria-expanded", "true");
 	await expect(picker).toHaveText("Generic · Flat 1% cash back");
 	await expect(period).toContainText("Alpha only charge");
 
 	await page.reload();
-	await expect(selectButton(tileFor(page, "Alpha"))).toHaveAttribute("aria-pressed", "true");
+	await expect(selectButton(tileFor(page, "Alpha"))).toHaveAttribute("aria-expanded", "true");
+});
+
+test("an open card shows its details; the others show only name and balance", async ({ page }) => {
+	await createCard(page, "Alpha", { currentBalance: 1_000, creditLimit: 50_000 });
+	await createCard(page, "Bravo", { currentBalance: 2_500, creditLimit: 80_000 });
+	await page.goto("/credit-cards");
+
+	const bravo = tileFor(page, "Bravo");
+	await expect(selectButton(bravo)).toHaveAttribute("aria-expanded", "false");
+	await expect(selectButton(bravo)).toHaveText(/Bravo.*\$25\.00/);
+	await expect(bravo).not.toContainText("Available credit");
+	await expect(bravo).not.toContainText("APR");
+	await expect(tileFor(page, "Alpha")).toContainText("Available credit");
+
+	await selectButton(bravo).click();
+	await expect(bravo).toContainText("Available credit");
+	await expect(tileFor(page, "Alpha")).not.toContainText("Available credit");
+});
+
+test("dragging a card by its grip reorders the stack and the order is saved", async ({ page }) => {
+	await createCard(page, "Alpha");
+	await createCard(page, "Bravo");
+	await createCard(page, "Charlie");
+	await page.goto("/credit-cards");
+	await expectCardOrder(page, ["Alpha", "Bravo", "Charlie"]);
+
+	const saved = page.waitForResponse(
+		(res) => res.url().endsWith("/api/credit-cards/order") && res.ok(),
+	);
+	await page
+		.getByRole("button", { name: "Reorder Charlie" })
+		.dragTo(selectButton(tileFor(page, "Alpha")), { targetPosition: { x: 20, y: 4 } });
+	await expectCardOrder(page, ["Charlie", "Alpha", "Bravo"]);
+	await saved;
+
+	await page.reload();
+	await expectCardOrder(page, ["Charlie", "Alpha", "Bravo"]);
+});
+
+test("Arrow keys on a card's grip move it one place", async ({ page }) => {
+	await createCard(page, "Alpha");
+	await createCard(page, "Bravo");
+	await page.goto("/credit-cards");
+
+	const grip = page.getByRole("button", { name: "Reorder Bravo" });
+	await grip.focus();
+	await page.keyboard.press("ArrowUp");
+	await expectCardOrder(page, ["Bravo", "Alpha"]);
+	await expect(grip).toBeFocused();
+	await page.keyboard.press("ArrowUp");
+	await expectCardOrder(page, ["Bravo", "Alpha"]);
+	await page.keyboard.press("ArrowDown");
+	await expectCardOrder(page, ["Alpha", "Bravo"]);
+	await expect(grip).toBeFocused();
+	await page.keyboard.press("ArrowUp");
+	await expectCardOrder(page, ["Bravo", "Alpha"]);
+
+	await expect
+		.poll(async () => {
+			const res = await page.request.get(`${API}/credit-cards`);
+			return ((await res.json()) as { data: { name: string }[] }).data.map((card) => card.name);
+		})
+		.toEqual(["Bravo", "Alpha"]);
+});
+
+test("a failed reorder puts the cards back and says so", async ({ page }) => {
+	await createCard(page, "Alpha");
+	await createCard(page, "Bravo");
+	await page.route(/\/api\/credit-cards\/order$/, (route) =>
+		route.fulfill({ status: 500, json: { message: "Boom" } }),
+	);
+	await page.goto("/credit-cards");
+
+	await page.getByRole("button", { name: "Reorder Bravo" }).focus();
+	await page.keyboard.press("ArrowUp");
+	await expect(page.getByText("Could not save the card order")).toBeVisible();
+	await expectCardOrder(page, ["Alpha", "Bravo"]);
+});
+
+test("another User cannot reorder my cards", async ({ page }) => {
+	const alpha = await createCard(page, "Alpha");
+	const bravo = await createCard(page, "Bravo");
+	const context = await page.context().browser()?.newContext();
+	if (!context) throw new Error("No browser");
+	try {
+		const other = await context.newPage();
+		await signUp(other);
+		const res = await other.request.put(`${API}/credit-cards/order`, {
+			data: { accountIds: [bravo, alpha] },
+		});
+		expect(res.ok()).toBe(true);
+	} finally {
+		await context.close();
+	}
+	const res = await page.request.get(`${API}/credit-cards`);
+	const names = ((await res.json()) as { data: { name: string }[] }).data.map((card) => card.name);
+	expect(names).toEqual(["Alpha", "Bravo"]);
+});
+
+test("the order endpoint rejects a malformed or repeated list", async ({ page }) => {
+	const alpha = await createCard(page, "Alpha");
+	for (const data of [{}, { accountIds: ["nope"] }, { accountIds: [alpha, alpha] }]) {
+		const res = await page.request.put(`${API}/credit-cards/order`, { data });
+		expect(res.status()).toBe(400);
+	}
 });
 
 test("a failed load shows Try again, which recovers once the API is back", async ({ page }) => {

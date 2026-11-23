@@ -1,5 +1,6 @@
-import { Controller, Get } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Put } from "@nestjs/common";
 import { CurrentUser } from "../auth/current-user.decorator";
+import { creditCardOrderBody } from "./card-benefits.schemas";
 import { CreditCardsService } from "./credit-cards.service";
 import { presetSummaries } from "./presets";
 
@@ -15,5 +16,12 @@ export class CreditCardsController {
 	@Get("presets")
 	presets() {
 		return { data: presetSummaries() };
+	}
+
+	@Put("order")
+	async reorder(@CurrentUser() user: { id: string }, @Body() body: unknown) {
+		const parsed = creditCardOrderBody.safeParse(body);
+		if (!parsed.success) throw new BadRequestException(parsed.error.message);
+		return { data: await this.cards.reorder(user.id, parsed.data.accountIds) };
 	}
 }
