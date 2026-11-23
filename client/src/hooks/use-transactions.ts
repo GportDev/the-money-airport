@@ -5,11 +5,13 @@ import {
 	deleteTransaction,
 	getTransaction,
 	getTransactions,
+	splitTransaction,
 	type TransactionCreateInput,
 	type TransactionUpdateInput,
+	unsplitTransaction,
 	updateTransaction,
 } from "@/api/transactions";
-import type { TransactionFilters } from "@/types";
+import type { SplitPartInput, TransactionFilters } from "@/types";
 
 export function useTransactionFeed(filters: TransactionFilters) {
 	return useInfiniteQuery({
@@ -61,4 +63,14 @@ export function useBulkCategorize() {
 
 export function useDeleteTransaction() {
 	return useTransactionMutation((id: string) => deleteTransaction(id));
+}
+
+export function useSplitTransaction() {
+	return useTransactionMutation(({ id, parts }: { id: string; parts: SplitPartInput[] }) =>
+		splitTransaction(id, parts),
+	);
+}
+
+export function useUnsplitTransaction() {
+	return useTransactionMutation((id: string) => unsplitTransaction(id));
 }
