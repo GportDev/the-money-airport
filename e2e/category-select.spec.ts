@@ -92,6 +92,26 @@ test("typing in a Category picker narrows the list by name", async ({ page }) =>
 	await expect(picker).toHaveText("Dining");
 });
 
+test("opening a Category picker shows no focus ring around its search field", async ({ page }) => {
+	await page.request.post(`${API}/transactions`, {
+		data: {
+			name: "Bus fare",
+			amount: -300,
+			date: new Date().toISOString().slice(0, 10),
+			categoryId: await categoryId(page, "Groceries"),
+		},
+	});
+
+	await page.goto("/transactions");
+	await page
+		.getByRole("list", { name: "Transactions" })
+		.getByRole("combobox", { name: "Category for Bus fare" })
+		.click();
+	const search = page.getByRole("combobox", { name: "Search categories" });
+	await expect(search).toBeFocused();
+	await expect(search).toHaveCSS("outline-style", "none");
+});
+
 test("the Category form's icon picker shows each icon beside its name", async ({ page }) => {
 	await page.goto("/transactions");
 	await page.getByRole("button", { name: "Filters" }).click();

@@ -1,5 +1,4 @@
-import { Bell, PanelLeft, Search, Settings } from "lucide-react";
-import { Link } from "react-router";
+import { Bell, PanelLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type HeaderProps = {
@@ -34,16 +33,6 @@ export function Header({ collapsed, onToggleSidebar }: HeaderProps) {
 				className="text-muted-foreground hover:text-foreground"
 			>
 				<Bell aria-hidden className="size-4" />
-			</Button>
-			<Button
-				asChild
-				variant="ghost"
-				size="icon-sm"
-				className="text-muted-foreground hover:text-foreground"
-			>
-				<Link to="/settings" aria-label="Settings">
-					<Settings aria-hidden className="size-4" />
-				</Link>
 			</Button>
 		</header>
 	);

@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { DATABASE } from "../db/db.module";
+import { bankAccount } from "../db/schema/bank-account";
 import { transaction } from "../db/schema/transaction";
 import { todayIso } from "../forecast/dates";
 import { notTransfer } from "../liabilities/liability-details";
@@ -17,10 +18,15 @@ import { rewardsTracking } from "./rewards-tracking";
 export class CreditCardsService {
 	constructor(@Inject(DATABASE) private readonly db: PostgresJsDatabase) {}
 
-	/** The User's visible credit BankAccounts with their billing period, Card benefits, and Rewards earned. */
+	/**
+	 * The User's visible credit BankAccounts in their saved order (then by name), with their
+	 * billing period, Card benefits, and Rewards earned.
+	 */
 	async list(userId: string): Promise<CreditCardDto[]> {
 		const today = todayIso();
-		const rows = (await creditAccounts(this.db, userId)).filter((row) => !row.account.isHidden);
+		const rows = (await creditAccounts(this.db, userId))
+			.filter((row) => !row.account.isHidden)
+			.sort(bySortOrder);
 		const withBenefits = rows.filter((row) => row.benefits).map((row) => row.account.id);
 		const spending = await this.yearTransactions(userId, withBenefits, today);
 		return Promise.all(
@@ -33,6 +39,25 @@ export class CreditCardsService {
 				),
 			),
 		);
+	}
+
+	/** Saves the Credit Cards page order; ids that are not the User's credit cards are ignored. */
+	async reorder(userId: string, accountIds: string[]): Promise<{ success: true }> {
+		await this.db.transaction(async (tx) => {
+			for (const [index, id] of accountIds.entries()) {
+				await tx
+					.update(bankAccount)
+					.set({ sortOrder: index })
+					.where(
+						and(
+							eq(bankAccount.id, id),
+							eq(bankAccount.userId, userId),
+							eq(bankAccount.displayGroup, "credit"),
+						),
+					);
+			}
+		});
+		return { success: true };
 	}
 
 	/** Each card's non-Transfer Transactions from January 1 through `today`, in date order. */
@@ -68,6 +93,12 @@ export class CreditCardsService {
 		}
 		return byCard;
 	}
+}
+
+/** Stable, so cards without a saved place keep the name order `creditAccounts` gives. */
+function bySortOrder(a: CreditAccountRow, b: CreditAccountRow) {
+	const unordered = Number.MAX_SAFE_INTEGER;
+	return (a.account.sortOrder ?? unordered) - (b.account.sortOrder ?? unordered);
 }
 
 function creditCardDto(

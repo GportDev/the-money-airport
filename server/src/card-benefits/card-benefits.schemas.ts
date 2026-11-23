@@ -72,3 +72,13 @@ export const cardBenefitsBody = z.union([
 ]);
 
 export type CardBenefitsBody = z.infer<typeof cardBenefitsBody>;
+
+const MAX_CARDS = 200;
+
+/** The Credit Cards page order, first card first. */
+export const creditCardOrderBody = z
+	.object({ accountIds: z.array(z.string().uuid()).max(MAX_CARDS) })
+	.strict()
+	.refine((body) => new Set(body.accountIds).size === body.accountIds.length, {
+		message: "accountIds must not repeat",
+	});

@@ -1,4 +1,5 @@
 import { expect, test } from "./fixtures";
+import { openProfileDrawer } from "./helpers/auth";
 
 const navItems = [
 	{ name: "Dashboard", path: "/" },
@@ -30,13 +31,28 @@ test("each sidebar item changes the path and page title", async ({ page }) => {
 	}
 });
 
-test("settings opens from the header gear and is not a sidebar row", async ({ page }) => {
+test("settings opens from the profile drawer, not a sidebar row or the header", async ({
+	page,
+}) => {
 	await page.goto("/");
 	const nav = page.getByRole("navigation", { name: "Primary" });
 	await expect(nav.getByRole("link", { name: "Settings" })).toHaveCount(0);
-	await page.getByRole("link", { name: "Settings" }).click();
+	await expect(page.locator("header").getByRole("link", { name: "Settings" })).toHaveCount(0);
+	const drawer = await openProfileDrawer(page);
+	await drawer.getByRole("link", { name: "Settings" }).click();
 	await expect(page).toHaveURL("/settings");
 	await expect(page.getByRole("heading", { level: 1 })).toHaveText("Settings");
+	await expect(drawer).toHaveCount(0);
+});
+
+test("the profile drawer shows who is signed in and their plan", async ({ page }) => {
+	await page.goto("/");
+	const drawer = await openProfileDrawer(page);
+	await expect(drawer.getByRole("heading", { name: "Gabriel" })).toBeVisible();
+	await expect(drawer).toContainText("@example.com");
+	await expect(drawer.getByText("Free", { exact: true })).toBeVisible();
+	await page.keyboard.press("Escape");
+	await expect(drawer).toHaveCount(0);
 });
 
 test("reload on budget and back keep the shell in sync", async ({ page }) => {

@@ -1,3 +1,5 @@
+import { cn } from "@/lib/cn";
+
 function initials(name: string) {
 	const parts = name.trim().split(/\s+/).filter(Boolean);
 	const first = parts[0]?.[0] ?? "";
@@ -5,11 +7,14 @@ function initials(name: string) {
 	return `${first}${last}`.toUpperCase() || "?";
 }
 
-export function ProfileAvatar({ name }: { name: string }) {
+export function ProfileAvatar({ name, className }: { name: string; className?: string }) {
 	return (
 		<span
 			aria-hidden
-			className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary"
+			className={cn(
+				"flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary",
+				className,
+			)}
 		>
 			{initials(name)}
 		</span>

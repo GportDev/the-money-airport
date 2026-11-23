@@ -22,7 +22,10 @@ test("signup with email lands on Dashboard with Free", async ({ page }) => {
 	await signUp(page, { name: "Gabriel" });
 	await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 	await expect(page.getByText("Free", { exact: true })).toBeVisible();
-	await expect(page.getByText("Gabriel", { exact: true })).toBeVisible();
+	const avatar = page.getByRole("button", { name: "Profile" });
+	await expect(avatar).toHaveText("G");
+	await avatar.hover();
+	await expect(page.getByRole("tooltip")).toHaveText("Gabriel");
 	await expect(page.getByText(/^Good (morning|afternoon|evening), Gabriel!$/)).toBeVisible();
 	await expect(page.getByText("Trial")).toHaveCount(0);
 });

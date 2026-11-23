@@ -1,5 +1,5 @@
 import { expect, test } from "./fixtures";
-import { logOut } from "./helpers/auth";
+import { logOut, openProfileDrawer } from "./helpers/auth";
 
 const SECTIONS = [
 	"Profile",
@@ -12,8 +12,11 @@ const SECTIONS = [
 	"Data",
 ];
 
-test("Settings opens from the gear and stacks its sections in spec order", async ({ page }) => {
-	await page.getByRole("link", { name: "Settings" }).click();
+test("Settings opens from the profile drawer and stacks its sections in spec order", async ({
+	page,
+}) => {
+	const drawer = await openProfileDrawer(page);
+	await drawer.getByRole("link", { name: "Settings" }).click();
 	await expect(page).toHaveURL("/settings");
 	const main = page.getByRole("main");
 	await expect(main.getByRole("heading", { level: 2 })).toHaveText(SECTIONS);
@@ -36,7 +39,12 @@ test("Profile shows email read-only and saves a new name", async ({ page }) => {
 	await expect(page.getByRole("region", { name: "Profile" }).getByLabel("Name")).toHaveValue(
 		"Ana Souza",
 	);
-	await expect(page.getByRole("complementary", { name: "Workspace" })).toContainText("Ana Souza");
+	const avatar = page
+		.getByRole("complementary", { name: "Workspace" })
+		.getByRole("button", { name: "Profile" });
+	await expect(avatar).toHaveText("AS");
+	await avatar.hover();
+	await expect(page.getByRole("tooltip")).toHaveText("Ana Souza");
 });
 
 test("Profile changes the password and reports a wrong current password", async ({ page }) => {
