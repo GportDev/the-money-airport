@@ -1,4 +1,14 @@
-import { date, index, integer, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	date,
+	index,
+	integer,
+	pgTable,
+	text,
+	timestamp,
+	unique,
+	uuid,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { bankAccount } from "./bank-account";
 
@@ -14,6 +24,8 @@ export const accountBalanceSnapshot = pgTable(
 			.references(() => bankAccount.id, { onDelete: "cascade" }),
 		date: date("date").notNull(),
 		balance: integer("balance").notNull(),
+		// True when rebuilt from transactions before the first synced balance; a sync replaces it.
+		isEstimated: boolean("is_estimated").notNull().default(false),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [

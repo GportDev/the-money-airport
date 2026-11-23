@@ -125,7 +125,7 @@ Connect Account:
 4. Plaid Link returns public_token + metadata
 5. POST /api/plaid/exchange-token → backend exchanges for access_token
 6. Backend fetches accounts → stores in DB (including institution logo when available)
-7. Backend pulls initial transactions via /transactions/sync (up to 24 months, `days_requested: 730`) and writes opening balance snapshots
+7. Backend pulls initial transactions via /transactions/sync (up to 24 months, `days_requested: 730`), writes today's balance snapshot, and rebuilds estimated past snapshots (see Ongoing Sync step 4)
 
 Ongoing Sync:
 1. Plaid webhook hits POST /api/plaid/webhook. The raw body is kept and the `Plaid-Verification`
@@ -133,7 +133,11 @@ Ongoing Sync:
    `request_body_sha256` matches the body). Unverified requests get 400.
 2. Backend calls /transactions/sync with cursor
 3. New/modified/removed transactions upserted/deleted
-4. Current balances updated; a daily row is upserted into account_balance_snapshot
+4. Current balances updated; a daily row is upserted into account_balance_snapshot. For cash and
+   credit BankAccounts, estimated rows (`is_estimated`) are rebuilt for every day from the day before
+   the earliest posted, non-manual transaction up to the earliest synced snapshot, walking back from
+   that snapshot through the transactions. Pending transactions are ignored. Investment and loan
+   BankAccounts get no estimates.
 5. If the item has Liabilities: /liabilities/get → upsert card_statement (latest Statement),
    Card terms (APR, limit) and loan_terms (principal, rate, term, next payment),
    skipping any field in bank_account.overridden_fields

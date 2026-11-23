@@ -208,6 +208,7 @@ Daily balance per account for net-worth charts and account sparklines.
 | `bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE CASCADE, NOT NULL |
 | `date` | `date` | NOT NULL |
 | `balance` | `integer` | In cents, NOT NULL |
+| `is_estimated` | `boolean` | NOT NULL, default `false` |
 | `created_at` | `timestamptz` | default `now()` |
 
 **Unique:** `(bank_account_id, date)`
@@ -215,6 +216,8 @@ Daily balance per account for net-worth charts and account sparklines.
 **Indexes:** `(user_id, date)`, `(bank_account_id, date)`
 
 Written on Plaid sync and when a manual account balance is edited. Missing days are treated as carry-forward of the last known snapshot at query time.
+
+Estimated rows (`is_estimated = true`) are past balances of Plaid cash and credit BankAccounts rebuilt from posted transactions on every sync. They cover only days before the account's earliest synced row, are deleted and rebuilt each sync, and a synced balance written on an estimated day replaces it. Readers treat both kinds the same.
 
 ---
 

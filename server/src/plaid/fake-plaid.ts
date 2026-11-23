@@ -238,6 +238,191 @@ function fakeSavingsPage(cursor: string | null): PlaidTransactionsPage {
 	};
 }
 
+/** A third Item, reached with HISTORY_PUBLIC_TOKEN, for balance backfill tests. */
+const HISTORY_PUBLIC_TOKEN = "public-sandbox-fake-history";
+const HISTORY_ACCESS_TOKEN = "access-sandbox-fake-history";
+
+function historyAccount(
+	input: Pick<
+		PlaidAccountSnapshot,
+		"plaidAccountId" | "name" | "type" | "currentBalance" | "displayGroup" | "isAsset"
+	>,
+): PlaidAccountSnapshot {
+	return {
+		officialName: null,
+		subtype: null,
+		mask: null,
+		availableBalance: null,
+		creditLimit: null,
+		isoCurrencyCode: "USD",
+		...input,
+	};
+}
+
+const FAKE_HISTORY_ACCOUNTS: PlaidAccountSnapshot[] = [
+	historyAccount({
+		plaidAccountId: "fake-history-checking",
+		name: "History Checking",
+		type: "checking",
+		currentBalance: 110000,
+		displayGroup: "cash",
+		isAsset: true,
+	}),
+	historyAccount({
+		plaidAccountId: "fake-history-card",
+		name: "History Card",
+		type: "credit",
+		currentBalance: 41000,
+		displayGroup: "credit",
+		isAsset: false,
+	}),
+	historyAccount({
+		plaidAccountId: "fake-history-brokerage",
+		name: "History Brokerage",
+		type: "investment",
+		currentBalance: 500000,
+		displayGroup: "investment",
+		isAsset: true,
+	}),
+	historyAccount({
+		plaidAccountId: "fake-history-loan",
+		name: "History Loan",
+		type: "loan",
+		currentBalance: 1000000,
+		displayGroup: "loan",
+		isAsset: false,
+	}),
+];
+
+function fakeHistoryPage(cursor: string | null): PlaidTransactionsPage {
+	if (cursor !== null) {
+		return { added: [], modified: [], removed: [], nextCursor: cursor };
+	}
+	const posted = [
+		{ id: "fake-history-old-spend", account: "fake-history-checking", amount: -10000, days: 300 },
+		{ id: "fake-history-deposit", account: "fake-history-checking", amount: 50000, days: 10 },
+		{ id: "fake-history-card-buy", account: "fake-history-card", amount: -2000, days: 5 },
+		{ id: "fake-history-brokerage", account: "fake-history-brokerage", amount: 10000, days: 7 },
+		{ id: "fake-history-loan-pay", account: "fake-history-loan", amount: 30000, days: 6 },
+	];
+	return {
+		added: [
+			...posted.map((row) =>
+				fakeTransaction(
+					{
+						plaidTransactionId: row.id,
+						plaidAccountId: row.account,
+						name: row.id,
+						amount: row.amount,
+					},
+					row.days,
+				),
+			),
+			fakeTransaction(
+				{
+					plaidTransactionId: "fake-history-pending",
+					plaidAccountId: "fake-history-checking",
+					name: "fake-history-pending",
+					amount: -5000,
+					pending: true,
+				},
+				2,
+			),
+		],
+		modified: [],
+		removed: [],
+		nextCursor: "fake-history-cursor-1",
+	};
+}
+
+/**
+ * A fourth Item whose history arrives late: the first pull is empty, the next brings two
+ * transactions, and the one after removes the older of them.
+ */
+const LATE_PUBLIC_TOKEN = "public-sandbox-fake-late-history";
+const LATE_ACCESS_TOKEN = "access-sandbox-fake-late-history";
+
+const FAKE_LATE_ACCOUNTS: PlaidAccountSnapshot[] = [
+	historyAccount({
+		plaidAccountId: "fake-late-checking",
+		name: "Late Checking",
+		type: "checking",
+		currentBalance: 200000,
+		displayGroup: "cash",
+		isAsset: true,
+	}),
+];
+
+function fakeLatePage(cursor: string | null): PlaidTransactionsPage {
+	const empty = { added: [], modified: [], removed: [] };
+	if (cursor === null) {
+		return { ...empty, nextCursor: "fake-late-cursor-1" };
+	}
+	if (cursor === "fake-late-cursor-1") {
+		return {
+			...empty,
+			added: [
+				fakeTransaction(
+					{
+						plaidTransactionId: "fake-late-old",
+						plaidAccountId: "fake-late-checking",
+						name: "fake-late-old",
+						amount: -1000,
+					},
+					60,
+				),
+				fakeTransaction(
+					{
+						plaidTransactionId: "fake-late-new",
+						plaidAccountId: "fake-late-checking",
+						name: "fake-late-new",
+						amount: 3000,
+					},
+					20,
+				),
+			],
+			nextCursor: "fake-late-cursor-2",
+		};
+	}
+	if (cursor === "fake-late-cursor-2") {
+		return { ...empty, removed: ["fake-late-old"], nextCursor: "fake-late-cursor-3" };
+	}
+	return { ...empty, nextCursor: cursor };
+}
+
+type FakeItem = {
+	accessToken: string;
+	itemId: string;
+	institutionId: string;
+	institutionName: string;
+	accounts: PlaidAccountSnapshot[];
+	page: (cursor: string | null) => PlaidTransactionsPage;
+};
+
+/** Extra Items by public token; any other token links the default Item. */
+const FAKE_ITEMS: Record<string, FakeItem> = {
+	[HISTORY_PUBLIC_TOKEN]: {
+		accessToken: HISTORY_ACCESS_TOKEN,
+		itemId: "item-fake-history",
+		institutionId: "ins_4",
+		institutionName: "Bettong Credit Union",
+		accounts: FAKE_HISTORY_ACCOUNTS,
+		page: fakeHistoryPage,
+	},
+	[LATE_PUBLIC_TOKEN]: {
+		accessToken: LATE_ACCESS_TOKEN,
+		itemId: "item-fake-late-history",
+		institutionId: "ins_5",
+		institutionName: "Quokka Savings Bank",
+		accounts: FAKE_LATE_ACCOUNTS,
+		page: fakeLatePage,
+	},
+};
+
+function fakeItemByAccessToken(accessToken: string) {
+	return Object.values(FAKE_ITEMS).find((item) => item.accessToken === accessToken);
+}
+
 export class FakePlaid implements PlaidPort {
 	configured = true;
 
@@ -249,11 +434,15 @@ export class FakePlaid implements PlaidPort {
 		if (publicToken === SAVINGS_PUBLIC_TOKEN) {
 			return { accessToken: SAVINGS_ACCESS_TOKEN, itemId: "item-fake-savings" };
 		}
+		const extra = FAKE_ITEMS[publicToken];
+		if (extra) {
+			return { accessToken: extra.accessToken, itemId: extra.itemId };
+		}
 		return { accessToken: "access-sandbox-fake", itemId: "item-fake-1" };
 	}
 
 	async getLiabilities(accessToken: string): Promise<PlaidLiabilities> {
-		if (accessToken === SAVINGS_ACCESS_TOKEN) {
+		if (accessToken === SAVINGS_ACCESS_TOKEN || fakeItemByAccessToken(accessToken)) {
 			return { cards: [], loans: [] };
 		}
 		return {
@@ -280,6 +469,15 @@ export class FakePlaid implements PlaidPort {
 				accounts: FAKE_SAVINGS_ACCOUNTS,
 			};
 		}
+		const extra = fakeItemByAccessToken(accessToken);
+		if (extra) {
+			return {
+				institutionId: extra.institutionId,
+				institutionName: extra.institutionName,
+				institutionLogo: null,
+				accounts: extra.accounts,
+			};
+		}
 		return {
 			institutionId: "ins_1",
 			institutionName: "First Platypus Bank",
@@ -289,6 +487,10 @@ export class FakePlaid implements PlaidPort {
 	}
 
 	async syncTransactions(accessToken: string, cursor: string | null) {
+		const extra = fakeItemByAccessToken(accessToken);
+		if (extra) {
+			return extra.page(cursor);
+		}
 		return accessToken === SAVINGS_ACCESS_TOKEN ? fakeSavingsPage(cursor) : fakePage(cursor);
 	}
 

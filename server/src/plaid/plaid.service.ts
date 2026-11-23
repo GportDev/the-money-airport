@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { and, eq } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { AccountsService } from "../accounts/accounts.service";
+import { BalanceBackfillService } from "../accounts/balance-backfill.service";
 import { decryptToken, encryptToken } from "../crypto/token-crypto";
 import { DATABASE } from "../db/db.module";
 import { bankAccount } from "../db/schema/bank-account";
@@ -36,6 +37,7 @@ export class PlaidService {
 		private readonly fundInterest: FundInterestService,
 		private readonly oneOffs: OneOffsService,
 		private readonly liabilities: LiabilitiesSyncService,
+		private readonly backfill: BalanceBackfillService,
 	) {}
 
 	async createLinkToken(userId: string, itemId?: string) {
@@ -265,6 +267,7 @@ export class PlaidService {
 			cursor,
 		);
 		const result = await this.ingest.apply(item.userId, item.id, page);
+		await this.backfill.rebuild(item.userId, item.id);
 		await this.fundInterest.split(item.userId);
 		await this.oneOffs.matchAfterSync(item.userId);
 		await this.db

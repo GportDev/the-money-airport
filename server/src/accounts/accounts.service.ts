@@ -159,7 +159,7 @@ export class AccountsService {
 			})
 			.onConflictDoUpdate({
 				target: [accountBalanceSnapshot.bankAccountId, accountBalanceSnapshot.date],
-				set: { balance },
+				set: { balance, isEstimated: false },
 			});
 	}
 

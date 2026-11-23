@@ -15,7 +15,7 @@ export function seedSnapshot(bankAccountId: string, date: string, balance: numbe
 		"-d",
 		databaseName(),
 		"-c",
-		`insert into account_balance_snapshot (user_id, bank_account_id, date, balance) select user_id, id, '${date}', ${Math.trunc(balance)} from bank_account where id = '${bankAccountId}' on conflict (bank_account_id, date) do update set balance = excluded.balance;`,
+		`insert into account_balance_snapshot (user_id, bank_account_id, date, balance) select user_id, id, '${date}', ${Math.trunc(balance)} from bank_account where id = '${bankAccountId}' on conflict (bank_account_id, date) do update set balance = excluded.balance, is_estimated = false;`,
 	]);
 }
 
