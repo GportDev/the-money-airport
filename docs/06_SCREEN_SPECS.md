@@ -29,7 +29,7 @@ Visual language: white cards, soft gray borders, rounded corners. Orange primary
 └────────────┴─────────────────────────────────────────────┴──────────────┘
 ```
 
-- Sidebar: 240px. Collapses to icon-only (64px). Active item: tinted background + accent border.
+- Sidebar: 168px. Collapses to icon-only (64px). Active item: tinted background + accent border.
 - Top chrome: search, notifications, settings gear, sidebar toggle. Settings is **not** a primary nav item.
 - Right panel: ~320px. Present on Accounts, Budget, Goals. Hidden on Dashboard, Credit Cards, Transactions, Cash Flow, Reports, Recurring, Investments, Forecasting.
 - Drawers: ~400–480px Sheet from the right. Do not cover the left nav. One at a time.

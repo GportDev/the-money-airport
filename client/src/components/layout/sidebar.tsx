@@ -44,7 +44,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 			aria-label="Workspace"
 			className={cn(
 				"relative flex h-full shrink-0 flex-col overflow-x-hidden overflow-y-auto border-r border-border bg-card transition-[width] duration-200 ease-out motion-reduce:transition-none",
-				isCompact ? "w-16" : "w-60",
+				isCompact ? "w-16" : "w-42",
 			)}
 		>
 			<div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3.75">

@@ -30,7 +30,7 @@ test("footer shows the Free plan over the profile avatar, not Trial or assistant
 test("sidebar collapse still navigates", async ({ page }) => {
 	await page.goto("/");
 	const sidebar = page.getByRole("complementary", { name: "Workspace" });
-	await expect(sidebar).toHaveCSS("width", "240px");
+	await expect(sidebar).toHaveCSS("width", "168px");
 	await page.getByRole("button", { name: "Collapse sidebar" }).click();
 	await expect(sidebar).toHaveCSS("width", "64px");
 	await page
@@ -64,6 +64,17 @@ test("the sidebar shows the round mark, with the app name in text only when expa
 	await page.getByRole("button", { name: "Collapse sidebar" }).click();
 	await expect(mark).toHaveAttribute("src", "/logo-mark.png");
 	await expect(name).toHaveCSS("opacity", "0");
+});
+
+test("the expanded sidebar fits its widest line without clipping", async ({ page }) => {
+	await page.goto("/");
+	const sidebar = page.getByRole("complementary", { name: "Workspace" });
+	const box = await sidebar.boundingBox();
+	const name = await sidebar.getByText("Money Airport", { exact: true }).boundingBox();
+	if (!box || !name) throw new Error("Sidebar not laid out");
+	const gap = box.x + box.width - (name.x + name.width);
+	expect(gap).toBeGreaterThanOrEqual(12);
+	expect(gap).toBeLessThanOrEqual(24);
 });
 
 test("an expanded sidebar row keeps its icon and name on one line", async ({ page }) => {

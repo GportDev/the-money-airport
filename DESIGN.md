@@ -119,7 +119,7 @@ This is not aviation costume, not a spreadsheet, and not a SaaS gradient kit.
 - Flat depth: off-white canvas, white cards, 1px gray borders, no drop shadows
 - One accent (orange) for CTAs, Free, and progress. Never for borders
 - Geist for UI, Geist Mono for numbers only
-- Desktop-first rail: 240px sidebar, 56px header, right drawer that leaves the nav visible
+- Desktop-first rail: 168px sidebar, 56px header, right drawer that leaves the nav visible
 
 ## Colors
 
@@ -177,7 +177,7 @@ Amounts are a component, not a fourth body family. Use `<Amount>` (`data-slot="a
 
 Desktop-first. The workspace is a left rail, a 56px header, a padded main column, and an optional right summary.
 
-The sidebar is a white rail with a 1px gray right edge. Expanded width is 240px at the `xl` breakpoint (1280px). Collapsed and all widths below `xl` are 64px (icon rail). Header is 56px tall with 16px horizontal padding and a 1px gray bottom edge. Main padding is 24px. Page title sits above content with 24px of space below.
+The sidebar is a white rail with a 1px gray right edge. Expanded width is 168px at the `xl` breakpoint (1280px), sized to fit its widest line. Collapsed and all widths below `xl` are 64px (icon rail). Header is 56px tall with 16px horizontal padding and a 1px gray bottom edge. Main padding is 24px. Page title sits above content with 24px of space below.
 
 The right summary is 320px at `xl`, with a 1px gray left edge. Below `xl` it stacks under main with a top edge. It appears only on Accounts, Budget, and Goals.
 
