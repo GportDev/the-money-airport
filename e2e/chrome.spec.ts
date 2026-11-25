@@ -51,6 +51,25 @@ test("a collapsed sidebar names each item in a tooltip", async ({ page }) => {
 	await expect(page.getByRole("tooltip")).toHaveText("Reports");
 });
 
+test("an expanded sidebar row keeps its icon and name on one line", async ({ page }) => {
+	await page.goto("/");
+	const link = page
+		.getByRole("navigation", { name: "Primary" })
+		.getByRole("link", { name: "Credit Cards" });
+	const icon = await link.locator("svg").boundingBox();
+	const label = await link.getByText("Credit Cards").boundingBox();
+	if (!icon || !label) throw new Error("Credit Cards link not laid out");
+	expect(label.x).toBeGreaterThan(icon.x + icon.width);
+	expect(Math.abs(label.y + label.height / 2 - (icon.y + icon.height / 2))).toBeLessThanOrEqual(2);
+});
+
+test("the current page's sidebar row is highlighted", async ({ page }) => {
+	await page.goto("/accounts");
+	const nav = page.getByRole("navigation", { name: "Primary" });
+	await expect(nav.getByRole("link", { name: "Accounts" })).toHaveCSS("font-weight", "500");
+	await expect(nav.getByRole("link", { name: "Goals" })).toHaveCSS("font-weight", "400");
+});
+
 test("the sidebar animates its width and centers icons when collapsed", async ({ page }) => {
 	await page.goto("/");
 	const sidebar = page.getByRole("complementary", { name: "Workspace" });

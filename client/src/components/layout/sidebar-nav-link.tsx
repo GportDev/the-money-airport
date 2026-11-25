@@ -19,14 +19,8 @@ export function SidebarNavLink({ name, path, icon: Icon, isCompact }: Props) {
 					to={path}
 					end={path === "/"}
 					aria-label={name}
-					className={({ isActive }) =>
-						cn(
-							"flex items-center gap-2 overflow-hidden rounded-md px-3.75 py-2 text-sm transition-colors",
-							isActive
-								? "bg-muted font-medium text-foreground"
-								: "text-muted-foreground hover:bg-muted hover:text-foreground",
-						)
-					}
+					// Radix Slot string-joins className, so NavLink's function form breaks; style active by aria-current.
+					className="flex items-center gap-2 overflow-hidden rounded-md px-3.75 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:font-medium aria-[current=page]:text-foreground"
 				>
 					<Icon aria-hidden className="size-4 shrink-0" />
 					<span
