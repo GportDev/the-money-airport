@@ -101,7 +101,7 @@ export class AccountsService {
 				type: input.type,
 				displayGroup: input.displayGroup,
 				currentBalance: input.currentBalance,
-				creditLimit: input.creditLimit ?? null,
+				creditLimit: input.displayGroup === "credit" ? (input.creditLimit ?? null) : null,
 				isoCurrencyCode: (input.isoCurrencyCode ?? "USD").toUpperCase(),
 				isAsset,
 			})
@@ -319,7 +319,7 @@ function toDto(
 		mask: account.mask,
 		currentBalance: account.currentBalance,
 		availableBalance: account.availableBalance,
-		creditLimit: account.creditLimit,
+		creditLimit: account.displayGroup === "credit" ? account.creditLimit : null,
 		isAsset: account.isAsset,
 		institutionName,
 		institutionLogo,

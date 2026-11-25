@@ -21,7 +21,10 @@ export const bankAccount = pgTable(
 		plaidItemId: uuid("plaid_item_id").references(() => plaidItem.id),
 		plaidAccountId: text("plaid_account_id"),
 		source: text("source").notNull().default("plaid"),
+		// The name shown in the app. The User's rename wins over Plaid (see overriddenFields).
 		name: text("name").notNull(),
+		// Plaid's own name for the account, refreshed on every sync.
+		plaidName: text("plaid_name"),
 		officialName: text("official_name"),
 		displayGroup: text("display_group").notNull(),
 		type: text("type").notNull(),
@@ -47,7 +50,7 @@ export const bankAccount = pgTable(
 		// statement_balance | new_charges | minimum | fixed
 		paymentRule: text("payment_rule").notNull().default("statement_balance"),
 		fixedPayment: integer("fixed_payment"),
-		// Card-term fields the User set by hand; Plaid Liabilities sync leaves them alone.
+		// Fields the User set by hand (card terms, name); Plaid syncs leave them alone.
 		overriddenFields: text("overridden_fields").array().notNull().default([]),
 		// The User's drag order on the Credit Cards page. Null sorts after ordered cards.
 		sortOrder: integer("sort_order"),

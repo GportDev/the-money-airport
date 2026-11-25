@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { reconnectItem } from "@/api/plaid";
 import { AccountFunds } from "@/components/accounts/account-funds";
+import { AccountTransactions } from "@/components/accounts/account-transactions";
 import { ApyField } from "@/components/accounts/apy-field";
 import { CashPlanToggle } from "@/components/accounts/cash-plan-toggle";
 import { ConnectPlaidButton } from "@/components/accounts/connect-plaid-button";
@@ -29,6 +30,7 @@ const TYPES = ["checking", "savings", "credit", "investment", "loan", "vehicle",
 export function AccountDrawer({
 	open,
 	account,
+	range = "1m",
 	onClose,
 	onSave,
 	onDelete,
@@ -37,6 +39,8 @@ export function AccountDrawer({
 }: {
 	open: boolean;
 	account: BankAccount | null;
+	/** The Accounts page timeframe; the drawer lists Transactions inside it. */
+	range?: string;
 	onClose: () => void;
 	onSave: (input: {
 		name: string;
@@ -44,6 +48,7 @@ export function AccountDrawer({
 		displayGroup: BankAccount["displayGroup"];
 		currentBalance: number;
 		isoCurrencyCode: string;
+		/** Credit cards only; null elsewhere. */
 		creditLimit: number | null;
 		isHidden: boolean;
 		apyBps: number | null;
@@ -75,6 +80,7 @@ export function AccountDrawer({
 	const isApyShown = isEdit && account !== null && earnsApy(account);
 	const isCashPlanShown = isEdit && account?.displayGroup === "cash";
 	const [inCashPlan, setInCashPlan] = useState(account?.inCashPlan ?? false);
+	const isCreditLimitShown = (account?.displayGroup ?? displayGroup) === "credit";
 	const isDebtPlanShown =
 		isEdit && (account?.displayGroup === "credit" || account?.displayGroup === "loan");
 	const [inDebtPlan, setInDebtPlan] = useState(account?.inDebtPlan ?? true);
@@ -87,7 +93,8 @@ export function AccountDrawer({
 			displayGroup,
 			currentBalance: majorUnitsToCents(balance),
 			isoCurrencyCode: currency.toUpperCase(),
-			creditLimit: creditLimit === "" ? null : majorUnitsToCents(creditLimit),
+			creditLimit:
+				!isCreditLimitShown || creditLimit === "" ? null : majorUnitsToCents(creditLimit),
 			isHidden: hidden,
 			apyBps: apy.trim() === "" ? null : percentToBps(apy),
 			inCashPlan: isCashPlanShown ? inCashPlan : undefined,
@@ -180,14 +187,16 @@ export function AccountDrawer({
 							<Amount>{formatMoney(account.availableBalance, account.isoCurrencyCode)}</Amount>
 						</p>
 					) : null}
-					<label className="flex flex-col gap-1 text-sm" htmlFor="account-limit">
-						Credit limit
-						<Input
-							id="account-limit"
-							value={creditLimit}
-							onChange={(event) => setCreditLimit(event.target.value)}
-						/>
-					</label>
+					{isCreditLimitShown ? (
+						<label className="flex flex-col gap-1 text-sm" htmlFor="account-limit">
+							Credit limit
+							<Input
+								id="account-limit"
+								value={creditLimit}
+								onChange={(event) => setCreditLimit(event.target.value)}
+							/>
+						</label>
+					) : null}
 					{isApyShown ? <ApyField value={apy} onChange={setApy} /> : null}
 					{isCashPlanShown ? (
 						<CashPlanToggle checked={inCashPlan} onCheckedChange={setInCashPlan} />
@@ -247,6 +256,7 @@ export function AccountDrawer({
 				{account && account.funds.length > 0 ? <AccountFunds account={account} /> : null}
 				{account?.card ? <CreditSection account={account} card={account.card} /> : null}
 				{account?.displayGroup === "loan" ? <LoanSection account={account} /> : null}
+				{account ? <AccountTransactions account={account} range={range} /> : null}
 			</SheetContent>
 		</Sheet>
 	);

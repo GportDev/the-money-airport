@@ -22,7 +22,13 @@ export type AccountPatchInput = {
 };
 
 /** Fields only a credit card has; APR also applies to loans. */
-const CARD_ONLY = ["statementCloseDay", "paymentDueDay", "paymentRule", "fixedPayment"] as const;
+const CARD_ONLY = [
+	"creditLimit",
+	"statementCloseDay",
+	"paymentDueDay",
+	"paymentRule",
+	"fixedPayment",
+] as const;
 
 /** Checks that each field fits the BankAccount's kind, then builds the update. */
 export function accountPatch(existing: Account, input: AccountPatchInput): Partial<Account> {
@@ -31,9 +37,12 @@ export function accountPatch(existing: Account, input: AccountPatchInput): Parti
 	for (const [key, value] of Object.entries(input)) {
 		if (value !== undefined) Object.assign(set, { [key]: value });
 	}
-	const overridden = CARD_TERM_FIELDS.filter(
+	const overridden: string[] = CARD_TERM_FIELDS.filter(
 		(field) => input[field] !== undefined && existing.displayGroup !== "cash",
 	);
+	if (input.name !== undefined && input.name !== existing.name) {
+		overridden.push("name");
+	}
 	if (overridden.length > 0) {
 		set.overriddenFields = [...new Set([...existing.overriddenFields, ...overridden])];
 	}

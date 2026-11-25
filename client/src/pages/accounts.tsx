@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { AccountDrawer } from "@/components/drawers/account-drawer";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
 	useAccounts,
 	useCreateAccount,
@@ -61,58 +62,13 @@ export function AccountsPage() {
 	return (
 		<>
 			<PageHeader title="Accounts">
-				<Button variant="outline" type="button" onClick={() => setFiltersOpen(true)}>
-					Filters
-				</Button>
-				<Button
-					variant="outline"
-					type="button"
-					onClick={() => {
-						toast.promise(
-							syncAll().then(() => invalidateLedger(queryClient)),
-							{
-								loading: "Refreshing accounts…",
-								success: "Accounts refreshed",
-								error: "Could not refresh accounts",
-							},
-						);
-					}}
-				>
-					Refresh all
-				</Button>
-				<Button type="button" onClick={() => setChooser(true)}>
-					Add account
-				</Button>
-			</PageHeader>
-			<AccountsState accounts={accounts} onAdd={() => setChooser(true)}>
-				<div className="flex flex-col gap-6">
-					{omitted ? (
-						<output className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30">
-							Unofficial currencies are omitted from net worth.
-						</output>
-					) : null}
-					<NetWorthHero
-						netWorth={netWorth.data}
-						range={range}
-						onRangeChange={(next) => {
-							patchParams((params) => params.set("range", next));
-						}}
-					/>
-					<AccountGroups
-						accounts={rows}
-						groups={netWorth.data?.groups ?? []}
-						baseCurrency={netWorth.data?.baseCurrency ?? "USD"}
-						onOpen={(account) => setDrawer(account)}
-					/>
-				</div>
-			</AccountsState>
-			{filtersOpen ? (
-				<div
-					role="dialog"
-					aria-label="Filters"
-					className="fixed inset-y-0 right-0 left-16 z-40 flex items-start justify-end bg-black/20 p-6 pt-24 xl:left-60"
-				>
-					<div className="flex w-72 flex-col gap-3 rounded-xl border border-border bg-card p-4">
+				<Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+					<PopoverTrigger asChild>
+						<Button variant="outline" type="button">
+							Filters
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent aria-label="Filters">
 						<label className="flex items-center gap-2 text-sm">
 							<input
 								type="checkbox"
@@ -155,16 +111,35 @@ export function AccountsPage() {
 						<Button variant="outline" type="button" onClick={() => setFiltersOpen(false)}>
 							Done
 						</Button>
-					</div>
-				</div>
-			) : null}
-			{chooser ? (
-				<div
-					role="dialog"
-					aria-label="Add account"
-					className="fixed inset-y-0 right-0 left-16 z-40 flex items-start justify-end bg-black/20 p-6 pt-24 xl:left-60"
+					</PopoverContent>
+				</Popover>
+				<Button
+					variant="outline"
+					type="button"
+					onClick={() => {
+						toast.promise(
+							syncAll().then(() => invalidateLedger(queryClient)),
+							{
+								loading: "Refreshing accounts…",
+								success: "Accounts refreshed",
+								error: "Could not refresh accounts",
+							},
+						);
+					}}
 				>
-					<div className="flex w-72 flex-col gap-2 rounded-xl border border-border bg-card p-4">
+					Refresh all
+				</Button>
+				<Popover open={chooser} onOpenChange={setChooser}>
+					<PopoverTrigger asChild>
+						<Button type="button">Add account</Button>
+					</PopoverTrigger>
+					{/* Plaid Link opens in its own iframe; moving focus there must not close this and
+					    unmount the Link handler before it reports back. */}
+					<PopoverContent
+						aria-label="Add account"
+						className="gap-2"
+						onFocusOutside={(event) => event.preventDefault()}
+					>
 						<ConnectPlaidButton onDone={() => setChooser(false)} />
 						<Button
 							type="button"
@@ -175,14 +150,37 @@ export function AccountsPage() {
 						>
 							Add manually
 						</Button>
-					</div>
+					</PopoverContent>
+				</Popover>
+			</PageHeader>
+			<AccountsState accounts={accounts} onAdd={() => setChooser(true)}>
+				<div className="flex flex-col gap-6">
+					{omitted ? (
+						<output className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30">
+							Unofficial currencies are omitted from net worth.
+						</output>
+					) : null}
+					<NetWorthHero
+						netWorth={netWorth.data}
+						range={range}
+						onRangeChange={(next) => {
+							patchParams((params) => params.set("range", next));
+						}}
+					/>
+					<AccountGroups
+						accounts={rows}
+						groups={netWorth.data?.groups ?? []}
+						baseCurrency={netWorth.data?.baseCurrency ?? "USD"}
+						onOpen={(account) => setDrawer(account)}
+					/>
 				</div>
-			) : null}
+			</AccountsState>
 			{drawer !== "closed" ? (
 				<AccountDrawer
 					key={drawer === "create" ? "create" : drawer.id}
 					open
 					account={drawer === "create" ? null : drawer}
+					range={range}
 					onClose={() => setDrawer("closed")}
 					onSave={async (input) => {
 						if (drawer === "create") {
@@ -192,7 +190,7 @@ export function AccountsPage() {
 								id: drawer.id,
 								name: input.name,
 								currentBalance: input.currentBalance,
-								creditLimit: input.creditLimit,
+								...(drawer.displayGroup === "credit" ? { creditLimit: input.creditLimit } : {}),
 								isHidden: input.isHidden,
 								apyBps: input.apyBps,
 								inCashPlan: input.inCashPlan,

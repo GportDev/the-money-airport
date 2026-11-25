@@ -336,7 +336,8 @@ export class PlaidService {
 			await this.db
 				.update(bankAccount)
 				.set({
-					name: account.name,
+					name: existing.overriddenFields.includes("name") ? existing.name : account.name,
+					plaidName: account.name,
 					officialName: account.officialName,
 					currentBalance: account.currentBalance,
 					availableBalance: account.availableBalance,
@@ -360,6 +361,7 @@ export class PlaidService {
 				plaidAccountId: account.plaidAccountId,
 				source: "plaid",
 				name: account.name,
+				plaidName: account.name,
 				officialName: account.officialName,
 				displayGroup: account.displayGroup,
 				type: account.type,
