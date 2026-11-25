@@ -89,7 +89,8 @@ Individual accounts — Plaid-linked or manual (vehicles, property, cash on hand
 | `plaid_item_id` | `uuid` | FK → plaid_item.id, nullable (null = manual) |
 | `plaid_account_id` | `text` | UNIQUE, nullable |
 | `source` | `text` | `plaid` \| `manual`, NOT NULL, default `plaid` |
-| `name` | `text` | NOT NULL |
+| `name` | `text` | NOT NULL. Shown in the app; the User's rename survives syncs |
+| `plaid_name` | `text` | Plaid's name, refreshed on every sync |
 | `official_name` | `text` | |
 | `display_group` | `text` | `cash` \| `credit` \| `investment` \| `loan` \| `vehicle` \| `other` |
 | `type` | `text` | `checking` \| `savings` \| `credit` \| `investment` \| `loan` \| `vehicle` \| `other` |
@@ -110,7 +111,7 @@ Individual accounts — Plaid-linked or manual (vehicles, property, cash on hand
 | `payment_due_day` | `integer` | 1-31, nullable — credit only |
 | `payment_rule` | `text` | `statement_balance` \| `new_charges` \| `minimum` \| `fixed`, default `statement_balance` — credit only |
 | `fixed_payment` | `integer` | Cents, nullable — used when `payment_rule = fixed` |
-| `overridden_fields` | `text[]` | Card-term columns the User set by hand; Plaid Liabilities sync skips them |
+| `overridden_fields` | `text[]` | Card-term columns and `name` the User set by hand; Plaid syncs skip them |
 | `sort_order` | `integer` | Nullable. The User's drag order on the Credit Cards page; null sorts after ordered cards |
 | `last_synced_at` | `timestamptz` | |
 | `created_at` | `timestamptz` | default `now()` |
@@ -233,7 +234,7 @@ User-defined transaction categories.
 | `name` | `text` | NOT NULL |
 | `color` | `text` | Hex color, default `#6B7280` |
 | `icon` | `text` | Icon identifier, NOT NULL, default `circle` |
-| `kind` | `text` | `income` \| `expense`, NOT NULL, default `expense` |
+| `kind` | `text` | `income` \| `expense` \| `transfer`, NOT NULL, default `expense`. Only `expense` has a `budget_group` |
 | `budget_group` | `text` | `fixed` \| `flexible` \| `non_monthly` \| null (income categories are null) |
 | `is_default` | `boolean` | default `false` (seeded categories) |
 | `is_uncategorized` | `boolean` | default `false` — exactly one per User; cannot be deleted |
@@ -252,7 +253,7 @@ Partial unique: one `is_uncategorized = true` per `user_id`.
 | Education | `non_monthly` |
 | Uncategorized (`is_uncategorized=true`) | `non_monthly` |
 
-**Seed defaults (income):** Salary (`kind=income`). Savings Transfer is `expense` / `non_monthly`.
+**Seed defaults (income):** Salary (`kind=income`). Savings Transfer is `expense` / `non_monthly`. Transfer is `kind=transfer`, and is re-seeded for a User left with no transfer Category.
 
 ---
 
@@ -284,6 +285,9 @@ All transactions from all accounts + manual entries.
 | `is_manual` | `boolean` | default `false` |
 | `category_locked` | `boolean` | default `false`; set when the User picks a Category. Sync never changes a locked Category |
 | `tags_locked` | `boolean` | default `false`; set when the User toggles the transfer tag. Transfer pairing skips locked rows |
+| `name_locked` | `boolean` | default `false`; set when the User renames it. Sync keeps the User's name |
+| `merchant_locked` | `boolean` | default `false`; set when the User picks its merchant. Sync keeps merchant and logo |
+| `refund_of_id` | `uuid` | FK → transaction.id, ON DELETE SET NULL. On a refund: the expense it pays back |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
 
@@ -293,6 +297,7 @@ All transactions from all accounts + manual entries.
 
 **Indexes:**
 - `(split_parent_id)` — split lookups
+- `(refund_of_id)` — refunds of an expense
 - `(user_id, date DESC)` — feed and cash-flow queries
 - `(user_id, category_id)` — budget/report queries
 - `(bank_account_id, date)` — account-specific queries
@@ -306,6 +311,19 @@ All transactions from all accounts + manual entries.
 **Transfer pairing:** after sync, pair two Transactions (same User, different `bank_account_id`, opposite signs, equal `|amount|`, same `iso_currency_code`, dates within 3 days, `plaid_pfc_primary` in `TRANSFER` / `LOAN_PAYMENTS`). Tag both `transfer` (or `savings_transfer` if Category is Savings Transfer). No cross-currency pairs. Totals that exclude Transfers also exclude `savings_transfer`.
 
 **Disconnect:** do not cascade-delete Transactions or BankAccounts. Set `plaid_item.status = disconnected`.
+
+---
+
+### `transaction_rule`
+
+| Column | Type | Constraints |
+|--------|------|------------|
+| `id` | `uuid` | PK |
+| `user_id` | `text` | FK → user.id, NOT NULL, ON DELETE CASCADE |
+| `merchant` | `text` | NOT NULL; matched case-insensitively against `coalesce(merchant_name, name)` |
+| `amount` | `integer` | Native cents, signed; null matches any amount |
+| `category_id` | `uuid` | FK → category.id, NOT NULL, ON DELETE CASCADE |
+| `created_at` | `timestamptz` | default `now()` |
 
 ---
 

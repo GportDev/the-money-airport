@@ -113,12 +113,20 @@ _Avoid_: trial, plan (the deprecated Stripe object), paid Product in V1
 ### Activity
 
 **Category**:
-A User-defined bucket for Transactions, with kind (income | expense) and an optional budget group (fixed | flexible | non_monthly).
+A User-defined bucket for Transactions, with kind (income | expense | transfer) and, for expenses, a budget group (fixed | flexible | non_monthly). Putting a Transaction in a transfer Category makes it a Transfer.
 _Avoid_: Plaid category as the User-facing name (that is ingest metadata)
 
 **Uncategorized**:
 A real seeded Category per User. It cannot be deleted. Deleting any other Category reassigns its Transactions here. After ingest, every Transaction has a Category.
 _Avoid_: null category, empty category
+
+**Rule**:
+A User's instruction that files every Transaction with a merchant, and optionally an exact amount, in one Category. Applied to existing Transactions when saved and to synced ones after.
+_Avoid_: auto-categorization (alone), filter
+
+**Refund**:
+A positive Transaction linked to the expense it pays back. It takes the expense's Category, so the two net out.
+_Avoid_: reversal, chargeback (the bank's process)
 
 **Transaction**:
 A dated movement of Money on a BankAccount (or a manual entry). Pending Transactions count in Budget, Spending, Cash Flow, and Reports. Amount sign: positive = income, negative = expense.

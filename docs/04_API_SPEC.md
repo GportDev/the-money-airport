@@ -105,7 +105,7 @@ interface DashboardPayload {
 | GET | `/accounts/net-worth` | `?range=1m\|3m\|1y\|ytd` | `{ data: NetWorthResponse }` |
 | GET | `/accounts/:id` | — | `{ data: AccountDetail }` |
 | POST | `/accounts` | `{ name, type, displayGroup, currentBalance, creditLimit? }` | `{ data: Account }` | Manual account |
-| PATCH | `/accounts/:id` | `{ name?, currentBalance?, creditLimit?, isHidden?, apyBps? (0–100000, null clears), inCashPlan?, inDebtPlan?, debtPriority?, aprBps?, apyBps?, statementCloseDay?, paymentDueDay?, paymentRule?, fixedPayment? }` | `{ data: Account }` | Card-term fields set here are added to `overriddenFields` |
+| PATCH | `/accounts/:id` | `{ name?, currentBalance?, creditLimit?, isHidden?, apyBps? (0–100000, null clears), inCashPlan?, inDebtPlan?, debtPriority?, aprBps?, apyBps?, statementCloseDay?, paymentDueDay?, paymentRule?, fixedPayment? }` | `{ data: Account }` | Card-term fields and a changed `name` are added to `overriddenFields`, so Plaid syncs keep them. `creditLimit` and other card terms are credit-only (400 elsewhere); non-credit accounts return `creditLimit: null` |
 | DELETE | `/accounts/:id` | — | `{ success }` | Manual accounts only |
 | GET | `/accounts/:id/statements` | `?periodEnd?` (default latest) | `{ data: StatementPeriod }` | Credit only. Transactions grouped by Statement period |
 | POST | `/accounts/:id/statements` | `{ periodStart, periodEnd, statementBalance, minimumPayment?, dueDate? }` | `{ data: CardStatement }` | Manual Statement |
@@ -341,7 +341,11 @@ interface BetterCard {
 | GET | `/transactions` | `?cursor&limit&dateFrom&dateTo&accountId&categoryId&search&pending&amountMin&amountMax&sortDir` | `{ data: TransactionListItem[], meta }` |
 | GET | `/transactions/:id` | — | `{ data: TransactionDetail }` |
 | POST | `/transactions` | `{ name, amount, date, categoryId?, bankAccountId?, notes? }` | `{ data: Transaction }` |
-| PATCH | `/transactions/:id` | `{ categoryId?, notes?, tags?, name?, amount?, date?, bankAccountId? }` | `{ data: TransactionDetail }` |
+| PATCH | `/transactions/:id` | `{ categoryId?, notes?, tags?, name?, merchantName?, amount?, date?, bankAccountId? }` | `{ data: TransactionDetail }` |
+| GET | `/transactions/merchants` | — | `{ data: { name, logoUrl }[] }` (most used first) |
+| GET | `/transactions/:id/refund-candidates` | — | `{ data: TransactionListItem[] }` |
+| PUT | `/transactions/:id/refund` | `{ originalId }` | `{ data: TransactionDetail }` (the refund) |
+| DELETE | `/transactions/:id/refund` | — | `{ data: TransactionDetail }` |
 | PUT | `/transactions/:id/split` | `{ parts: { categoryId, amount }[] }` (2–50 parts) | `{ data: TransactionDetail }` (the parent part) |
 | DELETE | `/transactions/:id/split` | — | `{ data: TransactionDetail }` (the parent, whole again) |
 | PATCH | `/transactions/bulk-categorize` | `{ transactionIds: string[], categoryId: string }` | `{ data: { updated: number } }` |
@@ -349,7 +353,9 @@ interface BetterCard {
 
 `limit` default 50, max 200. `nextCursor` is an opaque `(date, id)` key; the feed sorts by date (`sortDir` `desc` default). `accountId` and `categoryId` accept repeated params (multi-select). `amountMin` / `amountMax` compare absolute cents. `search` matches name, merchant, and notes.
 
-`name`, `amount`, `date`, and `bankAccountId` change only on manual Transactions, and only manual Transactions can be deleted (400 otherwise). Setting `categoryId` locks the Category against later syncs; setting `tags` locks the transfer flag against automatic pairing. A Transfer whose Category is Savings Transfer is stored as `savings_transfer`.
+`amount`, `date`, and `bankAccountId` change only on manual Transactions, and only manual Transactions can be deleted (400 otherwise). `name` and `merchantName` change on any Transaction and are locked against later syncs; a picked merchant takes the logo another Transaction of that merchant already has. Setting `categoryId` locks the Category against later syncs; setting `tags` locks the transfer flag against automatic pairing. Moving a Transaction into a `transfer`-kind Category tags it `transfer`; moving it out of one clears the tag. A Transfer whose Category is Savings Transfer is stored as `savings_transfer`.
+
+**Refund:** `PUT /:id/refund` links a positive Transaction (the refund) to a negative one in the same currency (the expense); the refund takes the expense's Category. Candidates are the expenses from the 120 days up to the refund's date, same merchant first, then the closest amount. Another User's id returns 404.
 
 **Split:** `PUT /:id/split` replaces the parts of a Transaction (`:id` may be any part). Every part is non-zero, has the total's sign, and the parts add up to the original amount to the cent (400 otherwise). The original row keeps the first part; the rest are child rows, so every total stays a plain sum. A split part cannot change name, amount, date, or account until it is unsplit. `DELETE /:id/split` folds the parts back into the parent (400 if not split). Another User's id returns 404.
 
@@ -366,6 +372,7 @@ interface TransactionListItem {
   isManual: boolean;
   tags: string[];
   isSplit: boolean; // true for every part of a split
+  isRefund: boolean; // linked as the refund of an expense
   category: { id: string; name: string; icon: string; color: string } | null;
   account: { id: string; name: string; mask: string | null; institutionLogo: string | null } | null;
   betterCard: BetterCard | null; // the User's other card that would have earned more; see Credit Cards
@@ -380,8 +387,19 @@ interface TransactionDetail extends TransactionListItem {
     total: number; // original amount, cents
     parts: { id: string; amount: number; category: { id: string; name: string; icon: string; color: string } | null }[]; // parent first
   } | null;
+  refund: { of: TransactionListItem | null; refundedBy: TransactionListItem[] };
 }
 ```
+
+### Rules — `/api/transaction-rules`
+
+| Method | Path | Body | Response |
+|--------|------|------|----------|
+| GET | `/transaction-rules` | — | `{ data: { id, merchant, amount, category }[] }` |
+| POST | `/transaction-rules` | `{ merchant, amount: number \| null, categoryId }` | `{ data: { applied: number } }` |
+| DELETE | `/transaction-rules/:id` | — | `{ data: { success } }` |
+
+A rule matches the merchant (or the name when there is none) case-insensitively and, when `amount` is set, the exact native cents. Saving replaces a rule with the same merchant and amount and recategorizes every matching Transaction now, split parts left out. Sync applies rules to Transactions whose Category the User has not picked; an exact-amount rule wins over an any-amount one.
 
 The feed is **date-grouped on the client**. The API returns a flat chronological list.
 
@@ -438,7 +456,7 @@ Transaction rows under the chart reuse `GET /transactions` with the same `accoun
 | PATCH | `/categories/:id` | `{ name?, color?, icon?, kind?, budgetGroup? }` | `{ data: Category }` |
 | DELETE | `/categories/:id` | — | `{ success }` |
 
-Deleting a category reassigns its transactions to Uncategorized. Uncategorized cannot be deleted.
+`kind` is `income`, `expense`, or `transfer`; only `expense` Categories have a `budgetGroup`, and `transfer` Categories stay out of the Budget. Every User keeps at least one `transfer` Category (Transfer is re-seeded when none is left). Deleting a category reassigns its transactions to Uncategorized. Uncategorized cannot be deleted.
 
 ---
 
