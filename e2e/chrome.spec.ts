@@ -51,6 +51,21 @@ test("a collapsed sidebar names each item in a tooltip", async ({ page }) => {
 	await expect(page.getByRole("tooltip")).toHaveText("Reports");
 });
 
+test("the sidebar shows the round mark, with the app name in text only when expanded", async ({
+	page,
+}) => {
+	await page.goto("/");
+	const sidebar = page.getByRole("complementary", { name: "Workspace" });
+	const mark = sidebar.getByRole("img", { name: "Money Airport" });
+	const name = sidebar.getByText("Money Airport", { exact: true });
+	await expect(mark).toHaveAttribute("src", "/logo-mark.png");
+	await expect(name).toHaveCSS("opacity", "1");
+
+	await page.getByRole("button", { name: "Collapse sidebar" }).click();
+	await expect(mark).toHaveAttribute("src", "/logo-mark.png");
+	await expect(name).toHaveCSS("opacity", "0");
+});
+
 test("an expanded sidebar row keeps its icon and name on one line", async ({ page }) => {
 	await page.goto("/");
 	const link = page

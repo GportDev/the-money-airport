@@ -11,7 +11,6 @@ import {
 	TrendingUp,
 	Wallet,
 } from "lucide-react";
-import { BrandLockup } from "@/components/brand/brand-lockup";
 import { BrandMark } from "@/components/brand/brand-mark";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { SidebarNavLink } from "@/components/layout/sidebar-nav-link";
@@ -48,8 +47,17 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 				isCompact ? "w-16" : "w-60",
 			)}
 		>
-			<div className="flex h-14 shrink-0 items-center border-b border-border px-3.75">
-				{isCompact ? <BrandMark /> : <BrandLockup className="h-10" />}
+			<div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3.75">
+				<BrandMark className="shrink-0" />
+				<span
+					aria-hidden
+					className={cn(
+						"whitespace-nowrap text-sm font-semibold text-foreground transition-opacity duration-200 motion-reduce:transition-none",
+						isCompact && "opacity-0",
+					)}
+				>
+					Money Airport
+				</span>
 			</div>
 			<nav aria-label="Primary" className="flex flex-1 flex-col gap-1 p-2">
 				{NAV_ITEMS.map((item) => (
