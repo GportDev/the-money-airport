@@ -17,21 +17,21 @@ export async function signUp(
 	return { email, password, name };
 }
 
-/** The sidebar avatar opens the profile drawer, which holds Settings and Log out. */
-export async function openProfileDrawer(page: Page) {
+/** The sidebar avatar opens the profile menu, which holds Settings and Log out. */
+export async function openProfileMenu(page: Page) {
 	await page
 		.getByRole("complementary", { name: "Workspace" })
 		.getByRole("button", { name: "Profile" })
 		.click();
-	const drawer = page.getByRole("dialog");
-	await expect(drawer).toBeVisible();
-	return drawer;
+	const menu = page.getByRole("menu");
+	await expect(menu).toBeVisible();
+	return menu;
 }
 
 /** Log out signs out and then reloads on /login; wait for that page before acting. */
 export async function logOut(page: Page) {
-	const drawer = await openProfileDrawer(page);
-	await drawer.getByRole("button", { name: "Log out" }).click();
+	const menu = await openProfileMenu(page);
+	await menu.getByRole("menuitem", { name: "Log out" }).click();
 	await expect(page).toHaveURL(/\/login$/);
 	await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
 }

@@ -1,5 +1,5 @@
 import { expect, test } from "./fixtures";
-import { logOut, openProfileDrawer } from "./helpers/auth";
+import { logOut, openProfileMenu } from "./helpers/auth";
 
 const SECTIONS = [
 	"Profile",
@@ -12,11 +12,11 @@ const SECTIONS = [
 	"Data",
 ];
 
-test("Settings opens from the profile drawer and stacks its sections in spec order", async ({
+test("Settings opens from the profile menu and stacks its sections in spec order", async ({
 	page,
 }) => {
-	const drawer = await openProfileDrawer(page);
-	await drawer.getByRole("link", { name: "Settings" }).click();
+	const menu = await openProfileMenu(page);
+	await menu.getByRole("menuitem", { name: "Settings" }).click();
 	await expect(page).toHaveURL("/settings");
 	const main = page.getByRole("main");
 	await expect(main.getByRole("heading", { level: 2 })).toHaveText(SECTIONS);
