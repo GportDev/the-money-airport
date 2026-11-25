@@ -77,9 +77,9 @@ export class BudgetsService {
 		const omitted = new Set<string>();
 		const actuals = await this.actuals(userId, year, month, base, omitted);
 
-		const rows = categories.map((row) =>
-			toRow(row, planByCategory.get(row.id), actuals.get(row.id) ?? 0),
-		);
+		const rows = categories
+			.filter((row) => row.kind !== "transfer")
+			.map((row) => toRow(row, planByCategory.get(row.id), actuals.get(row.id) ?? 0));
 		const groups = GROUP_ORDER.map((key) => summarize(key, rows));
 		const plannedIncome = groups.find((row) => row.key === "income")?.planned ?? 0;
 		const plannedExpense = groups

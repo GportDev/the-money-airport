@@ -22,6 +22,7 @@ function groupCategories(categories: Category[]): CategoryGroup[] {
 	return [
 		{ value: "Expenses", items: categories.filter((item) => item.kind === "expense") },
 		{ value: "Income", items: categories.filter((item) => item.kind === "income") },
+		{ value: "Transfers", items: categories.filter((item) => item.kind === "transfer") },
 	].filter((group) => group.items.length > 0);
 }
 

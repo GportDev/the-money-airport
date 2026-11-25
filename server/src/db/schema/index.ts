@@ -13,4 +13,5 @@ export * from "./loan-terms";
 export * from "./plaid-item";
 export * from "./recurring-item";
 export * from "./transaction";
+export * from "./transaction-rule";
 export * from "./user-settings";

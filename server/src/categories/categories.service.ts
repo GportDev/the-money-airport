@@ -1,10 +1,16 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { DATABASE } from "../db/db.module";
 import { category } from "../db/schema/category";
 import { transaction } from "../db/schema/transaction";
-import { type BudgetGroup, type CategoryKind, DEFAULT_CATEGORIES } from "./category-defaults";
+import {
+	type BudgetGroup,
+	budgetGroupFor,
+	type CategoryKind,
+	DEFAULT_CATEGORIES,
+	TRANSFER,
+} from "./category-defaults";
 
 export type CategoryDto = {
 	id: string;
@@ -29,20 +35,35 @@ type CategoryInput = {
 export class CategoriesService {
 	constructor(@Inject(DATABASE) private readonly db: PostgresJsDatabase) {}
 
-	/** Seeds the default Categories once per User. A User who deletes a default keeps it deleted. */
+	/**
+	 * Seeds the default Categories once per User. A User who deletes a default keeps it deleted,
+	 * except that a User with no transfer Category gets Transfer back: it is how a Transaction
+	 * is marked as a Transfer.
+	 */
 	async ensureDefaults(userId: string) {
-		const [existing] = await this.db
-			.select({ id: category.id })
+		const existing = await this.db
+			.select({ kind: category.kind, isUncategorized: category.isUncategorized })
 			.from(category)
-			.where(and(eq(category.userId, userId), eq(category.isUncategorized, true)))
-			.limit(1);
-		if (existing) {
+			.where(
+				and(
+					eq(category.userId, userId),
+					or(eq(category.isUncategorized, true), eq(category.kind, "transfer")),
+				),
+			)
+			.orderBy(desc(category.isUncategorized))
+			.limit(2);
+		const isSeeded = existing.some((row) => row.isUncategorized);
+		const hasTransfer = existing.some((row) => row.kind === "transfer");
+		if (isSeeded && hasTransfer) {
 			return;
 		}
+		const seeds = isSeeded
+			? DEFAULT_CATEGORIES.filter((seed) => seed.name === TRANSFER)
+			: DEFAULT_CATEGORIES;
 		await this.db
 			.insert(category)
 			.values(
-				DEFAULT_CATEGORIES.map((seed) => ({
+				seeds.map((seed) => ({
 					userId,
 					name: seed.name,
 					icon: seed.icon,
@@ -99,7 +120,7 @@ export class CategoriesService {
 				color: input.color,
 				icon: input.icon,
 				kind: input.kind,
-				budgetGroup: input.kind === "income" ? null : (input.budgetGroup ?? "flexible"),
+				budgetGroup: budgetGroupFor(input.kind, input.budgetGroup),
 			})
 			.onConflictDoNothing()
 			.returning();
@@ -115,12 +136,10 @@ export class CategoriesService {
 		if (existing.isUncategorized && input.kind && input.kind !== existing.kind) {
 			throw new BadRequestException("Uncategorized keeps its kind");
 		}
-		const budgetGroup =
-			kind === "income"
-				? null
-				: input.budgetGroup !== undefined
-					? input.budgetGroup
-					: (existing.budgetGroup ?? "flexible");
+		const budgetGroup = budgetGroupFor(
+			kind,
+			input.budgetGroup !== undefined ? input.budgetGroup : (existing.budgetGroup as BudgetGroup),
+		);
 		try {
 			const [row] = await this.db
 				.update(category)

@@ -27,6 +27,8 @@ export type TransactionListItem = {
 	} | null;
 	/** The User's other card that would have earned more; null when this one was the best. */
 	betterCard: BetterCard | null;
+	/** True when this Transaction is linked as a refund of an expense. */
+	isRefund: boolean;
 };
 
 export type TransactionDetail = TransactionListItem & {
@@ -36,6 +38,18 @@ export type TransactionDetail = TransactionListItem & {
 	fundEntry: { id: string; goalId: string; goalName: string } | null;
 	similar: TransactionListItem[];
 	split: TransactionSplit | null;
+	/** The expense this refund pays back, and the refunds that pay this expense back. */
+	refund: { of: TransactionListItem | null; refundedBy: TransactionListItem[] };
+};
+
+export type MerchantDto = { name: string; logoUrl: string | null };
+
+export type TransactionRuleDto = {
+	id: string;
+	merchant: string;
+	/** Native cents; null matches any amount. */
+	amount: number | null;
+	category: TransactionCategory;
 };
 
 export type SplitPartInput = { categoryId: string; amount: number };

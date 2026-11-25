@@ -1,9 +1,10 @@
-import { Plus, Search, Settings2 } from "lucide-react";
+import { ListChecks, Plus, Search, Settings2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { BulkCategorizeDrawer } from "@/components/drawers/bulk-categorize-drawer";
 import { CategoryManagerDrawer } from "@/components/drawers/category-manager-drawer";
+import { RulesDrawer } from "@/components/drawers/rules-drawer";
 import { TransactionDrawer } from "@/components/drawers/transaction-drawer";
 import { PageHeader } from "@/components/layout/page-header";
 import { FeedState } from "@/components/transactions/feed-state";
@@ -57,6 +58,7 @@ export function TransactionsPage() {
 	const [filtersOpen, setFiltersOpen] = useState(false);
 	const [columnsOpen, setColumnsOpen] = useState(false);
 	const [categoriesOpen, setCategoriesOpen] = useState(false);
+	const [rulesOpen, setRulesOpen] = useState(false);
 	const [columns, setColumns] = useState<FeedColumns>({ category: true, account: true });
 	const [selecting, setSelecting] = useState(false);
 	const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -235,6 +237,10 @@ export function TransactionsPage() {
 						setFiltersOpen(false);
 						setCategoriesOpen(true);
 					}}
+					onManageRules={() => {
+						setFiltersOpen(false);
+						setRulesOpen(true);
+					}}
 					onClose={() => setFiltersOpen(false)}
 				/>
 			) : null}
@@ -284,6 +290,7 @@ export function TransactionsPage() {
 				/>
 			) : null}
 			{categoriesOpen ? <CategoryManagerDrawer onClose={() => setCategoriesOpen(false)} /> : null}
+			{rulesOpen ? <RulesDrawer onClose={() => setRulesOpen(false)} /> : null}
 			{bulkOpen ? (
 				<BulkCategorizeDrawer
 					transactionIds={[...selected]}
@@ -311,11 +318,13 @@ function FiltersPanel({
 	params,
 	onPatch,
 	onManageCategories,
+	onManageRules,
 	onClose,
 }: {
 	params: URLSearchParams;
 	onPatch: (mutate: (next: URLSearchParams) => void) => void;
 	onManageCategories: () => void;
+	onManageRules: () => void;
 	onClose: () => void;
 }) {
 	const accounts = useAccounts();
@@ -392,6 +401,14 @@ function FiltersPanel({
 					>
 						<Settings2 aria-hidden className="size-4" />
 						Manage categories
+					</button>
+					<button
+						type="button"
+						className="flex items-center gap-1 self-start text-sm text-muted-foreground underline hover:text-primary"
+						onClick={onManageRules}
+					>
+						<ListChecks aria-hidden className="size-4" />
+						Manage rules
 					</button>
 				</fieldset>
 				<label className="flex flex-col gap-1 text-sm" htmlFor="filter-pending">

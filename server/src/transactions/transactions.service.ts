@@ -3,7 +3,6 @@ import { and, asc, desc, eq, gte, inArray, lte, ne, or, type SQL, sql } from "dr
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { type BetterCardFinder, betterCardFinder } from "../card-benefits/better-card-finder";
 import { CategoriesService } from "../categories/categories.service";
-import { SAVINGS_TRANSFER } from "../categories/category-defaults";
 import { DATABASE } from "../db/db.module";
 import { bankAccount } from "../db/schema/bank-account";
 import { category } from "../db/schema/category";
@@ -11,6 +10,9 @@ import { plaidItem } from "../db/schema/plaid-item";
 import { transaction } from "../db/schema/transaction";
 import { userSettings } from "../db/schema/user-settings";
 import { FundEntriesService } from "../goals/fund-entries.service";
+import { tagsAfterRecategorize, tagsAfterRecategorizeSql } from "./category-tags";
+import { TransactionMerchantsService } from "./transaction-merchants.service";
+import { TransactionRefundsService } from "./transaction-refunds.service";
 import { TransactionSplitsService } from "./transaction-splits.service";
 import type {
 	TransactionDetail,
@@ -28,6 +30,8 @@ export class TransactionsService {
 		private readonly categories: CategoriesService,
 		private readonly fundEntries: FundEntriesService,
 		private readonly splits: TransactionSplitsService,
+		private readonly refunds: TransactionRefundsService,
+		private readonly merchants: TransactionMerchantsService,
 	) {}
 
 	async list(userId: string, filters: TransactionFilters) {
@@ -114,6 +118,10 @@ export class TransactionsService {
 			.orderBy(desc(transaction.date), desc(transaction.id))
 			.limit(SIMILAR_LIMIT);
 		const betterCard = await betterCardFinder(this.db, userId);
+		const [refundOf, refundedBy] = await Promise.all([
+			row.tx.refundOfId ? this.itemsByIds(userId, [row.tx.refundOfId]) : [],
+			this.refunds.refundedByIds(userId, id).then((ids) => this.itemsByIds(userId, ids)),
+		]);
 		return {
 			...toListItem(row, betterCard),
 			notes: row.tx.notes,
@@ -121,7 +129,21 @@ export class TransactionsService {
 			fundEntry: await this.fundEntries.forTransaction(userId, id),
 			similar: similar.map((item) => toListItem(item, betterCard)),
 			split: await this.splits.forTransaction(userId, row.tx),
+			refund: { of: refundOf[0] ?? null, refundedBy },
 		};
+	}
+
+	/** List items for `ids`, in the order given. */
+	async itemsByIds(userId: string, ids: string[]): Promise<TransactionListItem[]> {
+		if (ids.length === 0) {
+			return [];
+		}
+		const rows = await this.selectItems().where(
+			and(eq(transaction.userId, userId), inArray(transaction.id, ids)),
+		);
+		const betterCard = await betterCardFinder(this.db, userId);
+		const byId = new Map(rows.map((row) => [row.tx.id, toListItem(row, betterCard)]));
+		return ids.flatMap((id) => byId.get(id) ?? []);
 	}
 
 	async create(
@@ -158,6 +180,7 @@ export class TransactionsService {
 				isoCurrencyCode: currency,
 				date: input.date,
 				notes: input.notes ?? null,
+				tags: tagsAfterRecategorize(lookup, categoryId, categoryId, []),
 				isManual: true,
 				categoryLocked: input.categoryId != null,
 			})
@@ -176,6 +199,7 @@ export class TransactionsService {
 			notes?: string | null;
 			tags?: TransferTag[];
 			name?: string;
+			merchantName?: string | null;
 			amount?: number;
 			date?: string;
 			bankAccountId?: string | null;
@@ -183,15 +207,12 @@ export class TransactionsService {
 	) {
 		const existing = await this.owned(userId, id);
 		const editsLedger =
-			input.name !== undefined ||
-			input.amount !== undefined ||
-			input.date !== undefined ||
-			input.bankAccountId !== undefined;
+			input.amount !== undefined || input.date !== undefined || input.bankAccountId !== undefined;
 		if (editsLedger && !existing.isManual) {
-			throw new BadRequestException("Only manual Transactions can change name, amount, or date");
+			throw new BadRequestException("Only manual Transactions can change amount, date, or account");
 		}
 		if (editsLedger && (await this.splits.forTransaction(userId, existing))) {
-			throw new BadRequestException("Unsplit this Transaction to change its name, amount, or date");
+			throw new BadRequestException("Unsplit this Transaction to change its amount or date");
 		}
 		const lookup = await this.categories.lookup(userId);
 		const categoryId = input.categoryId ?? existing.categoryId;
@@ -202,8 +223,15 @@ export class TransactionsService {
 		if (input.bankAccountId) {
 			currency = (await this.ownedAccount(userId, input.bankAccountId)).isoCurrencyCode;
 		}
-		const savingsId = lookup.byName.get(SAVINGS_TRANSFER.toLowerCase())?.id;
-		const tags = normalizeTags(input.tags ?? existing.tags, categoryId === savingsId);
+		const tags = tagsAfterRecategorize(
+			lookup,
+			existing.categoryId,
+			categoryId,
+			input.tags ?? existing.tags,
+		);
+		const isTagChange = input.tags !== undefined || tags.join() !== existing.tags.join();
+		const name = input.name?.trim() ?? existing.name;
+		const merchant = await this.merchantFields(userId, existing, input.merchantName);
 
 		await this.db
 			.update(transaction)
@@ -212,8 +240,10 @@ export class TransactionsService {
 				categoryLocked: input.categoryId !== undefined ? true : existing.categoryLocked,
 				notes: input.notes === undefined ? existing.notes : input.notes,
 				tags,
-				tagsLocked: input.tags !== undefined ? true : existing.tagsLocked,
-				name: input.name?.trim() ?? existing.name,
+				tagsLocked: isTagChange ? true : existing.tagsLocked,
+				name,
+				nameLocked: existing.nameLocked || name !== existing.name,
+				...merchant,
 				amount: input.amount ?? existing.amount,
 				date: input.date ?? existing.date,
 				bankAccountId:
@@ -230,10 +260,7 @@ export class TransactionsService {
 		if (!lookup.byId.has(categoryId)) {
 			throw new BadRequestException("Category not found");
 		}
-		const isSavings = lookup.byName.get(SAVINGS_TRANSFER.toLowerCase())?.id === categoryId;
-		const tags = isSavings
-			? sql`case when 'transfer' = any(${transaction.tags}) then array['savings_transfer']::text[] else ${transaction.tags} end`
-			: sql`case when 'savings_transfer' = any(${transaction.tags}) then array['transfer']::text[] else ${transaction.tags} end`;
+		const tags = tagsAfterRecategorizeSql(lookup, categoryId);
 		const updated = await this.db
 			.update(transaction)
 			.set({ categoryId, categoryLocked: true, tags, updatedAt: new Date() })
@@ -251,6 +278,23 @@ export class TransactionsService {
 			.delete(transaction)
 			.where(and(eq(transaction.userId, userId), eq(transaction.id, id)));
 		return { success: true };
+	}
+
+	/** A picked merchant takes the logo it already has elsewhere; sync keeps the User's pick. */
+	private async merchantFields(
+		userId: string,
+		existing: typeof transaction.$inferSelect,
+		merchantName: string | null | undefined,
+	) {
+		const next = merchantName?.trim() || null;
+		if (merchantName === undefined || next === existing.merchantName) {
+			return {};
+		}
+		return {
+			merchantName: next,
+			merchantLogoUrl: next ? await this.merchants.logoFor(userId, next) : null,
+			merchantLocked: true,
+		};
 	}
 
 	private selectItems() {
@@ -336,16 +380,8 @@ function toListItem(row: ItemRow, betterCard: BetterCardFinder): TransactionList
 		category: row.category,
 		account: row.account ? { ...row.account, institutionLogo: row.institutionLogo } : null,
 		betterCard: betterCard(row.tx),
+		isRefund: row.tx.refundOfId !== null,
 	};
-}
-
-/** One transfer tag at most; Savings Transfer rows carry `savings_transfer`. */
-function normalizeTags(tags: string[], isSavingsCategory: boolean): string[] {
-	const isTransfer = tags.includes("transfer") || tags.includes("savings_transfer");
-	if (!isTransfer) {
-		return [];
-	}
-	return [isSavingsCategory ? "savings_transfer" : "transfer"];
 }
 
 function encodeCursor(date: string, id: string) {

@@ -2,8 +2,12 @@ import { type FormEvent, useState } from "react";
 import { AssignToFund } from "@/components/transactions/assign-to-fund";
 import { CategoryCombobox } from "@/components/transactions/category-combobox";
 import { CategoryIcon } from "@/components/transactions/category-icon";
+import { CreateRule } from "@/components/transactions/create-rule";
+import { MerchantCombobox } from "@/components/transactions/merchant-combobox";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { TransactionSplit } from "@/components/transactions/split/transaction-split";
+import { TransactionFacts } from "@/components/transactions/transaction-facts";
+import { TransactionRefund } from "@/components/transactions/transaction-refund";
 import { Amount } from "@/components/ui/amount";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,14 +120,13 @@ function EditForm({
 	const accounts = useAccounts();
 	const [categoryId, setCategoryId] = useState(transaction.category?.id ?? "");
 	const [notes, setNotes] = useState(transaction.notes ?? "");
-	const [isTransfer, setIsTransfer] = useState(transaction.tags.length > 0);
 	const [name, setName] = useState(transaction.name);
+	const [merchant, setMerchant] = useState(transaction.merchantName);
 	const [amount, setAmount] = useState(centsToMajorUnits(transaction.amount));
 	const [date, setDate] = useState(transaction.date);
 	const [bankAccountId, setBankAccountId] = useState(transaction.account?.id ?? "");
 	const [error, setError] = useState<string | null>(null);
 	const title = transaction.merchantName ?? transaction.name;
-	const wasTransfer = transaction.tags.length > 0;
 	// The ledger fields of a split part are fixed; unsplit to change them.
 	const canEditLedger = transaction.isManual && !transaction.split;
 
@@ -135,10 +138,10 @@ function EditForm({
 				id: transaction.id,
 				...(categoryId !== transaction.category?.id ? { categoryId } : {}),
 				notes: notes.trim() === "" ? null : notes,
-				...(isTransfer !== wasTransfer ? { tags: isTransfer ? ["transfer"] : [] } : {}),
+				...(name.trim() !== transaction.name ? { name } : {}),
+				...(merchant !== transaction.merchantName ? { merchantName: merchant } : {}),
 				...(canEditLedger
 					? {
-							name,
 							amount: majorUnitsToCents(amount),
 							date,
 							bankAccountId: bankAccountId === "" ? null : bankAccountId,
@@ -176,18 +179,28 @@ function EditForm({
 					{transaction.name !== title ? ` · ${transaction.name}` : ""}
 				</p>
 			</SheetHeader>
+			<TransactionFacts transaction={transaction} />
 			<form className="flex flex-col gap-3 px-4" onSubmit={onSubmit}>
+				<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-name">
+					Name
+					<Input
+						id="transaction-name"
+						value={name}
+						onChange={(event) => setName(event.target.value)}
+						required
+					/>
+				</label>
+				<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-merchant">
+					Merchant
+					<MerchantCombobox
+						id="transaction-merchant"
+						value={merchant}
+						onValueChange={setMerchant}
+						className={fieldClass}
+					/>
+				</label>
 				{canEditLedger ? (
 					<>
-						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-name">
-							Name
-							<Input
-								id="transaction-name"
-								value={name}
-								onChange={(event) => setName(event.target.value)}
-								required
-							/>
-						</label>
 						<label className="flex flex-col gap-1 text-sm" htmlFor="transaction-amount">
 							Amount (negative for spend)
 							<Input
@@ -245,16 +258,9 @@ function EditForm({
 						onChange={(event) => setNotes(event.target.value)}
 					/>
 				</label>
-				<label className="flex items-center gap-2 text-sm">
-					<input
-						type="checkbox"
-						checked={isTransfer}
-						onChange={(event) => setIsTransfer(event.target.checked)}
-					/>
-					This is a transfer
-				</label>
 				<p className="text-xs text-muted-foreground">
-					Transfers move money between your own accounts and are left out of income and spending.
+					Pick a transfer category for money moving between your own accounts: it is left out of
+					income and spending.
 				</p>
 				{error ? (
 					<p role="alert" className="text-sm text-negative">
@@ -266,6 +272,8 @@ function EditForm({
 				</Button>
 			</form>
 			<TransactionSplit transaction={transaction} />
+			<TransactionRefund transaction={transaction} onOpen={onOpenSimilar} />
+			<CreateRule transaction={transaction} />
 			<AssignToFund transaction={transaction} />
 			{transaction.similar.length > 0 ? (
 				<section aria-labelledby="similar-heading" className="flex flex-col gap-2 px-4">

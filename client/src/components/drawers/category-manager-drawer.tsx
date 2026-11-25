@@ -27,6 +27,12 @@ const BUDGET_GROUPS: { key: BudgetGroup; label: string }[] = [
 	{ key: "non_monthly", label: "Non-monthly" },
 ];
 
+const KIND_SECTIONS: { kind: CategoryKind; label: string }[] = [
+	{ kind: "expense", label: "Expense" },
+	{ kind: "income", label: "Income" },
+	{ kind: "transfer", label: "Transfer" },
+];
+
 export function CategoryManagerDrawer({ onClose }: { onClose: () => void }) {
 	const categories = useCategories();
 	const remove = useDeleteCategory();
@@ -42,7 +48,8 @@ export function CategoryManagerDrawer({ onClose }: { onClose: () => void }) {
 					<SheetHeader>
 						<SheetTitle>Categories</SheetTitle>
 						<SheetDescription>
-							Deleting a Category moves its transactions to Uncategorized.
+							Deleting a Category moves its transactions to Uncategorized. Transfer categories mark
+							money moving between your own accounts: it is not income or spending.
 						</SheetDescription>
 					</SheetHeader>
 					<div className="flex flex-col gap-4 px-4 pb-6">
@@ -57,10 +64,10 @@ export function CategoryManagerDrawer({ onClose }: { onClose: () => void }) {
 								New category
 							</Button>
 						)}
-						{(["expense", "income"] as const).map((kind) => (
+						{KIND_SECTIONS.map(({ kind, label }) => (
 							<section key={kind} aria-labelledby={`categories-${kind}`}>
-								<h3 id={`categories-${kind}`} className="mb-1 text-sm font-medium capitalize">
-									{kind}
+								<h3 id={`categories-${kind}`} className="mb-1 text-sm font-medium">
+									{label}
 								</h3>
 								<ul className="flex flex-col">
 									{rows
@@ -129,7 +136,7 @@ function CategoryForm({ category, onDone }: { category: Category | null; onDone:
 			color,
 			icon,
 			kind,
-			budgetGroup: kind === "income" ? null : budgetGroup,
+			budgetGroup: kind === "expense" ? budgetGroup : null,
 		};
 		try {
 			if (category) {
@@ -189,6 +196,7 @@ function CategoryForm({ category, onDone }: { category: Category | null; onDone:
 					>
 						<option value="expense">Expense</option>
 						<option value="income">Income</option>
+						<option value="transfer">Transfer</option>
 					</select>
 				</label>
 			)}

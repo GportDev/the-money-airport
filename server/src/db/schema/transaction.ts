@@ -51,6 +51,13 @@ export const transaction = pgTable(
 		categoryLocked: boolean("category_locked").notNull().default(false),
 		// True once the User sets or clears the transfer tag by hand; pairing leaves it alone.
 		tagsLocked: boolean("tags_locked").notNull().default(false),
+		// True once the User renames it or picks its merchant; sync keeps the User's text.
+		nameLocked: boolean("name_locked").notNull().default(false),
+		merchantLocked: boolean("merchant_locked").notNull().default(false),
+		// On a refund: the expense it gives Money back for.
+		refundOfId: uuid("refund_of_id").references((): AnyPgColumn => transaction.id, {
+			onDelete: "set null",
+		}),
 		isManual: boolean("is_manual").notNull().default(false),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -60,6 +67,7 @@ export const transaction = pgTable(
 		index("transaction_user_category_idx").on(table.userId, table.categoryId),
 		index("transaction_account_date_idx").on(table.bankAccountId, table.date),
 		index("transaction_split_parent_idx").on(table.splitParentId),
+		index("transaction_refund_of_idx").on(table.refundOfId),
 		unique("transaction_user_plaid_id").on(table.userId, table.plaidTransactionId),
 	],
 );

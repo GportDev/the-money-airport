@@ -3,11 +3,15 @@ import {
 	bulkCategorize,
 	createTransaction,
 	deleteTransaction,
+	getMerchants,
+	getRefundCandidates,
 	getTransaction,
 	getTransactions,
+	linkRefund,
 	splitTransaction,
 	type TransactionCreateInput,
 	type TransactionUpdateInput,
+	unlinkRefund,
 	unsplitTransaction,
 	updateTransaction,
 } from "@/api/transactions";
@@ -73,4 +77,31 @@ export function useSplitTransaction() {
 
 export function useUnsplitTransaction() {
 	return useTransactionMutation((id: string) => unsplitTransaction(id));
+}
+
+export function useMerchants() {
+	return useQuery({
+		queryKey: ["transactions", "merchants"],
+		queryFn: getMerchants,
+		staleTime: 5 * 60 * 1000,
+	});
+}
+
+export function useRefundCandidates(id: string, enabled: boolean) {
+	return useQuery({
+		queryKey: ["transactions", "refund-candidates", id],
+		queryFn: () => getRefundCandidates(id),
+		enabled,
+		staleTime: 5 * 60 * 1000,
+	});
+}
+
+export function useLinkRefund() {
+	return useTransactionMutation(({ id, originalId }: { id: string; originalId: string }) =>
+		linkRefund(id, originalId),
+	);
+}
+
+export function useUnlinkRefund() {
+	return useTransactionMutation((id: string) => unlinkRefund(id));
 }

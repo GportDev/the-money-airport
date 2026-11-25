@@ -13,6 +13,8 @@ import {
 } from "@nestjs/common";
 import { z } from "zod";
 import { CurrentUser } from "../auth/current-user.decorator";
+import { TransactionMerchantsService } from "./transaction-merchants.service";
+import { TransactionRefundsService } from "./transaction-refunds.service";
 import { TransactionSplitsService } from "./transaction-splits.service";
 import { TransactionsService } from "./transactions.service";
 import { TRANSFER_TAGS } from "./transactions.types";
@@ -53,10 +55,13 @@ const updateBody = z.object({
 	notes: z.string().max(2000).nullable().optional(),
 	tags: z.array(z.enum(TRANSFER_TAGS)).max(1).optional(),
 	name: z.string().trim().min(1).max(200).optional(),
+	merchantName: z.string().trim().max(200).nullable().optional(),
 	amount: z.number().int().optional(),
 	date: isoDate.optional(),
 	bankAccountId: z.string().uuid().nullable().optional(),
 });
+
+const refundBody = z.object({ originalId: z.string().uuid() });
 
 const MAX_SPLIT_PARTS = 50;
 
@@ -77,6 +82,8 @@ export class TransactionsController {
 	constructor(
 		private readonly transactions: TransactionsService,
 		private readonly splits: TransactionSplitsService,
+		private readonly refunds: TransactionRefundsService,
+		private readonly merchants: TransactionMerchantsService,
 	) {}
 
 	@Get()
@@ -109,6 +116,11 @@ export class TransactionsController {
 				parsed.data.categoryId,
 			),
 		};
+	}
+
+	@Get("merchants")
+	async merchantList(@CurrentUser() user: { id: string }) {
+		return { data: await this.merchants.list(user.id) };
 	}
 
 	@Get(":id")
@@ -156,6 +168,35 @@ export class TransactionsController {
 	async unsplit(@CurrentUser() user: { id: string }, @Param("id", ParseUUIDPipe) id: string) {
 		const parentId = await this.splits.unsplit(user.id, id);
 		return { data: await this.transactions.get(user.id, parentId) };
+	}
+
+	@Get(":id/refund-candidates")
+	async refundCandidates(
+		@CurrentUser() user: { id: string },
+		@Param("id", ParseUUIDPipe) id: string,
+	) {
+		const ids = await this.refunds.candidateIds(user.id, id);
+		return { data: await this.transactions.itemsByIds(user.id, ids) };
+	}
+
+	@Put(":id/refund")
+	async linkRefund(
+		@CurrentUser() user: { id: string },
+		@Param("id", ParseUUIDPipe) id: string,
+		@Body() body: unknown,
+	) {
+		const parsed = refundBody.safeParse(body);
+		if (!parsed.success) {
+			throw new BadRequestException(parsed.error.message);
+		}
+		await this.refunds.link(user.id, id, parsed.data.originalId);
+		return { data: await this.transactions.get(user.id, id) };
+	}
+
+	@Delete(":id/refund")
+	async unlinkRefund(@CurrentUser() user: { id: string }, @Param("id", ParseUUIDPipe) id: string) {
+		await this.refunds.unlink(user.id, id);
+		return { data: await this.transactions.get(user.id, id) };
 	}
 
 	@Delete(":id")

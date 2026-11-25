@@ -172,6 +172,8 @@ function childRow(parent: TransactionRow, part: SplitPartInput, createdAt: Date)
 		pending: parent.pending,
 		tags: parent.tags,
 		tagsLocked: parent.tagsLocked,
+		nameLocked: parent.nameLocked,
+		merchantLocked: parent.merchantLocked,
 		categoryLocked: true,
 		// Parts are listed by `createdAt`, so each one gets its own instant in the order given.
 		createdAt,

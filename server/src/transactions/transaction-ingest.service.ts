@@ -7,6 +7,7 @@ import { DATABASE } from "../db/db.module";
 import { bankAccount } from "../db/schema/bank-account";
 import { transaction } from "../db/schema/transaction";
 import type { PlaidTransactionSnapshot, PlaidTransactionsPage } from "../plaid/plaid.port";
+import { TransactionRulesService } from "./transaction-rules.service";
 
 const TRANSFER_PFC = ["TRANSFER_IN", "TRANSFER_OUT", "LOAN_PAYMENTS"];
 const PAIR_WINDOW_DAYS = 3;
@@ -18,6 +19,7 @@ export class TransactionIngestService {
 	constructor(
 		@Inject(DATABASE) private readonly db: PostgresJsDatabase,
 		private readonly categories: CategoriesService,
+		private readonly rules: TransactionRulesService,
 	) {}
 
 	/**
@@ -37,10 +39,20 @@ export class TransactionIngestService {
 			accounts.filter((row) => row.plaidAccountId).map((row) => [row.plaidAccountId, row]),
 		);
 		const lookup = await this.categories.lookup(userId);
-		const categoryFor = (tx: PlaidTransactionSnapshot) => {
+		const ruleFor = await this.rules.matcher(userId);
+		const categoryFor = (
+			tx: PlaidTransactionSnapshot,
+			shown: { name: string; merchantName: string | null },
+		) => {
+			const ruled = ruleFor({ ...shown, amount: tx.amount });
+			if (ruled) {
+				return ruled;
+			}
 			const name = categoryNameForPlaid(tx.pfcPrimary, tx.pfcDetailed);
 			return (name && lookup.byName.get(name.toLowerCase())?.id) || lookup.uncategorized.id;
 		};
+		const transferTagsFor = (categoryId: string) =>
+			lookup.byId.get(categoryId)?.kind === "transfer" ? { tags: ["transfer"] } : {};
 
 		const incoming = [...page.added, ...page.modified];
 		const ids = new Set<string>();
@@ -96,15 +108,29 @@ export class TransactionIngestService {
 					updatedAt: new Date(),
 				};
 				if (current) {
+					// The User's rename and merchant pick survive every sync.
+					if (current.nameLocked) {
+						fields.name = current.name;
+					}
+					if (current.merchantLocked) {
+						fields.merchantName = current.merchantName;
+						fields.merchantLogoUrl = current.merchantLogoUrl;
+					}
 					// A split parent keeps only its own part; its child parts hold the rest.
 					const childTotal = splitTotals.get(current.id);
 					const amount = item.amount - (childTotal ?? 0);
+					const categoryId = categoryFor(item, fields);
 					await tx
 						.update(transaction)
 						.set({
 							...fields,
 							amount,
-							...(current.categoryLocked ? {} : { categoryId: categoryFor(item) }),
+							...(current.categoryLocked
+								? {}
+								: {
+										categoryId,
+										...(current.tagsLocked ? {} : transferTagsFor(categoryId)),
+									}),
 						})
 						.where(eq(transaction.id, current.id));
 					if (childTotal !== undefined) {
@@ -127,9 +153,10 @@ export class TransactionIngestService {
 					existing.set(item.plaidTransactionId, { ...current, ...fields, amount });
 					result.modified += 1;
 				} else {
+					const categoryId = categoryFor(item, fields);
 					const [created] = await tx
 						.insert(transaction)
-						.values({ ...fields, userId, categoryId: categoryFor(item) })
+						.values({ ...fields, userId, categoryId, ...transferTagsFor(categoryId) })
 						.onConflictDoNothing({
 							target: [transaction.userId, transaction.plaidTransactionId],
 						})

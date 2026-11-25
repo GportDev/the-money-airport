@@ -1,8 +1,10 @@
 import { api, apiUrl } from "@/api/client";
 import type {
+	Merchant,
 	SplitPartInput,
 	TransactionDetail,
 	TransactionFilters,
+	TransactionListItem,
 	TransactionPage,
 	TransferTag,
 } from "@/types";
@@ -55,6 +57,7 @@ export type TransactionUpdateInput = {
 	notes?: string | null;
 	tags?: TransferTag[];
 	name?: string;
+	merchantName?: string | null;
 	amount?: number;
 	date?: string;
 	bankAccountId?: string | null;
@@ -87,4 +90,23 @@ export function splitTransaction(id: string, parts: SplitPartInput[]) {
 
 export function unsplitTransaction(id: string) {
 	return api<TransactionDetail>(`/transactions/${id}/split`, { method: "DELETE" });
+}
+
+export function getMerchants() {
+	return api<Merchant[]>("/transactions/merchants");
+}
+
+export function getRefundCandidates(id: string) {
+	return api<TransactionListItem[]>(`/transactions/${id}/refund-candidates`);
+}
+
+export function linkRefund(id: string, originalId: string) {
+	return api<TransactionDetail>(`/transactions/${id}/refund`, {
+		method: "PUT",
+		body: JSON.stringify({ originalId }),
+	});
+}
+
+export function unlinkRefund(id: string) {
+	return api<TransactionDetail>(`/transactions/${id}/refund`, { method: "DELETE" });
 }

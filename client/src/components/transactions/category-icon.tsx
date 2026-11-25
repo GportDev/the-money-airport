@@ -1,4 +1,5 @@
 import {
+	ArrowLeftRight,
 	Baby,
 	Briefcase,
 	Bus,
@@ -66,6 +67,7 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
 	landmark: Landmark,
 	briefcase: Briefcase,
 	receipt: Receipt,
+	"arrow-left-right": ArrowLeftRight,
 };
 
 export function CategoryIcon({

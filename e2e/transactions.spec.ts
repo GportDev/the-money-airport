@@ -240,10 +240,14 @@ test("manual transactions can be added, edited, and deleted; Plaid rows keep the
 	signedExpect(editedBody.data.tags).toEqual(["transfer"]);
 
 	const plaidRow = byName(await listAll(page), "Joe Coffee");
-	const rename = await page.request.patch(`${API}/transactions/${plaidRow.id}`, {
-		data: { name: "Not allowed" },
+	const reprice = await page.request.patch(`${API}/transactions/${plaidRow.id}`, {
+		data: { amount: -100 },
 	});
-	signedExpect(rename.status()).toBe(400);
+	signedExpect(reprice.status()).toBe(400);
+	const rename = await page.request.patch(`${API}/transactions/${plaidRow.id}`, {
+		data: { name: "Morning coffee" },
+	});
+	signedExpect(rename.status()).toBe(200);
 	signedExpect((await page.request.delete(`${API}/transactions/${plaidRow.id}`)).status()).toBe(
 		400,
 	);

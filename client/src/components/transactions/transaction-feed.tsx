@@ -195,6 +195,7 @@ function FeedRow({
 		title,
 		item.pending ? "Pending" : null,
 		item.isSplit ? "Split" : null,
+		item.isRefund ? "Refund" : null,
 		isTransfer(item) ? "Transfer" : null,
 		item.betterCard ? `Better with ${item.betterCard.name}` : null,
 		item.category?.name,
@@ -240,6 +241,11 @@ function FeedRow({
 				{item.isSplit ? (
 					<span className="shrink-0 rounded-sm border border-border px-1.5 text-xs text-muted-foreground">
 						Split
+					</span>
+				) : null}
+				{item.isRefund ? (
+					<span className="shrink-0 rounded-sm border border-border px-1.5 text-xs text-muted-foreground">
+						Refund
 					</span>
 				) : null}
 				{isTransfer(item) ? (

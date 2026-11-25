@@ -12,8 +12,9 @@ import {
 import { z } from "zod";
 import { CurrentUser } from "../auth/current-user.decorator";
 import { CategoriesService } from "./categories.service";
+import { CATEGORY_KINDS } from "./category-defaults";
 
-const kind = z.enum(["income", "expense"]);
+const kind = z.enum(CATEGORY_KINDS);
 const budgetGroup = z.enum(["fixed", "flexible", "non_monthly"]).nullable();
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const icon = z.string().min(1).max(40);

@@ -1,8 +1,10 @@
-export type CategoryKind = "income" | "expense";
+export const CATEGORY_KINDS = ["income", "expense", "transfer"] as const;
+export type CategoryKind = (typeof CATEGORY_KINDS)[number];
 export type BudgetGroup = "fixed" | "flexible" | "non_monthly";
 
 export const UNCATEGORIZED = "Uncategorized";
 export const SAVINGS_TRANSFER = "Savings Transfer";
+export const TRANSFER = "Transfer";
 
 type Seed = {
 	name: string;
@@ -12,6 +14,11 @@ type Seed = {
 	budgetGroup: BudgetGroup | null;
 	isUncategorized?: boolean;
 };
+
+/** Only expense Categories sit in a budget group. */
+export function budgetGroupFor(kind: CategoryKind, group: BudgetGroup | null | undefined) {
+	return kind === "expense" ? (group ?? "flexible") : null;
+}
 
 export const DEFAULT_CATEGORIES: Seed[] = [
 	{ name: "Housing", icon: "house", color: "#8B5CF6", kind: "expense", budgetGroup: "fixed" },
@@ -77,6 +84,13 @@ export const DEFAULT_CATEGORIES: Seed[] = [
 		budgetGroup: "non_monthly",
 	},
 	{ name: "Salary", icon: "briefcase", color: "#16A34A", kind: "income", budgetGroup: null },
+	{
+		name: TRANSFER,
+		icon: "arrow-left-right",
+		color: "#64748B",
+		kind: "transfer",
+		budgetGroup: null,
+	},
 	{
 		name: UNCATEGORIZED,
 		icon: "circle-question-mark",
