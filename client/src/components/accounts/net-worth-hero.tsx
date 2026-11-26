@@ -43,7 +43,7 @@ export function NetWorthHero({
 					/>
 				) : null}
 			</div>
-			<p className="mt-2 text-3xl font-semibold">
+			<p className="mt-2 text-[32px] leading-tight font-normal tracking-[-0.03em]">
 				<Amount>{formatMoney(current, netWorth?.baseCurrency ?? "USD")}</Amount>
 			</p>
 			<div className="mt-4 h-24">

@@ -220,7 +220,7 @@ test("Cash Flow page: KPI cards, month navigator, scope, chart interval, and fee
 	await signedExpect(feed.getByRole("button", { name: /Groceries/ })).toBeVisible();
 	await signedExpect(feed.getByRole("button", { name: /April coffee/ })).toHaveCount(0);
 
-	await page.getByRole("button", { name: "Weekly" }).click();
+	await page.getByRole("radio", { name: "Weekly" }).click();
 	await signedExpect(page).toHaveURL(/view=weekly/);
 	await signedExpect(
 		page.getByRole("figure", { name: "Weekly income and expenses" }),

@@ -7,6 +7,7 @@ import { RecurringUpcoming } from "@/components/dashboard/recurring-upcoming";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
+import { CardInfo } from "@/components/ui/card";
 import { ChartGradient } from "@/components/ui/chart-gradient";
 import { ChartTooltip } from "@/components/ui/chart-tooltip";
 import { SelectField } from "@/components/ui/select-field";
@@ -30,6 +31,14 @@ const NET_WORTH_RANGES: { value: NetWorthRange; label: string }[] = [
 	{ value: "1y", label: "1 year" },
 	{ value: "ytd", label: "YTD" },
 ];
+
+const WIDGET_INFO: Record<DashboardWidgetId, string> = {
+	budget: "Spent so far this month against each budget group's plan.",
+	net_worth: "Assets minus liabilities in your base currency. Hidden accounts are left out.",
+	spending: "Spending this month, day by day, against last month. Transfers are left out.",
+	transactions: "Your latest transactions across every account.",
+	recurring: "Bills and subscriptions coming up next.",
+};
 
 const WIDGET_LINKS: Record<DashboardWidgetId, string> = {
 	budget: "/budget",
@@ -58,15 +67,21 @@ function WidgetCard({
 		>
 			<div className="flex items-start justify-between gap-3">
 				<div className="min-w-0">
-					<h2 id={headingId} className="text-sm font-medium">
-						<Link
-							to={WIDGET_LINKS[id]}
-							className="inline-flex items-center gap-0.5 text-muted-foreground hover:text-foreground"
-						>
-							{WIDGET_LABELS[id]}
-							<ChevronRight aria-hidden className="size-4" />
-						</Link>
-					</h2>
+					<div className="flex items-center gap-1">
+						<h2 id={headingId} className="text-[15px] font-semibold">
+							<Link
+								to={WIDGET_LINKS[id]}
+								className="group inline-flex items-center gap-0.5 rounded-md transition-colors hover:text-foreground/80"
+							>
+								{WIDGET_LABELS[id]}
+								<ChevronRight
+									aria-hidden
+									className="size-4 -translate-x-1 text-muted-foreground opacity-0 transition-[opacity,translate] duration-150 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+								/>
+							</Link>
+						</h2>
+						<CardInfo label={`About ${WIDGET_LABELS[id]}`}>{WIDGET_INFO[id]}</CardInfo>
+					</div>
 					{subtitle ? <div className="mt-1">{subtitle}</div> : null}
 				</div>
 				{action}
@@ -141,7 +156,7 @@ export function NetWorthWidget({
 			id="net_worth"
 			subtitle={
 				<>
-					<p className="text-2xl font-semibold">
+					<p className="text-[28px] leading-tight font-normal tracking-[-0.03em]">
 						<Amount>{formatMoney(netWorth.current, currency)}</Amount>
 					</p>
 					<p
@@ -225,7 +240,7 @@ export function SpendingWidget({
 		<WidgetCard
 			id="spending"
 			subtitle={
-				<p className="text-2xl font-semibold">
+				<p className="text-[28px] leading-tight font-normal tracking-[-0.03em]">
 					<Amount>{formatMoney(spending.total, currency)}</Amount>
 				</p>
 			}

@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
-import { Collapsible } from "radix-ui";
 import { Amount } from "@/components/ui/amount";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatMoney } from "@/lib/format";
 import type { BankAccount } from "@/types";
 
@@ -12,16 +12,16 @@ type Props = {
 export function NotInPlan({ accounts }: Props) {
 	if (accounts.length === 0) return null;
 	return (
-		<Collapsible.Root asChild>
+		<Collapsible asChild>
 			<section aria-label="Not in plan" className="rounded-xl border border-border bg-card">
-				<Collapsible.Trigger className="group flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium row-hover">
+				<CollapsibleTrigger className="group flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium row-hover">
 					<ChevronDown
 						aria-hidden
 						className="size-4 transition-transform group-data-[state=closed]:-rotate-90"
 					/>
 					Not in plan ({accounts.length})
-				</Collapsible.Trigger>
-				<Collapsible.Content>
+				</CollapsibleTrigger>
+				<CollapsibleContent>
 					<ul className="divide-y divide-border border-t border-border">
 						{accounts.map(({ account }) => (
 							<li key={account.id} className="flex justify-between px-3 py-2 text-sm">
@@ -30,8 +30,8 @@ export function NotInPlan({ accounts }: Props) {
 							</li>
 						))}
 					</ul>
-				</Collapsible.Content>
+				</CollapsibleContent>
 			</section>
-		</Collapsible.Root>
+		</Collapsible>
 	);
 }

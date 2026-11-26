@@ -30,6 +30,7 @@ export function ReportRangePicker({ preset, range, onPresetChange, onCustomChang
 					<Input
 						id="report-from"
 						type="date"
+						className="h-8"
 						value={range.dateFrom}
 						max={range.dateTo}
 						onChange={(event) =>
@@ -43,6 +44,7 @@ export function ReportRangePicker({ preset, range, onPresetChange, onCustomChang
 					<Input
 						id="report-to"
 						type="date"
+						className="h-8"
 						value={range.dateTo}
 						min={range.dateFrom}
 						onChange={(event) =>

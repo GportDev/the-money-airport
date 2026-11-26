@@ -10,6 +10,7 @@ import { ReportRangePicker } from "@/components/reports/report-range-picker";
 import { ReportsState } from "@/components/reports/reports-state";
 import { SpendingByCategoryCard } from "@/components/reports/spending-by-category-card";
 import { TopCategoriesCard } from "@/components/reports/top-categories-card";
+import { Toolbar } from "@/components/ui/toolbar";
 import { useAccounts } from "@/hooks/use-accounts";
 import { formatLongDate } from "@/lib/format";
 import {
@@ -77,14 +78,15 @@ export function ReportsPage() {
 
 	return (
 		<>
-			<PageHeader title="Reports">
+			<PageHeader title="Reports" />
+			<Toolbar aria-label="Report range">
 				<ReportRangePicker
 					preset={preset}
 					range={range}
 					onPresetChange={selectPreset}
 					onCustomChange={selectCustom}
 				/>
-			</PageHeader>
+			</Toolbar>
 
 			<ReportsState accounts={accounts}>
 				<div className="grid gap-4 lg:grid-cols-2">

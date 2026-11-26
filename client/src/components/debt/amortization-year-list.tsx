@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
-import { Collapsible } from "radix-ui";
 import { Amount } from "@/components/ui/amount";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatMoney } from "@/lib/format";
 import type { AmortizationRow } from "@/types";
 
@@ -23,8 +23,8 @@ export function AmortizationYearList({ schedule, currency }: Props) {
 	return (
 		<div className="flex flex-col gap-2">
 			{byYear(schedule).map(([year, rows]) => (
-				<Collapsible.Root key={year} className="rounded-lg border border-border">
-					<Collapsible.Trigger className="group flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium row-hover">
+				<Collapsible key={year} className="rounded-lg border border-border">
+					<CollapsibleTrigger className="group flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium row-hover">
 						<ChevronDown
 							aria-hidden
 							className="size-4 transition-transform group-data-[state=closed]:-rotate-90"
@@ -33,8 +33,8 @@ export function AmortizationYearList({ schedule, currency }: Props) {
 						<span className="ml-auto text-muted-foreground">
 							ends <Amount>{formatMoney(rows.at(-1)?.endingBalance ?? 0, currency)}</Amount>
 						</span>
-					</Collapsible.Trigger>
-					<Collapsible.Content>
+					</CollapsibleTrigger>
+					<CollapsibleContent>
 						<table className="w-full border-t border-border text-xs">
 							<thead className="text-muted-foreground">
 								<tr>
@@ -61,8 +61,8 @@ export function AmortizationYearList({ schedule, currency }: Props) {
 								))}
 							</tbody>
 						</table>
-					</Collapsible.Content>
-				</Collapsible.Root>
+					</CollapsibleContent>
+				</Collapsible>
 			))}
 		</div>
 	);

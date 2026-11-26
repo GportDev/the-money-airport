@@ -21,6 +21,7 @@ export function SpendingByCategoryCard({ range, onSelect }: Props) {
 		<ReportCard
 			onRetry={() => void spending.refetch()}
 			title="Spending by category"
+			info="How spending in this range splits across categories. Transfers are left out."
 			status={reportStatus(spending, (report) => report.categories.length === 0)}
 			omittedCurrencies={spending.data?.omittedCurrencies}
 			emptyMessage="No spending in this range."

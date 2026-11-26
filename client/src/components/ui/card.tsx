@@ -1,4 +1,6 @@
+import { Info } from "lucide-react";
 import type * as React from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
@@ -31,7 +33,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="card-title"
-			className={cn("leading-none font-semibold", className)}
+			className={cn("text-[15px] leading-none font-semibold", className)}
 			{...props}
 		/>
 	);
@@ -44,6 +46,35 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
 			className={cn("text-sm text-muted-foreground", className)}
 			{...props}
 		/>
+	);
+}
+
+/** Muted inline count after a title, e.g. "4 keyword clusters". */
+function CardCount({ className, ...props }: React.ComponentProps<"span">) {
+	return (
+		<span
+			data-slot="card-count"
+			className={cn("text-[13px] font-normal text-muted-foreground tabular-nums", className)}
+			{...props}
+		/>
+	);
+}
+
+/** Small info icon next to a title; the tooltip says what the number means in one sentence. */
+function CardInfo({ children, label }: { children: React.ReactNode; label: string }) {
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<button
+					type="button"
+					aria-label={label}
+					className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:text-foreground"
+				>
+					<Info aria-hidden className="size-3.5" />
+				</button>
+			</TooltipTrigger>
+			<TooltipContent className="max-w-64 font-normal">{children}</TooltipContent>
+		</Tooltip>
 	);
 }
 
@@ -71,4 +102,14 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+export {
+	Card,
+	CardHeader,
+	CardFooter,
+	CardTitle,
+	CardAction,
+	CardDescription,
+	CardContent,
+	CardCount,
+	CardInfo,
+};

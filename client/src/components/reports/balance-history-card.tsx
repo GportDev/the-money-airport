@@ -54,6 +54,7 @@ export function BalanceHistoryCard({ range }: { range: ReportRange }) {
 		<ReportCard
 			onRetry={() => void history.refetch()}
 			title="Account balances over time"
+			info="End-of-day balance of each account across the range."
 			status={reportStatus(history, (data) => data.points.length === 0)}
 			omittedCurrencies={history.data?.omittedCurrencies}
 			emptyMessage="No balance history in this range."

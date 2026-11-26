@@ -1,8 +1,8 @@
 import { ChevronDown, Plus } from "lucide-react";
-import { Collapsible } from "radix-ui";
 import { useId } from "react";
 import { ForecastRowItem } from "@/components/forecast/forecast-row-item";
 import { OneOffItem } from "@/components/forecast/one-off-item";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { ForecastRow, ForecastSection, OneOff } from "@/types";
 
 type Props = {
@@ -30,16 +30,16 @@ export function ForecastSectionCard({
 	const headingId = useId();
 	const isEmpty = section.rows.length === 0 && section.oneOffs.length === 0;
 	return (
-		<Collapsible.Root defaultOpen asChild>
+		<Collapsible defaultOpen asChild>
 			<section aria-labelledby={headingId} className="rounded-xl border border-border bg-card">
 				<div className="flex items-center gap-2 px-3 py-2">
-					<Collapsible.Trigger className="group flex flex-1 items-center gap-2 rounded-md py-1 text-left text-sm font-medium transition-colors hover:text-foreground/80">
+					<CollapsibleTrigger className="group flex flex-1 items-center gap-2 rounded-md py-1 text-left text-sm font-medium transition-colors hover:text-foreground/80">
 						<ChevronDown
 							aria-hidden
 							className="size-4 transition-transform group-data-[state=closed]:-rotate-90"
 						/>
 						<h2 id={headingId}>{section.name}</h2>
-					</Collapsible.Trigger>
+					</CollapsibleTrigger>
 					<button
 						type="button"
 						aria-label={`Add item to ${section.name}`}
@@ -59,7 +59,7 @@ export function ForecastSectionCard({
 						One-off
 					</button>
 				</div>
-				<Collapsible.Content>
+				<CollapsibleContent>
 					{isEmpty ? (
 						<p className="border-t border-border px-3 py-3 text-sm text-muted-foreground">
 							Nothing planned yet.
@@ -86,8 +86,8 @@ export function ForecastSectionCard({
 							))}
 						</ul>
 					)}
-				</Collapsible.Content>
+				</CollapsibleContent>
 			</section>
-		</Collapsible.Root>
+		</Collapsible>
 	);
 }

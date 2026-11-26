@@ -5,6 +5,7 @@ import { ManualStatementForm } from "@/components/accounts/manual-statement-form
 import { StatementPeriods } from "@/components/accounts/statement-periods";
 import { Amount } from "@/components/ui/amount";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatMoney } from "@/lib/format";
 import type { BankAccount, CardSummary } from "@/types";
 
@@ -46,18 +47,20 @@ export function CreditSection({ account, card }: Props) {
 				</div>
 			</dl>
 			<CardTermsForm key={account.aprBps ?? "none"} account={account} card={card} />
-			<Button
-				variant="outline"
-				type="button"
-				aria-expanded={isStatementFormOpen}
-				onClick={() => setStatementFormOpen((value) => !value)}
-				className="self-start"
+			<Collapsible
+				open={isStatementFormOpen}
+				onOpenChange={setStatementFormOpen}
+				className="flex flex-col gap-4"
 			>
-				+ Statement
-			</Button>
-			{isStatementFormOpen ? (
-				<ManualStatementForm accountId={account.id} onDone={() => setStatementFormOpen(false)} />
-			) : null}
+				<CollapsibleTrigger asChild>
+					<Button variant="outline" type="button" className="self-start">
+						+ Statement
+					</Button>
+				</CollapsibleTrigger>
+				<CollapsibleContent>
+					<ManualStatementForm accountId={account.id} onDone={() => setStatementFormOpen(false)} />
+				</CollapsibleContent>
+			</Collapsible>
 			<StatementPeriods accountId={account.id} currency={currency} />
 		</section>
 	);

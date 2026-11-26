@@ -1,7 +1,9 @@
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { Sparkline } from "@/components/accounts/sparkline";
+import { AccountRow } from "@/components/accounts/account-row";
 import { Amount } from "@/components/ui/amount";
-import { formatMoney, formatSyncedAt } from "@/lib/format";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { formatMoney } from "@/lib/format";
 import { type BankAccount, DISPLAY_GROUPS, type GroupSummary } from "@/types";
 
 export function AccountGroups({
@@ -25,92 +27,56 @@ export function AccountGroups({
 				const rows = accounts.filter((account) => account.displayGroup === group.key);
 				const headingId = `group-${group.key}`;
 				const summary = groups.find((item) => item.group === group.key);
-				const expanded = open[group.key] !== false;
 				const change = summary?.change ?? 0;
+				const largest = Math.max(0, ...rows.map((account) => Math.abs(account.currentBalance)));
 				return (
-					<section key={group.key} aria-labelledby={headingId}>
-						<div className="flex items-center justify-between gap-2 px-3">
-							<h2 id={headingId} className="text-sm font-semibold">
-								<button
-									type="button"
-									className="text-left underline-offset-4 hover:underline"
-									aria-expanded={expanded}
-									onClick={() => setOpen((current) => ({ ...current, [group.key]: !expanded }))}
-								>
-									{group.label}
-								</button>
-							</h2>
-							<span className="flex items-center gap-2 text-sm text-muted-foreground">
-								<Amount>{formatMoney(summary?.total ?? 0, baseCurrency)}</Amount>
-								{change !== 0 ? (
-									<Amount>
-										{change > 0 ? "+" : ""}
-										{formatMoney(change, baseCurrency)}
-									</Amount>
-								) : null}
-							</span>
-						</div>
-						{expanded ? (
-							rows.length === 0 ? (
-								<p className="text-sm text-muted-foreground">None</p>
-							) : (
-								<ul className="mt-2 flex flex-col gap-2">
-									{rows.map((account) => (
-										<li key={account.id}>
-											<button
-												className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-foreground/5 sm:grid-cols-[minmax(0,1fr)_3rem_4rem_8rem]"
-												type="button"
-												onClick={() => onOpen(account)}
-											>
-												<span className="flex min-w-0 items-center gap-2">
-													{account.institutionLogo ? (
-														<img
-															src={`data:image/png;base64,${account.institutionLogo}`}
-															alt=""
-															className="size-6 rounded-sm"
-														/>
-													) : null}
-													<span className="min-w-0">
-														<span className="block truncate">
-															{account.institutionName
-																? `${account.institutionName} · ${account.name}`
-																: account.name}
-															{account.mask ? ` · ${account.mask}` : ""}
-															{account.isHidden ? " (hidden)" : ""}
-														</span>
-														{account.lastSyncedAt ? (
-															<span className="text-xs text-muted-foreground">
-																{formatSyncedAt(account.lastSyncedAt)}
-															</span>
-														) : null}
-													</span>
-												</span>
-												{/* Trend and credit use, in fixed columns from sm up so rows line up. */}
-												<span className="hidden sm:block">
-													<Sparkline points={account.sparkline} />
-												</span>
-												<span className="hidden sm:block">
-													{account.creditLimit ? (
-														<span className="block h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
-															<span
-																className="block h-full bg-primary"
-																style={{
-																	width: `${Math.min(100, (account.currentBalance / account.creditLimit) * 100)}%`,
-																}}
-															/>
-														</span>
-													) : null}
-												</span>
-												<Amount className="text-right">
-													{formatMoney(account.currentBalance, account.isoCurrencyCode)}
-												</Amount>
-											</button>
-										</li>
-									))}
-								</ul>
-							)
-						) : null}
-					</section>
+					<Collapsible
+						key={group.key}
+						open={open[group.key] !== false}
+						onOpenChange={(next) => setOpen((current) => ({ ...current, [group.key]: next }))}
+						asChild
+					>
+						<section
+							aria-labelledby={headingId}
+							className="rounded-xl border border-border bg-card"
+						>
+							<div className="flex items-center justify-between gap-2 px-4 py-3">
+								<h2 id={headingId} className="text-[15px] font-semibold">
+									<CollapsibleTrigger className="group inline-flex items-center gap-1.5 rounded-md text-left">
+										<ChevronDown
+											aria-hidden
+											className="size-4 text-muted-foreground transition-transform duration-200 ease-out group-data-[state=closed]:-rotate-90 motion-reduce:transition-none"
+										/>
+										{group.label}
+									</CollapsibleTrigger>
+								</h2>
+								<span className="flex items-baseline gap-2 text-sm">
+									<Amount>{formatMoney(summary?.total ?? 0, baseCurrency)}</Amount>
+									{change !== 0 ? (
+										<Amount className={change > 0 ? "text-positive" : "text-negative"}>
+											{change > 0 ? "+" : ""}
+											{formatMoney(change, baseCurrency)}
+										</Amount>
+									) : null}
+								</span>
+							</div>
+							<CollapsibleContent>
+								{rows.length === 0 ? (
+									<p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
+										None
+									</p>
+								) : (
+									<ul className="flex flex-col divide-y divide-border border-t border-border px-1 py-1">
+										{rows.map((account) => (
+											<li key={account.id}>
+												<AccountRow account={account} largest={largest} onOpen={onOpen} />
+											</li>
+										))}
+									</ul>
+								)}
+							</CollapsibleContent>
+						</section>
+					</Collapsible>
 				);
 			})}
 		</div>

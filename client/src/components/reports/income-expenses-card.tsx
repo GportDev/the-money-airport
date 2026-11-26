@@ -33,6 +33,7 @@ export function IncomeExpensesCard({ range, onSelectMonth }: Props) {
 		<ReportCard
 			onRetry={() => void report.refetch()}
 			title="Income vs expenses"
+			info="Monthly income and spending in your base currency. Transfers are left out."
 			status={reportStatus(report, (data) =>
 				data.months.every((row) => row.income === 0 && row.expenses === 0),
 			)}

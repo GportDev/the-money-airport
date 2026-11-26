@@ -10,14 +10,15 @@ import { PageHeader } from "@/components/layout/page-header";
 import { FeedState } from "@/components/transactions/feed-state";
 import { NoTransactions } from "@/components/transactions/no-transactions";
 import { TransactionFeed } from "@/components/transactions/transaction-feed";
-import { Amount } from "@/components/ui/amount";
 import { Button } from "@/components/ui/button";
+import { KpiCell, KpiStrip } from "@/components/ui/kpi-strip";
 import { QueryError } from "@/components/ui/query-error";
+import { Segmented } from "@/components/ui/segmented";
 import { SelectField } from "@/components/ui/select-field";
+import { Toolbar, ToolbarDivider, ToolbarGroup } from "@/components/ui/toolbar";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCashFlow } from "@/hooks/use-cash-flow";
 import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
-import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
 import { monthLabel, parseMonth, shiftMonth } from "@/lib/month";
 import type { TransactionDetail, TransactionFilters } from "@/types";
@@ -25,6 +26,11 @@ import type { TransactionDetail, TransactionFilters } from "@/types";
 function pad(value: number) {
 	return String(value).padStart(2, "0");
 }
+
+const INTERVAL_OPTIONS = [
+	{ value: "daily", label: "Daily" },
+	{ value: "weekly", label: "Weekly" },
+] as const;
 
 export function CashFlowPage() {
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -64,6 +70,22 @@ export function CashFlowPage() {
 	return (
 		<>
 			<PageHeader title="Cash Flow">
+				<Button type="button" onClick={() => setDrawer("add")}>
+					<Plus aria-hidden className="size-4" />
+					Add
+				</Button>
+			</PageHeader>
+			<Toolbar aria-label="Cash flow filters">
+				<ToolbarGroup>
+					<MonthNavigator
+						year={year}
+						month={month}
+						onShift={(delta) =>
+							patchParams((next) => next.set("month", shiftMonth(year, month, delta)))
+						}
+					/>
+				</ToolbarGroup>
+				<ToolbarDivider />
 				<SelectField
 					aria-label="Account scope"
 					variant="ghost"
@@ -82,18 +104,7 @@ export function CashFlowPage() {
 						})
 					}
 				/>
-				<MonthNavigator
-					year={year}
-					month={month}
-					onShift={(delta) =>
-						patchParams((next) => next.set("month", shiftMonth(year, month, delta)))
-					}
-				/>
-				<Button type="button" onClick={() => setDrawer("add")}>
-					<Plus aria-hidden className="size-4" />
-					Add
-				</Button>
-			</PageHeader>
+			</Toolbar>
 
 			{cashFlow.isError ? (
 				<QueryError
@@ -104,7 +115,7 @@ export function CashFlowPage() {
 				/>
 			) : null}
 			{data && data.omittedCurrencies.length > 0 ? (
-				<output className="mb-4 block rounded-md border border-border bg-muted px-3 py-2 text-sm">
+				<output className="mb-4 block rounded-lg bg-foreground/[0.04] px-3 py-2 text-sm text-muted-foreground">
 					Left out of totals (no exchange rate into {currency}): {data.omittedCurrencies.join(", ")}
 					.
 				</output>
@@ -114,57 +125,45 @@ export function CashFlowPage() {
 				<CashFlowSkeleton />
 			) : (
 				<>
-					<div className="mb-4 grid gap-3 sm:grid-cols-3">
-						<KpiCard
+					<KpiStrip className="mb-4">
+						<KpiCell
 							label="Income"
+							markerClassName="bg-positive"
 							value={formatMoney(data?.summary.totalIncome ?? 0, currency)}
-							className="text-positive"
 						/>
-						<KpiCard
+						<KpiCell
 							label="Expenses"
+							markerClassName="bg-negative/75"
 							value={formatMoney(data?.summary.totalExpenses ?? 0, currency)}
 						/>
-						<KpiCard
+						<KpiCell
 							label="Net"
+							markerClassName={net < 0 ? "bg-negative" : "bg-primary"}
 							value={`${net > 0 ? "+" : net < 0 ? "-" : ""}${formatMoney(Math.abs(net), currency)}`}
-							className={net > 0 ? "text-positive" : net < 0 ? "text-negative" : undefined}
 						/>
-					</div>
+					</KpiStrip>
 
 					<section
 						aria-labelledby="cash-flow-chart-heading"
-						className="mb-6 rounded-xl border border-border bg-card p-4"
+						className="mb-6 rounded-xl border border-border bg-card p-5"
 					>
 						<div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-							<h2
-								id="cash-flow-chart-heading"
-								className="text-sm font-medium text-muted-foreground"
-							>
+							<h2 id="cash-flow-chart-heading" className="text-[15px] font-semibold">
 								Income vs expenses
 							</h2>
 							<div className="flex items-center gap-3 text-sm">
-								<fieldset className="flex rounded-md border border-border p-0.5">
-									<legend className="sr-only">Chart interval</legend>
-									{(["daily", "weekly"] as const).map((option) => (
-										<button
-											key={option}
-											type="button"
-											aria-pressed={granularity === option}
-											className={cn(
-												"rounded px-2 py-1 capitalize transition-colors hover:bg-foreground/5 hover:text-foreground",
-												granularity === option ? "bg-muted font-medium" : "text-muted-foreground",
-											)}
-											onClick={() =>
-												patchParams((next) => {
-													if (option === "weekly") next.set("view", "weekly");
-													else next.delete("view");
-												})
-											}
-										>
-											{option}
-										</button>
-									))}
-								</fieldset>
+								<Segmented
+									aria-label="Chart interval"
+									size="sm"
+									value={granularity}
+									options={INTERVAL_OPTIONS}
+									onValueChange={(option) =>
+										patchParams((next) => {
+											if (option === "weekly") next.set("view", "weekly");
+											else next.delete("view");
+										})
+									}
+								/>
 								<label className="flex items-center gap-2">
 									<input
 										type="checkbox"
@@ -232,24 +231,5 @@ export function CashFlowPage() {
 				/>
 			) : null}
 		</>
-	);
-}
-
-function KpiCard({
-	label,
-	value,
-	className,
-}: {
-	label: string;
-	value: string;
-	className?: string;
-}) {
-	return (
-		<section aria-label={label} className="rounded-xl border border-border bg-card p-4">
-			<h2 className="text-sm text-muted-foreground">{label}</h2>
-			<p className={cn("mt-1 text-2xl font-semibold", className)}>
-				<Amount>{value}</Amount>
-			</p>
-		</section>
 	);
 }

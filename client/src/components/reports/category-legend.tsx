@@ -1,5 +1,6 @@
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { Amount } from "@/components/ui/amount";
+import { ShareBar } from "@/components/ui/share-bar";
 import { formatMoney } from "@/lib/format";
 import type { CategoryTotal } from "@/types";
 
@@ -11,6 +12,7 @@ type Props = {
 
 export function CategoryLegend({ categories, currency, onSelect }: Props) {
 	const total = categories.reduce((sum, row) => sum + row.total, 0);
+	const largest = Math.max(0, ...categories.map((row) => row.total));
 	return (
 		<ul className="flex flex-col">
 			{categories.map((row) => (
@@ -21,7 +23,10 @@ export function CategoryLegend({ categories, currency, onSelect }: Props) {
 						onClick={() => onSelect(row)}
 					>
 						<CategoryIcon icon={row.icon} color={row.color} />
-						<span className="min-w-0 flex-1 truncate">{row.categoryName}</span>
+						<span className="flex min-w-0 flex-1 flex-col gap-1">
+							<span className="truncate">{row.categoryName}</span>
+							<ShareBar value={row.total} max={largest} color={row.color} />
+						</span>
 						<span className="text-xs text-muted-foreground">
 							{total === 0 ? 0 : Math.round((row.total / total) * 100)}%
 						</span>

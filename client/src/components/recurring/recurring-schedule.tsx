@@ -35,7 +35,7 @@ export function RecurringSchedule({ item, onDone }: Props) {
 	}
 
 	return (
-		<div className="mx-4 flex flex-col gap-3 rounded-lg border border-border bg-card p-3 text-sm">
+		<div className="mx-4 flex flex-col gap-3 rounded-xl bg-foreground/[0.03] p-3 text-sm">
 			<div className="flex items-baseline justify-between gap-2">
 				<span>
 					Next {formatLongDate(item.nextDate)}{" "}

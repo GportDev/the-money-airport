@@ -20,7 +20,7 @@ const segmentedVariants = cva(
 
 type Props<T extends string> = VariantProps<typeof segmentedVariants> & {
 	value: T;
-	options: Option<T>[];
+	options: readonly Option<T>[];
 	onValueChange: (value: T) => void;
 	"aria-label": string;
 	className?: string;

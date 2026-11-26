@@ -36,6 +36,7 @@ export function NetCashFlowCard({ range, onSelectMonth }: Props) {
 		<ReportCard
 			onRetry={() => void trend.refetch()}
 			title="Net cash flow"
+			info="Income minus expenses for each month. Transfers are left out."
 			status={reportStatus(trend, (data) => data.months.every((row) => row.net === 0))}
 			omittedCurrencies={trend.data?.omittedCurrencies}
 			emptyMessage="No transactions in this range."

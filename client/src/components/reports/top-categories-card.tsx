@@ -1,6 +1,7 @@
 import { ReportCard } from "@/components/reports/report-card";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { Amount } from "@/components/ui/amount";
+import { ShareBar } from "@/components/ui/share-bar";
 import { useTopCategories } from "@/hooks/use-reports";
 import { formatMoney } from "@/lib/format";
 import { reportStatus } from "@/lib/report-status";
@@ -20,6 +21,7 @@ export function TopCategoriesCard({ range, onSelect }: Props) {
 		<ReportCard
 			onRetry={() => void top.refetch()}
 			title="Top categories"
+			info="The categories you spent the most on in this range."
 			status={reportStatus(top, (report) => report.categories.length === 0)}
 			omittedCurrencies={top.data?.omittedCurrencies}
 			emptyMessage="No spending in this range."
@@ -38,16 +40,7 @@ export function TopCategoriesCard({ range, onSelect }: Props) {
 								<span className="min-w-0 flex-1 truncate font-medium">{row.categoryName}</span>
 								<Amount>{formatMoney(row.total, currency)}</Amount>
 							</span>
-							<span aria-hidden className="ml-6 h-1.5 rounded-full bg-muted">
-								<span
-									className="block h-full rounded-full"
-									// Width tracks the amount and the fill is the Category's own color.
-									style={{
-										width: `${largest === 0 ? 0 : (row.total / largest) * 100}%`,
-										backgroundColor: row.color,
-									}}
-								/>
-							</span>
+							<ShareBar value={row.total} max={largest} color={row.color} className="ml-6 w-auto" />
 						</button>
 					</li>
 				))}

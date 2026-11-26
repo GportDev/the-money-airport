@@ -49,6 +49,8 @@
 	--animate-fade-in: fade-in 160ms var(--ease-out);
 	--animate-accordion-down: accordion-down 220ms var(--ease-out);
 	--animate-accordion-up: accordion-up 180ms var(--ease-out);
+	--animate-collapsible-down: collapsible-down 220ms var(--ease-out);
+	--animate-collapsible-up: collapsible-up 180ms var(--ease-out);
 }
 
 /* Radix measures the panel into --radix-accordion-content-height. */
@@ -67,6 +69,27 @@
 	}
 	to {
 		height: 0;
+	}
+}
+
+/* Radix Collapsible measures into its own variable, so it gets its own pair. */
+@keyframes collapsible-down {
+	from {
+		height: 0;
+		opacity: 0;
+	}
+	to {
+		height: var(--radix-collapsible-content-height);
+	}
+}
+
+@keyframes collapsible-up {
+	from {
+		height: var(--radix-collapsible-content-height);
+	}
+	to {
+		height: 0;
+		opacity: 0;
 	}
 }
 

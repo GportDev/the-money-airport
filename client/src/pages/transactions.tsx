@@ -1,4 +1,12 @@
-import { ListChecks, Plus, Search, Settings2 } from "lucide-react";
+import {
+	Columns3,
+	ListChecks,
+	ListFilter,
+	Plus,
+	Search,
+	Settings2,
+	SquareCheck,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -14,6 +22,7 @@ import { type FeedColumns, TransactionFeed } from "@/components/transactions/tra
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
+import { Toolbar, ToolbarDivider } from "@/components/ui/toolbar";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
@@ -143,7 +152,7 @@ export function TransactionsPage() {
 			</nav>
 			{tab === "all" ? (
 				<>
-					<div className="mb-4 flex flex-wrap items-center gap-2">
+					<Toolbar aria-label="Transaction filters">
 						<label className="relative flex min-w-48 flex-1 items-center" htmlFor="tx-search">
 							<span className="sr-only">Search transactions</span>
 							<Search
@@ -154,36 +163,41 @@ export function TransactionsPage() {
 								id="tx-search"
 								type="search"
 								placeholder="Search"
-								className="w-full pl-9"
+								className="h-8 w-full border-transparent bg-transparent pl-9 hover:border-transparent focus-visible:bg-card"
 								value={searchInput}
 								onChange={(event) => setSearchInput(event.target.value)}
 							/>
 						</label>
-						<Button variant="outline" type="button" onClick={() => setFiltersOpen(true)}>
+						<ToolbarDivider />
+						<Button variant="ghost" size="sm" type="button" onClick={() => setFiltersOpen(true)}>
+							<ListFilter aria-hidden className="size-3.5" />
 							Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
 						</Button>
-						<Button variant="outline" type="button" onClick={() => setColumnsOpen(true)}>
+						<Button variant="ghost" size="sm" type="button" onClick={() => setColumnsOpen(true)}>
+							<Columns3 aria-hidden className="size-3.5" />
 							Columns
 						</Button>
 						{selecting ? (
 							<>
 								<Button
+									size="sm"
 									type="button"
 									disabled={selected.size === 0}
 									onClick={() => setBulkOpen(true)}
 								>
 									Edit {selected.size}
 								</Button>
-								<Button variant="outline" type="button" onClick={stopSelecting}>
+								<Button variant="ghost" size="sm" type="button" onClick={stopSelecting}>
 									Cancel
 								</Button>
 							</>
 						) : (
-							<Button variant="outline" type="button" onClick={() => setSelecting(true)}>
+							<Button variant="ghost" size="sm" type="button" onClick={() => setSelecting(true)}>
+								<SquareCheck aria-hidden className="size-3.5" />
 								Edit multiple
 							</Button>
 						)}
-					</div>
+					</Toolbar>
 					<FeedState
 						feed={feed}
 						isEmpty={items.length === 0}

@@ -18,10 +18,13 @@ export function BudgetProgress({ label, planned, actual, isOver, className }: Pr
 			aria-valuemin={0}
 			aria-valuemax={100}
 			aria-valuenow={Math.round(percent)}
-			className={cn("h-2 overflow-hidden rounded-full bg-muted", className)}
+			className={cn("h-1.5 overflow-hidden rounded-full bg-foreground/[0.06]", className)}
 		>
 			<div
-				className={cn("h-full rounded-full", isOver ? "bg-negative" : "bg-positive")}
+				className={cn(
+					"h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
+					isOver ? "bg-negative" : "bg-positive",
+				)}
 				// Width tracks live data, so it cannot be a static class.
 				style={{ width: `${percent}%` }}
 			/>

@@ -44,12 +44,12 @@ function SkeletonCard({ className, children }: { className?: string; children?: 
 /** List rows shaped like a transaction or account row: icon, two lines, amount. */
 function SkeletonRows({ count }: { count: number }) {
 	return (
-		<ul className="flex flex-col gap-2">
+		<ul className="flex flex-col divide-y divide-border rounded-xl border border-border bg-card px-1">
 			{Array.from({ length: count }, (_, index) => (
 				<li
 					// biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows.
 					key={index}
-					className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-3"
+					className="flex items-center gap-3 px-3 py-3"
 				>
 					<Skeleton className="size-8 shrink-0 rounded-full" />
 					<div className="flex min-w-0 flex-1 flex-col gap-1.5">

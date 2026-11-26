@@ -3,6 +3,7 @@ import { FundEntryForm } from "@/components/goals/fund-entry-form";
 import { FundEntryList } from "@/components/goals/fund-entry-list";
 import { Amount } from "@/components/ui/amount";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
 import {
 	Sheet,
@@ -44,26 +45,26 @@ export function FundDrawer({ goal, currency, onEdit, onClose }: Props) {
 						{formatPercent(goal.percentComplete)} of {formatMoney(goal.targetAmount, currency)}
 					</p>
 				</SheetHeader>
-				<div className="flex gap-2 px-4">
-					<Button
-						type="button"
-						aria-expanded={isFormOpen}
-						onClick={() => setFormOpen((value) => !value)}
-					>
-						Add entry
-					</Button>
-					<Button
-						variant="outline"
-						type="button"
-						onClick={() => {
-							close();
-							onEdit();
-						}}
-					>
-						Edit goal
-					</Button>
-				</div>
-				{isFormOpen ? <FundEntryForm goalId={goal.id} onDone={() => setFormOpen(false)} /> : null}
+				<Collapsible open={isFormOpen} onOpenChange={setFormOpen}>
+					<div className="flex gap-2 px-4">
+						<CollapsibleTrigger asChild>
+							<Button type="button">Add entry</Button>
+						</CollapsibleTrigger>
+						<Button
+							variant="outline"
+							type="button"
+							onClick={() => {
+								close();
+								onEdit();
+							}}
+						>
+							Edit goal
+						</Button>
+					</div>
+					<CollapsibleContent>
+						<FundEntryForm goalId={goal.id} onDone={() => setFormOpen(false)} />
+					</CollapsibleContent>
+				</Collapsible>
 				<FundEntryList
 					goalId={goal.id}
 					entries={entries.data ?? []}
