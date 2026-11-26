@@ -1,9 +1,9 @@
-import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { Amount } from "@/components/ui/amount";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { InlineText } from "@/components/ui/inline-text";
+import { PropertyList, PropertyRow } from "@/components/ui/property-list";
 import {
 	Sheet,
 	SheetContent,
@@ -26,29 +26,18 @@ type Props = {
 	onClose: () => void;
 };
 
+/** One Category's plan for the month; the planned amount saves as soon as it changes. */
 export function BudgetCategoryDrawer({ row, month, monthName, currency, onClose }: Props) {
 	const { sheet, close } = useSheetClose(onClose);
 	const save = useSaveBudget();
 	const remove = useDeleteBudget();
-	const [planned, setPlanned] = useState(row.id ? centsToMajorUnits(row.planned) : "");
-	const [error, setError] = useState<string | null>(null);
-	const isBusy = save.isPending || remove.isPending;
 
-	async function onSubmit(event: FormEvent) {
-		event.preventDefault();
-		const amount = majorUnitsToCents(planned);
-		if (planned.trim() === "" || !Number.isFinite(amount) || amount < 0) {
-			setError("Enter a planned amount of 0 or more.");
-			return;
+	function savePlanned(value: string) {
+		const amount = majorUnitsToCents(value);
+		if (!Number.isFinite(amount) || amount < 0) {
+			throw new Error("Enter a planned amount of 0 or more.");
 		}
-		setError(null);
-		try {
-			await save.mutateAsync({ categoryId: row.categoryId, month, amount });
-			toast.success("Budget saved");
-			close();
-		} catch (_error) {
-			toast.error("Could not save budget");
-		}
+		return save.mutateAsync({ categoryId: row.categoryId, month, amount });
 	}
 
 	async function onRemove() {
@@ -65,54 +54,40 @@ export function BudgetCategoryDrawer({ row, month, monthName, currency, onClose 
 	return (
 		<Sheet open={sheet.open} onOpenChange={sheet.onOpenChange}>
 			<SheetContent className="overflow-y-auto">
-				<SheetHeader>
-					<SheetTitle className="flex items-center gap-2">
+				<SheetHeader className="pr-12">
+					<SheetTitle className="flex items-center gap-2 text-xl tracking-tight">
 						<CategoryIcon icon={row.categoryIcon} color={row.categoryColor} />
 						{row.categoryName}
 					</SheetTitle>
 					<SheetDescription>Planned amount for {monthName}.</SheetDescription>
 				</SheetHeader>
-				<form id="budget-category-form" className="flex flex-col gap-4 px-4" onSubmit={onSubmit}>
-					<label className="flex flex-col gap-1 text-sm" htmlFor="budget-planned">
-						Planned
-						<Input
-							id="budget-planned"
-							type="number"
+				<PropertyList className="mx-4">
+					<PropertyRow label="Planned">
+						<InlineText
+							aria-label="Planned"
 							inputMode="decimal"
-							min="0"
-							step="0.01"
 							placeholder="0.00"
-							value={planned}
-							onChange={(event) => setPlanned(event.target.value)}
-							aria-invalid={Boolean(error)}
-							aria-describedby={error ? "budget-planned-error" : undefined}
+							value={row.id ? centsToMajorUnits(row.planned) : ""}
+							onCommit={savePlanned}
+							className="amount -ml-2"
 						/>
-					</label>
-					{error ? (
-						<p id="budget-planned-error" role="alert" className="text-sm text-negative">
-							{error}
-						</p>
-					) : null}
-					<p className="text-sm text-muted-foreground">
-						{row.group === "income" ? "Received" : "Spent"} so far:{" "}
-						<Amount className="text-foreground">{formatMoney(row.actual, currency)}</Amount>
-					</p>
-				</form>
-				<SheetFooter>
-					<Button form="budget-category-form" type="submit" disabled={isBusy}>
-						{save.isPending ? "Saving…" : "Save"}
-					</Button>
-					{row.id ? (
+					</PropertyRow>
+					<PropertyRow label={row.group === "income" ? "Received" : "Spent"}>
+						<Amount>{formatMoney(row.actual, currency)}</Amount>
+					</PropertyRow>
+				</PropertyList>
+				{row.id ? (
+					<SheetFooter>
 						<Button
 							variant="danger-outline"
 							type="button"
-							disabled={isBusy}
+							disabled={remove.isPending}
 							onClick={() => void onRemove()}
 						>
 							{remove.isPending ? "Removing…" : "Remove plan"}
 						</Button>
-					) : null}
-				</SheetFooter>
+					</SheetFooter>
+				) : null}
 			</SheetContent>
 		</Sheet>
 	);

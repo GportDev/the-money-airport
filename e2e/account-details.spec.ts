@@ -41,7 +41,11 @@ test("a renamed Plaid account keeps the User's name after a sync", async ({ page
 	await page.goto("/accounts");
 	await page.getByRole("button", { name: /Plaid Checking/ }).click();
 	await page.getByRole("dialog").getByLabel("Name").fill("Everyday checking");
-	await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+	await page.getByRole("dialog").getByLabel("Name").press("Enter");
+	await expect
+		.poll(async () => (await accounts(page)).find((row) => row.id === checking.id)?.name)
+		.toBe("Everyday checking");
+	await page.keyboard.press("Escape");
 	await expect(page.getByRole("dialog")).toHaveCount(0);
 
 	expect((await page.request.post(`${API}/plaid/sync/${itemId}`)).status()).toBe(200);
@@ -77,7 +81,7 @@ test("only credit cards carry a credit limit", async ({ page }) => {
 	await page.getByRole("button", { name: /Wallet/ }).click();
 	await expect(page.getByRole("dialog").getByLabel("Name")).toHaveValue("Wallet");
 	await expect(page.getByRole("dialog").getByLabel("Credit limit")).toHaveCount(0);
-	await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+	await page.keyboard.press("Escape");
 	await expect(page.getByRole("dialog")).toHaveCount(0);
 	await page.getByRole("button", { name: /Travel card/ }).click();
 	await expect(page.getByRole("dialog").getByLabel("Credit limit")).toHaveValue("500.00");

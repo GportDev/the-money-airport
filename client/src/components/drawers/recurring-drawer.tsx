@@ -1,10 +1,12 @@
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { RecurringFields } from "@/components/recurring/recurring-fields";
 import { RecurringSchedule } from "@/components/recurring/recurring-schedule";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { InlineText } from "@/components/ui/inline-text";
+import { PropertyList, PropertyRow } from "@/components/ui/property-list";
+import { Segmented } from "@/components/ui/segmented";
 import {
 	Sheet,
 	SheetContent,
@@ -16,44 +18,31 @@ import {
 } from "@/components/ui/sheet";
 import { useDeleteRecurring, useUpdateRecurring } from "@/hooks/use-recurring";
 import { centsToMajorUnits, majorUnitsToCents } from "@/lib/format";
-import { cadenceLabel, draftError, type RecurringDraft } from "@/lib/recurring";
+import { CADENCE_OPTIONS, cadenceLabel } from "@/lib/recurring";
 import type { RecurringListItem } from "@/types";
 
 type Props = { item: RecurringListItem; onClose: () => void };
 
+type RecurringPatch = Partial<
+	Pick<RecurringListItem, "amount" | "cadence" | "nextDate" | "isActive">
+>;
+
+/** A bill or subscription, edited in place: every value saves as soon as it changes. */
 export function RecurringDrawer({ item, onClose }: Props) {
 	const { sheet, close } = useSheetClose(onClose);
 	const update = useUpdateRecurring();
 	const remove = useDeleteRecurring();
-	const [draft, setDraft] = useState<RecurringDraft>({
-		amount: centsToMajorUnits(item.amount),
-		cadence: item.cadence,
-		nextDate: item.nextDate,
-	});
-	const [isActive, setIsActive] = useState(item.isActive);
-	const [error, setError] = useState<string | null>(null);
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
-	const isBusy = update.isPending || remove.isPending;
 
-	async function onSubmit(event: FormEvent) {
-		event.preventDefault();
-		const amount = majorUnitsToCents(draft.amount);
-		const problem = draftError(draft, amount);
-		setError(problem);
-		if (problem) return;
-		try {
-			await update.mutateAsync({
-				id: item.id,
-				amount,
-				cadence: draft.cadence,
-				nextDate: draft.nextDate,
-				isActive,
-			});
-			toast.success(`${item.merchantName} saved`);
-			close();
-		} catch (_error) {
-			toast.error(`Could not save ${item.merchantName}`);
-		}
+	function saveOrThrow(patch: RecurringPatch) {
+		return update.mutateAsync({ id: item.id, ...patch });
+	}
+
+	function save(patch: RecurringPatch) {
+		update.mutate(
+			{ id: item.id, ...patch },
+			{ onError: () => toast.error(`Could not save ${item.merchantName}`) },
+		);
 	}
 
 	async function onDelete() {
@@ -70,33 +59,55 @@ export function RecurringDrawer({ item, onClose }: Props) {
 	return (
 		<Sheet open={sheet.open} onOpenChange={sheet.onOpenChange}>
 			<SheetContent className="overflow-y-auto">
-				<SheetHeader>
-					<SheetTitle>{item.merchantName}</SheetTitle>
+				<SheetHeader className="pr-12">
+					<SheetTitle className="text-xl tracking-tight">{item.merchantName}</SheetTitle>
 					<SheetDescription>
 						{cadenceLabel(item.cadence)}
 						{item.account ? ` from ${item.account.name}` : ""}
 					</SheetDescription>
 				</SheetHeader>
 				{item.isActive ? <RecurringSchedule item={item} onDone={() => close()} /> : null}
-				<form id="recurring-form" className="flex flex-col gap-4 px-4" onSubmit={onSubmit}>
-					<RecurringFields draft={draft} onChange={setDraft} error={error} />
-					<label className="flex items-center gap-2 text-sm" htmlFor="recurring-active">
-						<Checkbox
-							id="recurring-active"
-							checked={isActive}
-							onCheckedChange={(checked) => setIsActive(checked === true)}
+				<PropertyList className="mx-4">
+					<PropertyRow label="Amount">
+						<InlineText
+							aria-label="Amount"
+							inputMode="decimal"
+							value={centsToMajorUnits(item.amount)}
+							onCommit={(value) => saveOrThrow({ amount: positiveCents(value) })}
+							className="-ml-2 amount"
 						/>
-						Active
-					</label>
-				</form>
+					</PropertyRow>
+					<PropertyRow label="Cadence">
+						<Segmented
+							aria-label="Cadence"
+							size="sm"
+							value={item.cadence}
+							options={CADENCE_OPTIONS}
+							onValueChange={(cadence) => save({ cadence })}
+						/>
+					</PropertyRow>
+					<PropertyRow label="Next date">
+						<InlineText
+							aria-label="Next date"
+							type="date"
+							value={item.nextDate}
+							onCommit={(nextDate) => saveOrThrow({ nextDate })}
+							className="-ml-2"
+						/>
+					</PropertyRow>
+					<PropertyRow label="Active">
+						<Checkbox
+							aria-label="Active"
+							checked={item.isActive}
+							onCheckedChange={(checked) => save({ isActive: checked === true })}
+						/>
+					</PropertyRow>
+				</PropertyList>
 				<SheetFooter>
-					<Button form="recurring-form" type="submit" disabled={isBusy}>
-						{update.isPending ? "Saving…" : "Save"}
-					</Button>
 					<Button
 						variant="danger-outline"
 						type="button"
-						disabled={isBusy}
+						disabled={remove.isPending}
 						onClick={() => setDeleteOpen(true)}
 					>
 						{remove.isPending ? "Deleting…" : "Delete"}
@@ -112,4 +123,11 @@ export function RecurringDrawer({ item, onClose }: Props) {
 			</SheetContent>
 		</Sheet>
 	);
+}
+
+/** Recurring amounts are positive cents; anything else is rejected before it reaches the API. */
+function positiveCents(value: string) {
+	const cents = majorUnitsToCents(value);
+	if (!Number.isFinite(cents) || cents <= 0) throw new Error("Enter an amount above 0.");
+	return cents;
 }

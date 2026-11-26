@@ -136,7 +136,7 @@ test("hide omits a BankAccount from net worth and delete removes it", async ({ p
 	await addManual(page, { name: "Hidden cash", group: "cash", type: "other", balance: "50.00" });
 	await page.getByRole("button", { name: "Hidden cash" }).click();
 	await page.getByRole("checkbox", { name: "Hidden" }).check();
-	await page.getByRole("button", { name: "Save" }).click();
+	await page.keyboard.press("Escape");
 	// Drawers slide out before unmounting.
 	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await signedExpect(
@@ -154,7 +154,11 @@ test("edit and unhide move net worth, and Filters stay in the URL", async ({ pag
 	await addManual(page, { name: "Editable cash", group: "cash", type: "other", balance: "50.00" });
 	await page.getByRole("button", { name: "Editable cash" }).click();
 	await page.getByLabel("Balance").fill("80.00");
-	await page.getByRole("button", { name: "Save" }).click();
+	await page.getByLabel("Balance").press("Enter");
+	await signedExpect(
+		page.getByRole("region", { name: "Net worth" }).getByText("$80.00"),
+	).toBeVisible();
+	await page.keyboard.press("Escape");
 	// Drawers slide out before unmounting.
 	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await signedExpect(
@@ -162,7 +166,7 @@ test("edit and unhide move net worth, and Filters stay in the URL", async ({ pag
 	).toBeVisible();
 	await page.getByRole("button", { name: "Editable cash" }).click();
 	await page.getByRole("checkbox", { name: "Hidden" }).check();
-	await page.getByRole("button", { name: "Save" }).click();
+	await page.keyboard.press("Escape");
 	// Drawers slide out before unmounting.
 	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await signedExpect(
@@ -170,7 +174,7 @@ test("edit and unhide move net worth, and Filters stay in the URL", async ({ pag
 	).toBeVisible();
 	await page.getByRole("button", { name: "Editable cash" }).click();
 	await page.getByRole("checkbox", { name: "Hidden" }).uncheck();
-	await page.getByRole("button", { name: "Save" }).click();
+	await page.keyboard.press("Escape");
 	// Drawers slide out before unmounting.
 	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await signedExpect(

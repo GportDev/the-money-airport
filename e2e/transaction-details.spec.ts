@@ -246,15 +246,18 @@ test("a rule files every matching transaction and the transactions that sync lat
 	await expect(rules.getByText("Joe Coffee")).toHaveCount(0);
 });
 
-test("the drawer shows status, account, best card, split, and refund details", async ({ page }) => {
+test("the drawer shows status, account, and best card, and hides default split and refund", async ({
+	page,
+}) => {
 	await connectFakeBank(page);
 	await page.goto("/transactions");
 	await openRow(page, /^Amazon/);
-	const details = page.getByRole("dialog").locator("dl[aria-label='Details']");
-	await expect(details).toContainText("StatusPending");
+	const drawer = page.getByRole("dialog");
+	await expect(drawer.getByText("Pending", { exact: true })).toBeVisible();
+	const details = drawer.getByLabel("Details", { exact: true });
 	await expect(details).toContainText("Plaid Credit Card");
-	await expect(details).toContainText("SplitNot split");
-	await expect(details).toContainText("RefundNone");
+	await expect(details).not.toContainText("Not split");
+	await expect(details).not.toContainText("Refund");
 });
 
 test("refunds, rules, and merchants stay with their own User", async ({ page, browser }) => {

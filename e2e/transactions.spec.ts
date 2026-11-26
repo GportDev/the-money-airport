@@ -307,7 +307,7 @@ test("Transactions page: date-grouped feed, drawer edit, filters, and Edit multi
 
 	await page.getByLabel("Search transactions").fill("whole");
 	await signedExpect(page).toHaveURL(/search=whole/);
-	await signedExpect(feed.getByRole("button")).toHaveCount(1);
+	await signedExpect(feed.getByRole("button", { name: /, / })).toHaveCount(1);
 	await page.getByLabel("Search transactions").fill("");
 	await signedExpect(page).not.toHaveURL(/search=/);
 
@@ -326,7 +326,7 @@ test("Transactions page: date-grouped feed, drawer edit, filters, and Edit multi
 	await page.getByRole("dialog", { name: "Filters" }).getByLabel("Transport").check();
 	await page.getByRole("dialog", { name: "Filters" }).getByRole("button", { name: "Done" }).click();
 	await signedExpect(page).toHaveURL(/category=/);
-	await signedExpect(feed.getByRole("button")).toHaveCount(2);
+	await signedExpect(feed.getByRole("button", { name: /, / })).toHaveCount(2);
 });
 
 test("Transactions page: add a manual transaction and manage categories", async ({ page }) => {

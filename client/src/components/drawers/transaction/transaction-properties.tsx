@@ -17,7 +17,7 @@ export function TransactionProperties({ transaction }: Props) {
 	// The ledger fields of a split part are fixed; unsplit to change them.
 	const canEditLedger = transaction.isManual && !transaction.split;
 	return (
-		<PropertyList className="mx-4">
+		<PropertyList aria-label="Details" className="mx-4">
 			<PropertyRow
 				label={
 					<>

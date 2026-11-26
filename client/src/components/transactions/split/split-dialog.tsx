@@ -22,7 +22,7 @@ export function SplitDialog({ transactionId, onClose }: Props) {
 	const transaction = detail.data;
 	return (
 		<Dialog open={transactionId !== null} onOpenChange={(open) => (open ? undefined : onClose())}>
-			<DialogContent aria-describedby={undefined}>
+			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Split transaction</DialogTitle>
 					{transaction ? (

@@ -111,7 +111,11 @@ export function GoalsPage() {
 			{goalDrawer ? (
 				<GoalDrawer
 					key={goalDrawer === "new" ? "new" : goalDrawer.id}
-					goal={goalDrawer === "new" ? null : goalDrawer}
+					goal={
+						goalDrawer === "new"
+							? null
+							: (data?.goals.find((goal) => goal.id === goalDrawer.id) ?? goalDrawer)
+					}
 					defaultType={tab}
 					onClose={() => setGoalDrawer(null)}
 				/>

@@ -319,8 +319,6 @@ test("the drawer marks paid, skips, and deactivates", async ({ page }) => {
 	await main.getByRole("button", { name: /Verizon/ }).click();
 	drawer = page.getByRole("dialog", { name: "Verizon" });
 	await drawer.getByLabel("Active").click();
-	await drawer.getByRole("button", { name: "Save" }).click();
-	await expect(page.getByText("Verizon saved")).toBeVisible();
 	await expect(main.getByRole("region", { name: "Inactive" })).toContainText("Verizon");
 	await expect(main.getByRole("region", { name: "Upcoming" })).toHaveCount(0);
 });

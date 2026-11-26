@@ -177,7 +177,11 @@ export function AccountsPage() {
 				<AccountDrawer
 					key={drawer === "create" ? "create" : drawer.id}
 					open
-					account={drawer === "create" ? null : drawer}
+					account={
+						drawer === "create"
+							? null
+							: (accounts.data?.find((account) => account.id === drawer.id) ?? drawer)
+					}
 					range={range}
 					onClose={() => setDrawer("closed")}
 					onSave={async (input) => {
