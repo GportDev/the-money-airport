@@ -29,7 +29,7 @@ export function CategoryIconSelect({ labelId, value, color, onValueChange }: Pro
 		>
 			<Select.Trigger
 				aria-labelledby={labelId}
-				className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:border-foreground/30 focus-visible:outline-2 focus-visible:outline-ring"
+				className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring"
 			>
 				<Select.Value className="flex min-w-0 flex-1 items-center gap-2">
 					{(key: string) => (
@@ -51,7 +51,7 @@ export function CategoryIconSelect({ labelId, value, color, onValueChange }: Pro
 					sideOffset={4}
 					className="z-50 outline-none"
 				>
-					<Select.Popup className="max-h-[min(20rem,var(--available-height))] min-w-(--anchor-width) origin-(--transform-origin) overflow-y-auto rounded-lg border border-border bg-card p-1 text-sm shadow-lg data-[open]:animate-pop-in">
+					<Select.Popup className="max-h-[min(20rem,var(--available-height))] min-w-(--anchor-width) origin-(--transform-origin) overflow-y-auto rounded-lg border border-border bg-card p-1 text-sm shadow-pop data-[open]:animate-pop-in">
 						{ICON_KEYS.map((key) => (
 							<Select.Item
 								key={key}

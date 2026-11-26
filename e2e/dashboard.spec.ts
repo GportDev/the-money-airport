@@ -166,8 +166,8 @@ test("dashboard payload rolls up budget groups, spending, and recent transaction
 });
 
 test("Dashboard page: widgets, deep links, drawer, and Customize persists", async ({ page }) => {
-	// Below 1280px the grid is one column, so DOM order is the saved widget order.
-	await page.setViewportSize({ width: 1024, height: 900 });
+	// Below 1000px the grid is one column, so DOM order is the saved widget order.
+	await page.setViewportSize({ width: 960, height: 900 });
 	await page.goto("/");
 	await signedExpect(page.getByRole("heading", { name: "Connect an account" })).toBeVisible();
 

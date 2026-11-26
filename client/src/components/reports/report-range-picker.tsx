@@ -1,4 +1,6 @@
+import { CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select-field";
 import { REPORT_PRESETS, type ReportPreset } from "@/lib/report-range";
 import type { ReportRange } from "@/types";
 
@@ -12,22 +14,14 @@ type Props = {
 export function ReportRangePicker({ preset, range, onPresetChange, onCustomChange }: Props) {
 	return (
 		<div className="flex flex-wrap items-center gap-2">
-			<label className="flex items-center gap-2 text-sm" htmlFor="report-range">
-				Date range
-				{/* CONVENTION-DEVIATION: native select, matching the range pickers on Accounts and Cash Flow. */}
-				<select
-					id="report-range"
-					className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30"
-					value={preset}
-					onChange={(event) => onPresetChange(event.target.value as ReportPreset)}
-				>
-					{REPORT_PRESETS.map((option) => (
-						<option key={option.key} value={option.key}>
-							{option.label}
-						</option>
-					))}
-				</select>
-			</label>
+			<SelectField
+				aria-label="Date range"
+				variant="ghost"
+				icon={<CalendarDays aria-hidden className="size-4" />}
+				value={preset}
+				options={REPORT_PRESETS.map((option) => ({ value: option.key, label: option.label }))}
+				onValueChange={onPresetChange}
+			/>
 			{preset === "custom" ? (
 				<>
 					<label className="sr-only" htmlFor="report-from">

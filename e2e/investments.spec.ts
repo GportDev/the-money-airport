@@ -165,10 +165,10 @@ test("Investments page: total, allocation, rows, and range toggle", async ({ pag
 	await signedExpect(brokerage).toContainText("80%");
 	await signedExpect(list.getByText("Everyday Checking")).toHaveCount(0);
 
-	await page.getByRole("button", { name: "1 year" }).click();
+	await page.getByRole("radio", { name: "1 year" }).click();
 	await signedExpect(page).toHaveURL(/range=1y/);
-	await signedExpect(page.getByRole("button", { name: "1 year" })).toHaveAttribute(
-		"aria-pressed",
+	await signedExpect(page.getByRole("radio", { name: "1 year" })).toHaveAttribute(
+		"aria-checked",
 		"true",
 	);
 });

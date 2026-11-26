@@ -12,6 +12,7 @@ import { Sparkline } from "@/components/accounts/sparkline";
 import { Amount } from "@/components/ui/amount";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select-field";
 import {
 	Sheet,
 	SheetContent,
@@ -129,38 +130,27 @@ export function AccountDrawer({
 					</label>
 					{isEdit ? null : (
 						<>
-							<label className="flex flex-col gap-1 text-sm" htmlFor="account-group">
-								Display group
-								<select
+							<div className="flex flex-col gap-1 text-sm">
+								<label htmlFor="account-group">Display group</label>
+								<SelectField
 									id="account-group"
-									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									value={displayGroup}
-									onChange={(event) =>
-										setDisplayGroup(event.target.value as BankAccount["displayGroup"])
-									}
-								>
-									{DISPLAY_GROUPS.map((group) => (
-										<option key={group.key} value={group.key}>
-											{group.label}
-										</option>
-									))}
-								</select>
-							</label>
-							<label className="flex flex-col gap-1 text-sm" htmlFor="account-type">
-								Type
-								<select
+									options={DISPLAY_GROUPS.map((group) => ({
+										value: group.key,
+										label: group.label,
+									}))}
+									onValueChange={setDisplayGroup}
+								/>
+							</div>
+							<div className="flex flex-col gap-1 text-sm">
+								<label htmlFor="account-type">Type</label>
+								<SelectField
 									id="account-type"
-									className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
 									value={type}
-									onChange={(event) => setType(event.target.value)}
-								>
-									{TYPES.map((item) => (
-										<option key={item} value={item}>
-											{item}
-										</option>
-									))}
-								</select>
-							</label>
+									options={TYPES.map((item) => ({ value: item, label: item }))}
+									onValueChange={setType}
+								/>
+							</div>
 							<label className="flex flex-col gap-1 text-sm" htmlFor="account-currency">
 								Currency
 								<Input

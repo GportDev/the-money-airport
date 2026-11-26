@@ -6,6 +6,7 @@ import { BetterCardBadge } from "@/components/transactions/better-card-badge";
 import { CategorySelect } from "@/components/transactions/category-select";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import { formatLongDate, formatSignedMoney } from "@/lib/format";
 import type { TransactionListItem } from "@/types";
@@ -233,21 +234,9 @@ function FeedRow({
 			</span>
 			<span className="pointer-events-none flex min-w-0 items-center gap-2">
 				<span className="truncate">{title}</span>
-				{item.pending ? (
-					<span className="shrink-0 rounded-sm border border-border px-1.5 text-xs text-muted-foreground">
-						Pending
-					</span>
-				) : null}
-				{item.isSplit ? (
-					<span className="shrink-0 rounded-sm border border-border px-1.5 text-xs text-muted-foreground">
-						Split
-					</span>
-				) : null}
-				{item.isRefund ? (
-					<span className="shrink-0 rounded-sm border border-border px-1.5 text-xs text-muted-foreground">
-						Refund
-					</span>
-				) : null}
+				{item.pending ? <Badge>Pending</Badge> : null}
+				{item.isSplit ? <Badge>Split</Badge> : null}
+				{item.isRefund ? <Badge>Refund</Badge> : null}
 				{isTransfer(item) ? (
 					<ArrowLeftRight
 						aria-label="Transfer"

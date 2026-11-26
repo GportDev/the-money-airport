@@ -20,7 +20,7 @@ export function SplitPartRow({ draft, index, canRemove, onChange, onRemove }: Pr
 				aria-label={`${label} category`}
 				value={draft.categoryId}
 				onValueChange={(categoryId) => onChange({ ...draft, categoryId })}
-				className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-3 hover:border-foreground/30"
+				className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-3 hover:border-border-strong"
 			/>
 			<Input
 				aria-label={`${label} amount`}

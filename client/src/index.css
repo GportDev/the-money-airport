@@ -2,6 +2,11 @@
 @import "@fontsource-variable/geist-mono";
 @import "tailwindcss";
 
+/* Desktop layout (expanded sidebar, side-by-side summary, two-column dashboard) starts at 1000px. */
+@theme {
+	--breakpoint-desk: 62.5rem;
+}
+
 @theme inline {
 	--font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
 	--font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, monospace;
@@ -14,22 +19,31 @@
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-border: var(--border);
+	--color-border-strong: var(--border-strong);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
 	--color-ring: var(--ring);
 	--color-positive: var(--positive);
 	--color-negative: var(--negative);
+	--color-warning: var(--warning);
 	--color-chart-1: var(--chart-1);
 	--color-chart-2: var(--chart-2);
 	--color-chart-3: var(--chart-3);
 	--color-chart-4: var(--chart-4);
 	--color-chart-5: var(--chart-5);
 	--color-chart-6: var(--chart-6);
+	--color-chart-grid: var(--chart-grid);
 	--radius-lg: var(--radius);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-sm: calc(var(--radius) - 4px);
+	--radius-xl: var(--radius-card);
+	--radius-2xl: var(--radius-float);
+	--shadow-float: var(--elevation-float);
+	--shadow-pop: var(--elevation-pop);
 	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 	--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+	/* Soft spring (about 0.2 bounce), kept for rare delight moments only. */
+	--ease-spring: linear(0, 0.36 10%, 0.82 25%, 1.04 40%, 1.01 55%, 1);
 	--animate-pop-in: pop-in 160ms var(--ease-out);
 	--animate-pop-out: pop-out 100ms var(--ease-out) forwards;
 	--animate-fade-in: fade-in 160ms var(--ease-out);
@@ -79,7 +93,7 @@
 }
 
 :root {
-	--background: #f7f7f6;
+	--background: #fafafa;
 	--foreground: #171717;
 	--card: #ffffff;
 	--card-foreground: #171717;
@@ -87,12 +101,14 @@
 	--primary-foreground: #ffffff;
 	--secondary: #f5f5f4;
 	--secondary-foreground: #171717;
-	--border: #e5e5e5;
+	--border: #ebebeb;
+	--border-strong: #d4d4d4;
 	--muted: #f5f5f4;
 	--muted-foreground: #737373;
 	--ring: #171717;
 	--positive: #16a34a;
 	--negative: #dc2626;
+	--warning: #b45309;
 	/* Series inks for multi-line and allocation charts; orange leads like the accent. */
 	--chart-1: #ea580c;
 	--chart-2: #2563eb;
@@ -100,7 +116,13 @@
 	--chart-4: #9333ea;
 	--chart-5: #ca8a04;
 	--chart-6: #64748b;
-	--radius: 0.5rem;
+	--chart-grid: #f0f0f0;
+	--radius: 0.625rem;
+	--radius-card: 1rem;
+	--radius-float: 1.25rem;
+	/* Floating surfaces only (toolbars, the active segment, popovers). Resting cards stay flat. */
+	--elevation-float: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.02);
+	--elevation-pop: 0 8px 24px -8px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.04);
 	--pop-scale: 0.96;
 }
 

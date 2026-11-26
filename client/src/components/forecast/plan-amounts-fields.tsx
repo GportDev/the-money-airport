@@ -51,7 +51,7 @@ export function PlanAmountsFields({ year, amounts, onChange }: Props) {
 						{longMonthName(month)}
 						<input
 							id={`plan-month-${month}`}
-							className="rounded-md border border-border bg-card px-2 py-1.5 text-sm text-foreground transition-colors hover:border-foreground/30"
+							className="rounded-md border border-border bg-card px-2 py-1.5 text-sm text-foreground transition-colors hover:border-border-strong"
 							type="number"
 							inputMode="decimal"
 							min="0"

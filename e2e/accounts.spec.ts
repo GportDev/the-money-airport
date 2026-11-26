@@ -2,6 +2,16 @@ import { expect, type Page, test as unsigned } from "@playwright/test";
 import { expect as signedExpect, test } from "./fixtures";
 import { signUp } from "./helpers/auth";
 import { seedFxRate } from "./helpers/fx";
+import { chooseOption } from "./helpers/select";
+
+const GROUP_LABELS: Record<string, string> = {
+	cash: "Cash",
+	credit: "Credit Cards",
+	investment: "Investments",
+	loan: "Loans",
+	vehicle: "Vehicles",
+	other: "Other",
+};
 
 const groups = ["Cash", "Credit Cards", "Investments", "Loans", "Vehicles", "Other"] as const;
 
@@ -78,10 +88,14 @@ async function addManual(
 	await page.getByRole("button", { name: "Add manually" }).click();
 	await page.getByLabel("Name").fill(fields.name);
 	if (fields.group) {
-		await page.getByLabel("Display group").selectOption(fields.group);
+		await chooseOption(
+			page,
+			page.getByLabel("Display group"),
+			GROUP_LABELS[fields.group] ?? fields.group,
+		);
 	}
 	if (fields.type) {
-		await page.getByLabel("Type").selectOption(fields.type);
+		await chooseOption(page, page.getByLabel("Type"), fields.type);
 	}
 	await page.getByLabel("Balance").fill(fields.balance);
 	if (fields.currency) {
@@ -162,10 +176,10 @@ test("edit and unhide move net worth, and Filters stay in the URL", async ({ pag
 	await signedExpect(
 		page.getByRole("region", { name: "Net worth" }).getByText("$80.00"),
 	).toBeVisible();
-	await page.getByLabel("Timeframe").selectOption("3m");
+	await chooseOption(page, page.getByLabel("Timeframe"), "3 months");
 	await signedExpect(page).toHaveURL(/range=3m/);
 	await page.getByRole("button", { name: "Filters" }).click();
-	await page.getByLabel("Group").selectOption("vehicle");
+	await chooseOption(page, page.getByLabel("Group"), "Vehicles");
 	await signedExpect(page).toHaveURL(/group=vehicle/);
 	await signedExpect(page.getByText("Editable cash")).toHaveCount(0);
 });

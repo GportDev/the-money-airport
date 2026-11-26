@@ -7,6 +7,7 @@ import { RecurringUpcoming } from "@/components/dashboard/recurring-upcoming";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
+import { SelectField } from "@/components/ui/select-field";
 import { BUDGET_GROUP_LABELS } from "@/lib/budget";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
@@ -19,6 +20,13 @@ export const WIDGET_LABELS: Record<DashboardWidgetId, string> = {
 	transactions: "Transactions",
 	recurring: "Recurring",
 };
+
+const NET_WORTH_RANGES: { value: NetWorthRange; label: string }[] = [
+	{ value: "1m", label: "1 month" },
+	{ value: "3m", label: "3 months" },
+	{ value: "1y", label: "1 year" },
+	{ value: "ytd", label: "YTD" },
+];
 
 const WIDGET_LINKS: Record<DashboardWidgetId, string> = {
 	budget: "/budget",
@@ -147,20 +155,13 @@ export function NetWorthWidget({
 				</>
 			}
 			action={
-				<label className="text-sm" htmlFor="dashboard-net-worth-range">
-					<span className="sr-only">Net worth timeframe</span>
-					<select
-						id="dashboard-net-worth-range"
-						className="rounded-md border border-border bg-card px-2 py-1 transition-colors hover:border-foreground/30"
-						value={netWorth.range}
-						onChange={(event) => onRangeChange(event.target.value as NetWorthRange)}
-					>
-						<option value="1m">1 month</option>
-						<option value="3m">3 months</option>
-						<option value="1y">1 year</option>
-						<option value="ytd">YTD</option>
-					</select>
-				</label>
+				<SelectField
+					aria-label="Net worth timeframe"
+					variant="ghost"
+					value={netWorth.range}
+					options={NET_WORTH_RANGES}
+					onValueChange={onRangeChange}
+				/>
 			}
 		>
 			<div className="h-28">

@@ -1,6 +1,7 @@
 import { expect, type Page, test as unsigned } from "@playwright/test";
 import { expect as signedExpect, test } from "./fixtures";
 import { signUp } from "./helpers/auth";
+import { chooseOption } from "./helpers/select";
 import { daysAgo, seedSnapshot } from "./helpers/snapshots";
 
 const API = "http://localhost:3000/api";
@@ -293,7 +294,7 @@ test("Reports page: range drives the cards and a category opens its transactions
 	await page.keyboard.press("Escape");
 	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 
-	await page.getByLabel("Date range").selectOption({ label: "This Month" });
+	await chooseOption(page, page.getByLabel("Date range"), "This Month");
 	await signedExpect(page).toHaveURL(/range=this_month/);
 	await signedExpect(page.getByLabel("From")).toHaveCount(0);
 	await signedExpect(spending.getByText("No spending in this range.")).toBeVisible();

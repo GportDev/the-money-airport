@@ -34,3 +34,6 @@ export const BASE_CURRENCIES = [
 	"HKD",
 	"ZAR",
 ] as const;
+
+/** Mirrors the `desk` breakpoint in `index.css`: desktop layout from 1000px up. */
+export const DESK_QUERY = "(min-width: 62.5rem)";

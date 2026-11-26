@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { signUp } from "./helpers/auth";
+import { chooseOption } from "./helpers/select";
 
 const API = "http://localhost:3000/api";
 
@@ -120,7 +121,7 @@ test("the category manager creates a Transfer-kind category", async ({ page }) =
 	await expect(manager.getByRole("heading", { name: "Transfer", exact: true })).toBeVisible();
 	await manager.getByRole("button", { name: "New category" }).click();
 	await manager.getByLabel("Name").fill("Card payment");
-	await manager.getByLabel("Kind").selectOption("transfer");
+	await chooseOption(page, manager.getByLabel("Kind"), "Transfer");
 	await expect(manager.getByLabel("Budget group")).toHaveCount(0);
 	await manager.getByRole("button", { name: "Create category" }).click();
 	await expect

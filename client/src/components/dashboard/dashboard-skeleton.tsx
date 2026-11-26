@@ -2,7 +2,7 @@ import { Skeleton, SkeletonCard, SkeletonGroup, SkeletonRows } from "@/component
 
 export function DashboardSkeleton() {
 	return (
-		<SkeletonGroup label="Loading dashboard" className="grid gap-4 xl:grid-cols-2">
+		<SkeletonGroup label="Loading dashboard" className="grid gap-4 desk:grid-cols-2">
 			<div className="flex flex-col gap-4">
 				<SkeletonCard>
 					<Skeleton className="h-3 w-full" />

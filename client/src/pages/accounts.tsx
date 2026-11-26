@@ -12,6 +12,7 @@ import { AccountDrawer } from "@/components/drawers/account-drawer";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SelectField } from "@/components/ui/select-field";
 import {
 	useAccounts,
 	useCreateAccount,
@@ -85,29 +86,26 @@ export function AccountsPage() {
 							/>
 							Show hidden
 						</label>
-						<label className="flex flex-col gap-1 text-sm">
-							Group
-							<select
-								className="rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30"
+						<div className="flex flex-col gap-1 text-sm">
+							<label htmlFor="accounts-group-filter">Group</label>
+							<SelectField
+								id="accounts-group-filter"
 								value={groupFilter ?? "all"}
-								onChange={(event) => {
+								options={[
+									{ value: "all", label: "All" },
+									...DISPLAY_GROUPS.map((group) => ({ value: group.key, label: group.label })),
+								]}
+								onValueChange={(value) => {
 									patchParams((params) => {
-										if (event.target.value === "all") {
+										if (value === "all") {
 											params.delete("group");
 										} else {
-											params.set("group", event.target.value);
+											params.set("group", value);
 										}
 									});
 								}}
-							>
-								<option value="all">All</option>
-								{DISPLAY_GROUPS.map((group) => (
-									<option key={group.key} value={group.key}>
-										{group.label}
-									</option>
-								))}
-							</select>
-						</label>
+							/>
+						</div>
 						<Button variant="outline" type="button" onClick={() => setFiltersOpen(false)}>
 							Done
 						</Button>
@@ -156,7 +154,7 @@ export function AccountsPage() {
 			<AccountsState accounts={accounts} onAdd={() => setChooser(true)}>
 				<div className="flex flex-col gap-6">
 					{omitted ? (
-						<output className="rounded-md border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-foreground/30">
+						<output className="rounded-lg bg-foreground/[0.04] px-3 py-2 text-sm text-muted-foreground">
 							Unofficial currencies are omitted from net worth.
 						</output>
 					) : null}

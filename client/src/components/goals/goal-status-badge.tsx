@@ -1,4 +1,4 @@
-import { cn } from "@/lib/cn";
+import { Badge, BadgeDot } from "@/components/ui/badge";
 import type { Goal } from "@/types";
 
 type Props = { status: Goal["status"]; hasDate: boolean };
@@ -10,13 +10,9 @@ export function GoalStatusBadge({ status, hasDate }: Props) {
 	}
 	const isAtRisk = status === "at_risk";
 	return (
-		<span
-			className={cn(
-				"rounded-full px-2 py-0.5 text-xs",
-				isAtRisk ? "bg-negative/10 text-negative" : "bg-positive/10 text-positive",
-			)}
-		>
+		<Badge tone={isAtRisk ? "negative" : "positive"}>
+			<BadgeDot />
 			{isAtRisk ? "At risk" : "On track"}
-		</span>
+		</Badge>
 	);
 }

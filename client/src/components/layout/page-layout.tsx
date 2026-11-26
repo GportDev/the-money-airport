@@ -35,7 +35,7 @@ export function PageLayout() {
 					<div
 						ref={scrollRef}
 						data-testid="page-scroll"
-						className="relative flex min-h-0 flex-1 flex-col overflow-y-auto xl:flex-row xl:items-start"
+						className="relative flex min-h-0 flex-1 flex-col overflow-y-auto desk:flex-row desk:items-start"
 					>
 						<main className="min-w-0 flex-1 p-6">
 							<Outlet />
@@ -43,7 +43,7 @@ export function PageLayout() {
 						{showSummary ? (
 							<aside
 								aria-label="Summary"
-								className="w-full shrink-0 border-t border-border p-4 xl:sticky xl:top-0 xl:h-full xl:w-80 xl:self-start xl:overflow-y-auto xl:border-t-0 xl:border-l"
+								className="w-full shrink-0 border-t border-border p-4 desk:sticky desk:top-0 desk:h-full desk:w-80 desk:self-start desk:overflow-y-auto desk:border-t-0 desk:border-l"
 							>
 								<SummaryPanel pathname={location.pathname} />
 							</aside>

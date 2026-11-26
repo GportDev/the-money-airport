@@ -1,17 +1,20 @@
-import { cva } from "class-variance-authority";
+import { Badge } from "@/components/ui/badge";
 import { ONE_OFF_STATUS_LABELS } from "@/lib/forecast";
 import type { OneOffStatus } from "@/types";
 
-const badge = cva("rounded-full px-2 py-0.5 text-xs font-medium", {
-	variants: {
-		status: {
-			expected: "bg-muted text-muted-foreground",
-			done: "bg-positive/10 text-positive",
-			cancelled: "bg-foreground/5 text-muted-foreground line-through",
-		},
-	},
-});
+const STATUS_TONES = {
+	expected: "neutral",
+	done: "positive",
+	cancelled: "neutral",
+} as const satisfies Record<OneOffStatus, "neutral" | "positive">;
 
 export function OneOffStatusBadge({ status }: { status: OneOffStatus }) {
-	return <span className={badge({ status })}>{ONE_OFF_STATUS_LABELS[status]}</span>;
+	return (
+		<Badge
+			tone={STATUS_TONES[status]}
+			className={status === "cancelled" ? "line-through" : undefined}
+		>
+			{ONE_OFF_STATUS_LABELS[status]}
+		</Badge>
+	);
 }

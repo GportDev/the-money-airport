@@ -1,7 +1,15 @@
 import { Line, LineChart, ResponsiveContainer } from "recharts";
 import { Amount } from "@/components/ui/amount";
+import { SelectField } from "@/components/ui/select-field";
 import { formatMoney } from "@/lib/format";
 import type { NetWorth } from "@/types";
+
+const RANGE_OPTIONS = [
+	{ value: "1m", label: "1 month" },
+	{ value: "3m", label: "3 months" },
+	{ value: "1y", label: "1 year" },
+	{ value: "ytd", label: "YTD" },
+];
 
 export function NetWorthHero({
 	netWorth,
@@ -25,20 +33,14 @@ export function NetWorthHero({
 					Net worth
 				</h2>
 				{onRangeChange ? (
-					<label className="text-sm" htmlFor="net-worth-range">
-						Timeframe
-						<select
-							id="net-worth-range"
-							className="ml-2 rounded-md border border-border bg-card px-2 py-1 transition-colors hover:border-foreground/30"
-							value={range}
-							onChange={(event) => onRangeChange(event.target.value)}
-						>
-							<option value="1m">1 month</option>
-							<option value="3m">3 months</option>
-							<option value="1y">1 year</option>
-							<option value="ytd">YTD</option>
-						</select>
-					</label>
+					<SelectField
+						aria-label="Timeframe"
+						variant="ghost"
+						lead="Timeframe"
+						value={range}
+						options={RANGE_OPTIONS}
+						onValueChange={onRangeChange}
+					/>
 				) : null}
 			</div>
 			<p className="mt-2 text-3xl font-semibold">

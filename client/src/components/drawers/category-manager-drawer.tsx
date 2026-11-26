@@ -4,6 +4,7 @@ import { CategoryIcon } from "@/components/transactions/category-icon";
 import { CategoryIconSelect } from "@/components/transactions/category-icon-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select-field";
 import {
 	Sheet,
 	SheetContent,
@@ -19,12 +20,16 @@ import {
 } from "@/hooks/use-categories";
 import type { BudgetGroup, Category, CategoryKind } from "@/types";
 
-const fieldClass =
-	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";
 const BUDGET_GROUPS: { key: BudgetGroup; label: string }[] = [
 	{ key: "fixed", label: "Fixed" },
 	{ key: "flexible", label: "Flexible" },
 	{ key: "non_monthly", label: "Non-monthly" },
+];
+
+const KIND_OPTIONS: { value: CategoryKind; label: string }[] = [
+	{ value: "expense", label: "Expense" },
+	{ value: "income", label: "Income" },
+	{ value: "transfer", label: "Transfer" },
 ];
 
 const KIND_SECTIONS: { kind: CategoryKind; label: string }[] = [
@@ -186,36 +191,26 @@ function CategoryForm({ category, onDone }: { category: Category | null; onDone:
 				</div>
 			</div>
 			{category?.isUncategorized ? null : (
-				<label className="flex flex-col gap-1 text-sm" htmlFor="category-kind">
-					Kind
-					<select
+				<div className="flex flex-col gap-1 text-sm">
+					<label htmlFor="category-kind">Kind</label>
+					<SelectField
 						id="category-kind"
-						className={fieldClass}
 						value={kind}
-						onChange={(event) => setKind(event.target.value as CategoryKind)}
-					>
-						<option value="expense">Expense</option>
-						<option value="income">Income</option>
-						<option value="transfer">Transfer</option>
-					</select>
-				</label>
+						options={KIND_OPTIONS}
+						onValueChange={setKind}
+					/>
+				</div>
 			)}
 			{kind === "expense" ? (
-				<label className="flex flex-col gap-1 text-sm" htmlFor="category-budget-group">
-					Budget group
-					<select
+				<div className="flex flex-col gap-1 text-sm">
+					<label htmlFor="category-budget-group">Budget group</label>
+					<SelectField
 						id="category-budget-group"
-						className={fieldClass}
 						value={budgetGroup}
-						onChange={(event) => setBudgetGroup(event.target.value as BudgetGroup)}
-					>
-						{BUDGET_GROUPS.map((group) => (
-							<option key={group.key} value={group.key}>
-								{group.label}
-							</option>
-						))}
-					</select>
-				</label>
+						options={BUDGET_GROUPS.map((group) => ({ value: group.key, label: group.label }))}
+						onValueChange={setBudgetGroup}
+					/>
+				</div>
 			) : null}
 			{error ? (
 				<p role="alert" className="text-sm text-negative">

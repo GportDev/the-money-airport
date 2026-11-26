@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { signUp } from "./helpers/auth";
+import { chooseOption } from "./helpers/select";
 
 const API = "http://localhost:3000/api";
 
@@ -85,7 +86,7 @@ test("only credit cards carry a credit limit", async ({ page }) => {
 	await page.getByRole("button", { name: "Add account" }).click();
 	await page.getByRole("button", { name: "Add manually" }).click();
 	await expect(page.getByRole("dialog").getByLabel("Credit limit")).toHaveCount(0);
-	await page.getByRole("dialog").getByLabel("Display group").selectOption("credit");
+	await chooseOption(page, page.getByRole("dialog").getByLabel("Display group"), "Credit Cards");
 	await expect(page.getByRole("dialog").getByLabel("Credit limit")).toBeVisible();
 });
 

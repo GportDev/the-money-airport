@@ -20,6 +20,7 @@ import { QueryError } from "@/components/ui/query-error";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useDeleteTransaction } from "@/hooks/use-transactions";
+import { DESK_QUERY } from "@/lib/constants";
 import type { Dashboard, DashboardWidget, NetWorthRange, TransactionDetail } from "@/types";
 
 function greeting(hour: number) {
@@ -111,7 +112,7 @@ function Widgets({
 		.sort((a, b) => a.order - b.order)
 		.filter((widget) => widget.visible);
 	const currency = data.baseCurrency;
-	const wide = useMediaQuery("(min-width: 1280px)");
+	const wide = useMediaQuery(DESK_QUERY);
 	// Two independent stacks (1st, 3rd, … left; 2nd, 4th, … right) so tall widgets leave no gaps.
 	const columns = wide
 		? [visible.filter((_, index) => index % 2 === 0), visible.filter((_, index) => index % 2 === 1)]
@@ -154,7 +155,7 @@ function Widgets({
 		);
 	}
 	return (
-		<div className="grid gap-4 xl:grid-cols-2">
+		<div className="grid gap-4 desk:grid-cols-2">
 			{columns.map((column, index) => (
 				<div key={String(index)} className="flex min-w-0 flex-col gap-4">
 					{column.map((widget) => (

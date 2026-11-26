@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import { formatSignedMoney } from "@/lib/format";
 import type { BetterCard } from "@/types";
@@ -13,15 +14,9 @@ export function BetterCardBadge({ betterCard, currency, className }: Props) {
 	const gain = `${formatSignedMoney(betterCard.extraValue, currency)} est. rewards`;
 	const cardLabel = betterCard.mask ? `${betterCard.name} …${betterCard.mask}` : betterCard.name;
 	return (
-		<span
-			title={`${gain} with ${cardLabel}`}
-			className={cn(
-				"inline-flex max-w-44 shrink-0 items-center rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground",
-				className,
-			)}
-		>
+		<Badge title={`${gain} with ${cardLabel}`} className={cn("max-w-44 font-normal", className)}>
 			<span className="truncate">{`Better with ${betterCard.name}`}</span>
 			<span className="sr-only">{`, ${gain}`}</span>
-		</span>
+		</Badge>
 	);
 }

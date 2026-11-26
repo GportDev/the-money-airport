@@ -54,7 +54,7 @@ export function CreateRule({ transaction }: Props) {
 							id="rule-category"
 							value={categoryId}
 							onValueChange={setCategoryId}
-							className="rounded-md border border-border bg-card px-3 py-2 hover:border-foreground/30"
+							className="rounded-md border border-border bg-card px-3 py-2 hover:border-border-strong"
 						/>
 					</label>
 					<label className="flex items-center gap-2" htmlFor="rule-match-amount">

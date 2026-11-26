@@ -13,6 +13,7 @@ import { NoTransactions } from "@/components/transactions/no-transactions";
 import { type FeedColumns, TransactionFeed } from "@/components/transactions/transaction-feed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select-field";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
 import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
@@ -27,9 +28,6 @@ const TABS = [
 ] as const;
 
 const FILTER_PARAMS = ["search", "account", "category", "pending", "min", "max", "from", "to"];
-
-const fieldClass =
-	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";
 
 function filtersFromParams(params: URLSearchParams): TransactionFilters {
 	const pending = params.get("pending");
@@ -248,7 +246,7 @@ export function TransactionsPage() {
 				<div
 					role="dialog"
 					aria-label="Columns"
-					className="fixed inset-y-0 right-0 left-16 z-40 flex items-start justify-end bg-black/20 p-6 pt-24 xl:left-60"
+					className="fixed inset-y-0 right-0 left-16 z-40 flex items-start justify-end bg-black/20 p-6 pt-24 desk:left-60"
 				>
 					<div className="flex w-60 flex-col gap-3 rounded-xl border border-border bg-card p-4">
 						<label className="flex items-center gap-2 text-sm">
@@ -363,7 +361,7 @@ function FiltersPanel({
 		<div
 			role="dialog"
 			aria-label="Filters"
-			className="fixed inset-y-0 right-0 left-16 z-40 flex items-start justify-end bg-black/20 p-6 pt-24 xl:left-60"
+			className="fixed inset-y-0 right-0 left-16 z-40 flex items-start justify-end bg-black/20 p-6 pt-24 desk:left-60"
 		>
 			<div className="flex max-h-[70vh] w-80 flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-card p-4">
 				<fieldset className="flex flex-col gap-1 text-sm">
@@ -411,19 +409,19 @@ function FiltersPanel({
 						Manage rules
 					</button>
 				</fieldset>
-				<label className="flex flex-col gap-1 text-sm" htmlFor="filter-pending">
-					Status
-					<select
+				<div className="flex flex-col gap-1 text-sm">
+					<label htmlFor="filter-pending">Status</label>
+					<SelectField
 						id="filter-pending"
-						className={fieldClass}
 						value={local.get("pending") ?? ""}
-						onChange={(event) => setValue("pending", event.target.value)}
-					>
-						<option value="">Any</option>
-						<option value="pending">Pending</option>
-						<option value="posted">Posted</option>
-					</select>
-				</label>
+						options={[
+							{ value: "", label: "Any" },
+							{ value: "pending", label: "Pending" },
+							{ value: "posted", label: "Posted" },
+						]}
+						onValueChange={(value) => setValue("pending", value)}
+					/>
+				</div>
 				<div className="grid grid-cols-2 gap-2">
 					<label className="flex flex-col gap-1 text-sm" htmlFor="filter-min">
 						Min amount

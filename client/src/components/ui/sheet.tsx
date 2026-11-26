@@ -92,7 +92,7 @@ function SheetContent({
 				<Drawer.Popup
 					data-slot="sheet-content"
 					className={cn(
-						"pointer-events-auto relative flex h-full w-3/4 flex-col border-l border-border bg-background shadow-2xl outline-none sm:max-w-sm",
+						"pointer-events-auto relative flex h-full w-3/4 flex-col border-l border-border bg-background shadow-pop outline-none sm:max-w-[28.75rem]",
 						// Base UI's side-drawer recipe: follow the finger while swiping, slide fully
 						// out on enter/exit, and finish a flick at the speed it was thrown.
 						"[transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-drawer",

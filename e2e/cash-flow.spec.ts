@@ -1,6 +1,7 @@
 import { expect, type Page, test as unsigned } from "@playwright/test";
 import { expect as signedExpect, test } from "./fixtures";
 import { signUp } from "./helpers/auth";
+import { chooseOption } from "./helpers/select";
 
 const API = "http://localhost:3000/api";
 
@@ -225,7 +226,7 @@ test("Cash Flow page: KPI cards, month navigator, scope, chart interval, and fee
 		page.getByRole("figure", { name: "Weekly income and expenses" }),
 	).toBeVisible();
 
-	await page.getByLabel("Account scope").selectOption({ label: "Flow Checking" });
+	await chooseOption(page, page.getByLabel("Account scope"), /^Flow Checking/);
 	await signedExpect(page).toHaveURL(new RegExp(`account=${checking}`));
 	await signedExpect(page.getByRole("region", { name: "Expenses", exact: true })).toContainText(
 		"$120.00",

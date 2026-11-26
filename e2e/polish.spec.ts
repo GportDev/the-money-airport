@@ -143,10 +143,10 @@ test("Budget month with no plans offers copy from the previous month", async ({ 
 	await expect(page.getByRole("alertdialog")).toContainText("Copy February plans");
 });
 
-test("below 1280px the summary panel stacks under main; wide screens put it beside", async ({
+test("below 1000px the summary panel stacks under main; wide screens put it beside", async ({
 	page,
 }) => {
-	await page.setViewportSize({ width: 1024, height: 800 });
+	await page.setViewportSize({ width: 960, height: 800 });
 	await page.goto("/accounts");
 	const main = page.getByRole("main");
 	const panel = page.getByRole("complementary", { name: "Summary" });

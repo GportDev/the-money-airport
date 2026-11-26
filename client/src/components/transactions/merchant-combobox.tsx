@@ -50,7 +50,7 @@ export function MerchantCombobox({ value, onValueChange, id, className }: Props)
 					{/* No exit transition, like CategoryCombobox: Base UI can leave it mounted. */}
 					<Combobox.Popup
 						aria-label="Merchants"
-						className="flex max-h-[min(24rem,var(--available-height))] w-72 origin-(--transform-origin) flex-col overflow-hidden rounded-lg border border-border bg-card text-sm shadow-lg data-[open]:animate-pop-in"
+						className="flex max-h-[min(24rem,var(--available-height))] w-72 origin-(--transform-origin) flex-col overflow-hidden rounded-lg border border-border bg-card text-sm shadow-pop data-[open]:animate-pop-in"
 					>
 						<div className="flex items-center gap-2 border-b border-border px-3">
 							<Search aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />

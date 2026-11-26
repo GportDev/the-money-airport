@@ -16,10 +16,7 @@ import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { SidebarNavLink } from "@/components/layout/sidebar-nav-link";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/cn";
-import { NAV_ITEMS } from "@/lib/constants";
-
-/** Tailwind's `xl`: below it the sidebar stays compact even when expanded. */
-const WIDE_QUERY = "(min-width: 80rem)";
+import { DESK_QUERY, NAV_ITEMS } from "@/lib/constants";
 
 const NAV_ICONS = {
 	Dashboard: LayoutDashboard,
@@ -36,7 +33,7 @@ const NAV_ICONS = {
 } as const;
 
 export function Sidebar({ collapsed }: { collapsed: boolean }) {
-	const isWide = useMediaQuery(WIDE_QUERY);
+	const isWide = useMediaQuery(DESK_QUERY);
 	const isCompact = collapsed || !isWide;
 
 	return (

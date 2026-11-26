@@ -22,7 +22,7 @@ function PopoverContent({
 				align={align}
 				sideOffset={sideOffset}
 				className={cn(
-					"z-50 flex w-72 max-w-[calc(100vw-2rem)] origin-(--radix-popover-content-transform-origin) flex-col gap-3 rounded-xl border border-border bg-card p-4 text-sm shadow-lg data-[state=closed]:animate-pop-out data-[state=open]:animate-pop-in",
+					"z-50 flex w-72 max-w-[calc(100vw-2rem)] origin-(--radix-popover-content-transform-origin) flex-col gap-3 rounded-xl border border-border bg-card p-4 text-sm shadow-pop data-[state=closed]:animate-pop-out data-[state=open]:animate-pop-in",
 					className,
 				)}
 				{...props}

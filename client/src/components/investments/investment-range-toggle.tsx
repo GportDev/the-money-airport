@@ -1,4 +1,4 @@
-import { cn } from "@/lib/cn";
+import { Segmented } from "@/components/ui/segmented";
 import type { InvestmentRange } from "@/types";
 
 const OPTIONS: { value: InvestmentRange; label: string }[] = [
@@ -14,22 +14,6 @@ type Props = {
 
 export function InvestmentRangeToggle({ value, onChange }: Props) {
 	return (
-		<fieldset className="flex rounded-md border border-border bg-card p-0.5 text-sm">
-			<legend className="sr-only">Timeframe</legend>
-			{OPTIONS.map((option) => (
-				<button
-					key={option.value}
-					type="button"
-					aria-pressed={value === option.value}
-					className={cn(
-						"rounded px-2 py-1 transition-colors hover:bg-foreground/5 hover:text-foreground",
-						value === option.value ? "bg-muted font-medium" : "text-muted-foreground",
-					)}
-					onClick={() => onChange(option.value)}
-				>
-					{option.label}
-				</button>
-			))}
-		</fieldset>
+		<Segmented aria-label="Timeframe" value={value} options={OPTIONS} onValueChange={onChange} />
 	);
 }

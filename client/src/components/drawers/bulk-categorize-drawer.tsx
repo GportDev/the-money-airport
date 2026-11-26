@@ -54,7 +54,7 @@ export function BulkCategorizeDrawer({
 							id="bulk-category"
 							value={categoryId || null}
 							onValueChange={setCategoryId}
-							className="rounded-md border border-border bg-card px-3 py-2 hover:border-foreground/30"
+							className="rounded-md border border-border bg-card px-3 py-2 hover:border-border-strong"
 						/>
 					</label>
 					{error ? (

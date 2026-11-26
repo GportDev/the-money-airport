@@ -40,7 +40,7 @@ import {
 import type { Category, TransactionDetail } from "@/types";
 
 const fieldClass =
-	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-foreground/30";
+	"rounded-md border border-border bg-card px-3 py-2 transition-colors hover:border-border-strong";
 
 /** `transactionId` null opens the add form; otherwise the detail/edit view. */
 export function TransactionDrawer({
