@@ -248,7 +248,7 @@ function FeedRow({
 				) : null}
 				<MerchantLogo name={title} url={item.merchantLogoUrl} />
 			</span>
-			<span className="pointer-events-none flex min-w-0 items-center gap-2 [&_button]:pointer-events-auto [&_input]:pointer-events-auto">
+			<span className="pointer-events-none flex min-w-0 items-center gap-2 overflow-hidden [&_button]:pointer-events-auto [&_input]:pointer-events-auto">
 				<FeedTitleEditor item={item} isEditable={!selecting} />
 				{item.pending ? <Badge>Pending</Badge> : null}
 				{item.isSplit ? <Badge>Split</Badge> : null}
@@ -305,7 +305,7 @@ function FeedRow({
 						size="icon-sm"
 						type="button"
 						aria-label={item.isSplit ? "Edit split" : "Split transaction"}
-						className="row-action relative size-6 text-muted-foreground hover:text-foreground"
+						className="row-action relative size-6 max-sm:hidden text-muted-foreground hover:text-foreground"
 						onClick={() => onSplit(item)}
 					>
 						<SplitIcon aria-hidden className="size-3.5" />

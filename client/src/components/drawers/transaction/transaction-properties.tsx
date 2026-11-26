@@ -37,6 +37,16 @@ export function TransactionProperties({ transaction, onSaved }: Props) {
 					onSaved={onSaved}
 				/>
 			</PropertyRow>
+			{transaction.merchantName ? (
+				<PropertyRow label="Name">
+					<InlineText
+						aria-label="Name"
+						value={transaction.name}
+						onCommit={(name) => saveOrThrow({ name })}
+						className="-ml-2"
+					/>
+				</PropertyRow>
+			) : null}
 			<PropertyRow label="Merchant">
 				{(labelId) => (
 					<MerchantCombobox
@@ -54,8 +64,8 @@ export function TransactionProperties({ transaction, onSaved }: Props) {
 					<span className="truncate">{accountLabel(transaction)}</span>
 				)}
 			</PropertyRow>
-			<PropertyRow label="Date">
-				{canEditLedger ? (
+			{canEditLedger ? (
+				<PropertyRow label="Date">
 					<InlineText
 						aria-label="Date"
 						type="date"
@@ -63,20 +73,16 @@ export function TransactionProperties({ transaction, onSaved }: Props) {
 						onCommit={(date) => saveOrThrow({ date })}
 						className="-ml-2"
 					/>
-				) : (
-					<span>{transaction.date}</span>
-				)}
-			</PropertyRow>
-			<PropertyRow label="Best card">
-				{transaction.betterCard ? (
+				</PropertyRow>
+			) : null}
+			{transaction.betterCard ? (
+				<PropertyRow label="Best card">
 					<BetterCardBadge
 						betterCard={transaction.betterCard}
 						currency={transaction.isoCurrencyCode}
 					/>
-				) : (
-					<span className="truncate">{transaction.account?.name ?? "—"}</span>
-				)}
-			</PropertyRow>
+				</PropertyRow>
+			) : null}
 			{transaction.split ? (
 				<PropertyRow label="Split">{`${transaction.split.parts.length} parts`}</PropertyRow>
 			) : null}

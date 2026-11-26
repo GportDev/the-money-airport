@@ -91,6 +91,7 @@ export function CashFlowPage() {
 				<SelectField
 					aria-label="Account scope"
 					variant="ghost"
+					className="shrink-0"
 					value={accountId ?? ""}
 					options={[
 						{ value: "", label: "All accounts" },

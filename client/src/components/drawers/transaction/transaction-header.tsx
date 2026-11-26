@@ -21,7 +21,10 @@ type Props = {
 	menu: MenuItem[];
 };
 
-/** Logo, the editable name as the drawer title, date and status, and the overflow menu. */
+/**
+ * Logo, title, date and status, and the overflow menu. The title is the merchant when there is
+ * one (edited in the property card); otherwise it is the name, edited right here.
+ */
 export function TransactionHeader({ transaction, onRename, menu }: Props) {
 	const logoName = transaction.merchantName ?? transaction.name;
 	return (
@@ -29,13 +32,19 @@ export function TransactionHeader({ transaction, onRename, menu }: Props) {
 			<div className="flex items-center gap-2">
 				<MerchantLogo name={logoName} url={transaction.merchantLogoUrl} />
 				<SheetTitle className="min-w-0 flex-1">
-					<InlineText
-						aria-label="Name"
-						size="title"
-						value={transaction.name}
-						onCommit={onRename}
-						className="-ml-2"
-					/>
+					{transaction.merchantName ? (
+						<span className="block truncate text-xl font-semibold tracking-tight">
+							{transaction.merchantName}
+						</span>
+					) : (
+						<InlineText
+							aria-label="Name"
+							size="title"
+							value={transaction.name}
+							onCommit={onRename}
+							className="-ml-2"
+						/>
+					)}
 				</SheetTitle>
 				{menu.length > 0 ? <OverflowMenu items={menu} /> : null}
 			</div>

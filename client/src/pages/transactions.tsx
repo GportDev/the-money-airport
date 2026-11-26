@@ -158,7 +158,7 @@ export function TransactionsPage() {
 			{tab === "all" ? (
 				<>
 					<Toolbar aria-label="Transaction filters">
-						<label className="relative flex min-w-48 flex-1 items-center" htmlFor="tx-search">
+						<label className="relative flex min-w-36 flex-1 items-center" htmlFor="tx-search">
 							<span className="sr-only">Search transactions</span>
 							<Search
 								aria-hidden

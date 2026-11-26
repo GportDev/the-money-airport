@@ -21,7 +21,7 @@ function Toolbar({ className, children, ...props }: Props) {
 				aria-label={props["aria-label"]}
 				data-stuck={isStuck || undefined}
 				className={cn(
-					"sticky top-3 z-20 mb-4 flex items-center gap-1 overflow-x-auto rounded-2xl border border-border bg-card/95 px-2 py-1.5 backdrop-blur-sm transition-shadow duration-150 ease-out data-[stuck]:shadow-float",
+					"sticky top-3 z-20 mb-4 flex items-center gap-1 overflow-x-auto [scrollbar-width:none] rounded-2xl border border-border bg-card/95 px-2 py-1.5 backdrop-blur-sm transition-shadow duration-150 ease-out data-[stuck]:shadow-float",
 					className,
 				)}
 			>

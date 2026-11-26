@@ -304,7 +304,8 @@ body {
 }
 
 /* Row buttons (rename, split) appear on row hover or keyboard focus on precise pointers; touch
-   screens, with no hover, always show them. */
+   tablets, with no hover, always show them. Phones hide them (`max-sm:hidden` at the call
+   site) and leave rename and split to the drawer, so titles keep their room. */
 @utility row-action {
 	transition:
 		opacity 120ms var(--ease-out),

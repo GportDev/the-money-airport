@@ -45,10 +45,12 @@ export function FeedTitleEditor({
 			/>
 		);
 	}
-	const showsRawName = item.merchantName !== null && item.merchantName !== item.name;
+	// The raw bank text only earns a second line when it says more than the merchant does.
+	const showsRawName =
+		item.merchantName !== null && item.merchantName.toLowerCase() !== item.name.toLowerCase();
 	return (
 		<>
-			<span className="pointer-events-none flex min-w-0 flex-col">
+			<span className="pointer-events-none flex min-w-16 flex-col">
 				<span className="truncate">{title}</span>
 				{showsRawName ? (
 					<span className="truncate text-xs text-muted-foreground">{item.name}</span>
@@ -59,7 +61,7 @@ export function FeedTitleEditor({
 					type="button"
 					aria-label="Edit name or merchant"
 					onClick={() => setEditing(true)}
-					className="row-action relative inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+					className="row-action relative inline-flex max-sm:hidden size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
 				>
 					<Pencil aria-hidden className="size-3.5" />
 				</button>
