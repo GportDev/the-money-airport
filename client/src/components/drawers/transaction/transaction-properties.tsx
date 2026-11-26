@@ -9,11 +9,11 @@ import { useAccounts } from "@/hooks/use-accounts";
 import { useSaveTransaction } from "@/hooks/use-save-transaction";
 import type { TransactionDetail } from "@/types";
 
-type Props = { transaction: TransactionDetail };
+type Props = { transaction: TransactionDetail; onSaved?: () => void };
 
 /** One card of the Transaction's properties; each editable value saves as soon as it changes. */
-export function TransactionProperties({ transaction }: Props) {
-	const { save, saveOrThrow } = useSaveTransaction(transaction.id);
+export function TransactionProperties({ transaction, onSaved }: Props) {
+	const { save, saveOrThrow } = useSaveTransaction(transaction.id, onSaved);
 	// The ledger fields of a split part are fixed; unsplit to change them.
 	const canEditLedger = transaction.isManual && !transaction.split;
 	return (
@@ -34,6 +34,7 @@ export function TransactionProperties({ transaction }: Props) {
 					category={transaction.category}
 					label="Category"
 					className="-ml-1.5"
+					onSaved={onSaved}
 				/>
 			</PropertyRow>
 			<PropertyRow label="Merchant">
@@ -48,7 +49,7 @@ export function TransactionProperties({ transaction }: Props) {
 			</PropertyRow>
 			<PropertyRow label="Account">
 				{canEditLedger ? (
-					<AccountPicker transaction={transaction} />
+					<AccountPicker transaction={transaction} onSaved={onSaved} />
 				) : (
 					<span className="truncate">{accountLabel(transaction)}</span>
 				)}
@@ -86,9 +87,9 @@ export function TransactionProperties({ transaction }: Props) {
 	);
 }
 
-function AccountPicker({ transaction }: Props) {
+function AccountPicker({ transaction, onSaved }: Props) {
 	const accounts = useAccounts();
-	const { save } = useSaveTransaction(transaction.id);
+	const { save } = useSaveTransaction(transaction.id, onSaved);
 	return (
 		<SelectField
 			aria-label="Account"

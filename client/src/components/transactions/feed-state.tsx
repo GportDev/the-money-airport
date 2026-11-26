@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { TransactionFeedSkeleton } from "@/components/transactions/transaction-feed-skeleton";
 import { QueryError } from "@/components/ui/query-error";
+import { useSettleClass } from "@/hooks/use-settle-class";
 
 type Props = {
 	feed: { isPending: boolean; isError: boolean; isFetching: boolean; refetch: () => unknown };
@@ -12,6 +13,7 @@ type Props = {
 
 /** Picks what a transaction feed area shows: skeleton, error with retry, empty state, or rows. */
 export function FeedState({ feed, isEmpty, empty, children }: Props) {
+	const settle = useSettleClass(feed.isPending);
 	if (feed.isPending) return <TransactionFeedSkeleton />;
 	if (feed.isError) {
 		return (
@@ -22,5 +24,5 @@ export function FeedState({ feed, isEmpty, empty, children }: Props) {
 			/>
 		);
 	}
-	return isEmpty ? empty : children;
+	return <div className={settle}>{isEmpty ? empty : children}</div>;
 }

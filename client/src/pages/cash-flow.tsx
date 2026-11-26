@@ -18,6 +18,7 @@ import { SelectField } from "@/components/ui/select-field";
 import { Toolbar, ToolbarDivider, ToolbarGroup } from "@/components/ui/toolbar";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCashFlow } from "@/hooks/use-cash-flow";
+import { useSettleClass } from "@/hooks/use-settle-class";
 import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
 import { formatMoney } from "@/lib/format";
 import { monthLabel, parseMonth, shiftMonth } from "@/lib/month";
@@ -64,6 +65,7 @@ export function CashFlowPage() {
 	}
 
 	const data = cashFlow.data;
+	const settle = useSettleClass(cashFlow.isPending);
 	const currency = data?.baseCurrency ?? "USD";
 	const net = data?.summary.netCashFlow ?? 0;
 
@@ -124,7 +126,7 @@ export function CashFlowPage() {
 			{cashFlow.isPending ? (
 				<CashFlowSkeleton />
 			) : (
-				<>
+				<div className={settle}>
 					<KpiStrip className="mb-4">
 						<KpiCell
 							label="Income"
@@ -186,7 +188,7 @@ export function CashFlowPage() {
 							<div className="h-64" aria-hidden />
 						)}
 					</section>
-				</>
+				</div>
 			)}
 
 			<FeedState

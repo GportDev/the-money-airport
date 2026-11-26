@@ -21,11 +21,14 @@ type Props = {
 	transaction: TransactionDetail;
 	onDelete?: (transaction: TransactionDetail) => void;
 	onOpenSimilar?: (id: string) => void;
+	/** Called after any field of this Transaction saves. */
+	onChanged?: (id: string) => void;
 };
 
 /** The detail view: every value is shown once, where it is edited, and saves on its own. */
-export function TransactionEdit({ transaction, onDelete, onOpenSimilar }: Props) {
-	const { saveOrThrow } = useSaveTransaction(transaction.id);
+export function TransactionEdit({ transaction, onDelete, onOpenSimilar, onChanged }: Props) {
+	const onSaved = () => onChanged?.(transaction.id);
+	const { saveOrThrow } = useSaveTransaction(transaction.id, onSaved);
 	const [panel, setPanel] = useState<ActionPanel>(null);
 	const [isSplitOpen, setSplitOpen] = useState(false);
 	const funds = useAssignableFunds(transaction);
@@ -44,7 +47,7 @@ export function TransactionEdit({ transaction, onDelete, onOpenSimilar }: Props)
 				menu={menu}
 			/>
 			<div className="-mt-2 flex flex-col gap-1 px-4">
-				<TransactionAmount transaction={transaction} />
+				<TransactionAmount transaction={transaction} onSaved={onSaved} />
 				<InlineNote
 					aria-label="Notes"
 					value={transaction.notes ?? ""}
@@ -52,7 +55,7 @@ export function TransactionEdit({ transaction, onDelete, onOpenSimilar }: Props)
 					className="-mx-2 w-[calc(100%+1rem)]"
 				/>
 			</div>
-			<TransactionProperties transaction={transaction} />
+			<TransactionProperties transaction={transaction} onSaved={onSaved} />
 			<TransactionRefund transaction={transaction} onOpen={onOpenSimilar} />
 			<TransactionActions
 				transaction={transaction}
@@ -64,14 +67,21 @@ export function TransactionEdit({ transaction, onDelete, onOpenSimilar }: Props)
 			<SplitDialog
 				transactionId={isSplitOpen ? transaction.id : null}
 				onClose={() => setSplitOpen(false)}
+				onSaved={onSaved}
 			/>
 		</>
 	);
 }
 
 /** Bank amounts are read-only; a manual, unsplit Transaction's amount is edited in place. */
-function TransactionAmount({ transaction }: { transaction: TransactionDetail }) {
-	const { saveOrThrow } = useSaveTransaction(transaction.id);
+function TransactionAmount({
+	transaction,
+	onSaved,
+}: {
+	transaction: TransactionDetail;
+	onSaved: () => void;
+}) {
+	const { saveOrThrow } = useSaveTransaction(transaction.id, onSaved);
 	if (transaction.isManual && !transaction.split) {
 		return (
 			<InlineText

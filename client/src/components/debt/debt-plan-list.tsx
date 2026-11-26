@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { LiabilityCard } from "@/components/debt/liability-card";
+import { useOptimisticValue } from "@/hooks/use-optimistic-value";
+import { transitionName, withViewTransition } from "@/lib/view-transition";
 import type { DebtLiability } from "@/types";
 
 type Props = {
@@ -19,7 +21,20 @@ function moved(ids: string[], from: number, to: number) {
 /** In-plan liabilities in Payback order; dragging or moving one saves a custom order. */
 export function DebtPlanList({ liabilities, currency, onReorder, onOpen }: Props) {
 	const [dragIndex, setDragIndex] = useState<number | null>(null);
-	const ids = liabilities.map((entry) => entry.account.id);
+	const saved = useOptimisticValue(liabilities.map((entry) => entry.account.id).join(","));
+	const ids = saved.value.split(",").filter(Boolean);
+	const ordered = ids
+		.map((id) => liabilities.find((entry) => entry.account.id === id))
+		.filter((entry): entry is DebtLiability => entry !== undefined);
+
+	/** Pointer moves glide to their new place; keyboard moves stay instant. */
+	function reorder(next: string[], isKeyboard: boolean) {
+		const apply = () => saved.setValue(next.join(","));
+		if (isKeyboard) apply();
+		else withViewTransition(apply);
+		onReorder(next);
+	}
+
 	if (liabilities.length === 0) {
 		return (
 			<p className="py-6 text-center text-sm text-muted-foreground">
@@ -29,14 +44,17 @@ export function DebtPlanList({ liabilities, currency, onReorder, onOpen }: Props
 	}
 	return (
 		<ul aria-label="Debt plan" className="flex flex-col gap-2">
-			{liabilities.map((liability, index) => (
+			{ordered.map((liability, index) => (
 				<li
 					key={liability.account.id}
+					// Each card needs its own transition name so it can glide; names are per id.
+					style={{ viewTransitionName: transitionName("debt", liability.account.id) }}
 					draggable
 					onDragStart={() => setDragIndex(index)}
 					onDragOver={(event) => event.preventDefault()}
 					onDrop={() => {
-						if (dragIndex !== null && dragIndex !== index) onReorder(moved(ids, dragIndex, index));
+						if (dragIndex !== null && dragIndex !== index)
+							reorder(moved(ids, dragIndex, index), false);
 						setDragIndex(null);
 					}}
 					className={dragIndex === index ? "opacity-60" : undefined}
@@ -45,8 +63,8 @@ export function DebtPlanList({ liabilities, currency, onReorder, onOpen }: Props
 						liability={liability}
 						currency={currency}
 						canMoveUp={index > 0}
-						canMoveDown={index < liabilities.length - 1}
-						onMove={(delta) => onReorder(moved(ids, index, index + delta))}
+						canMoveDown={index < ordered.length - 1}
+						onMove={(delta, isKeyboard) => reorder(moved(ids, index, index + delta), isKeyboard)}
 						onOpen={() => onOpen(liability)}
 					/>
 				</li>

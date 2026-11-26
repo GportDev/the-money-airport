@@ -10,7 +10,8 @@ type Props = {
 	currency: string;
 	canMoveUp: boolean;
 	canMoveDown: boolean;
-	onMove: (delta: -1 | 1) => void;
+	/** `isKeyboard` is true when the move came from a key press (no pointer). */
+	onMove: (delta: -1 | 1, isKeyboard: boolean) => void;
 	onOpen: () => void;
 };
 
@@ -86,7 +87,7 @@ export function LiabilityCard({
 					<button
 						type="button"
 						aria-label={`Move ${account.name} up`}
-						onClick={() => onMove(-1)}
+						onClick={(event) => onMove(-1, event.detail === 0)}
 						className="rounded-md p-1 transition-colors hover:bg-foreground/5"
 					>
 						<ArrowUp aria-hidden className="size-4" />
@@ -96,7 +97,7 @@ export function LiabilityCard({
 					<button
 						type="button"
 						aria-label={`Move ${account.name} down`}
-						onClick={() => onMove(1)}
+						onClick={(event) => onMove(1, event.detail === 0)}
 						className="rounded-md p-1 transition-colors hover:bg-foreground/5"
 					>
 						<ArrowDown aria-hidden className="size-4" />

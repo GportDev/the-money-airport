@@ -7,7 +7,7 @@ import {
 	Settings2,
 	SquareCheck,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { BulkCategorizeDrawer } from "@/components/drawers/bulk-categorize-drawer";
@@ -26,6 +26,7 @@ import { SelectField } from "@/components/ui/select-field";
 import { Toolbar, ToolbarDivider } from "@/components/ui/toolbar";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useCategories } from "@/hooks/use-categories";
+import { useRowFlash } from "@/hooks/use-row-flash";
 import { useDeleteTransaction, useTransactionFeed } from "@/hooks/use-transactions";
 import { cn } from "@/lib/cn";
 import { majorUnitsToCents } from "@/lib/format";
@@ -73,6 +74,8 @@ export function TransactionsPage() {
 	const [bulkOpen, setBulkOpen] = useState(false);
 	const [pendingDelete, setPendingDelete] = useState<TransactionDetail | null>(null);
 	const [splitId, setSplitId] = useState<string | null>(null);
+	const { flashIds, flash } = useRowFlash();
+	const changedInDrawer = useRef(new Set<string>());
 
 	function patchParams(mutate: (next: URLSearchParams) => void) {
 		setSearchParams(
@@ -222,6 +225,7 @@ export function TransactionsPage() {
 							fetchNextPage={() => void feed.fetchNextPage()}
 							onOpen={(item) => setDrawer(item.id)}
 							onSplit={(item) => setSplitId(item.id)}
+							flashIds={flashIds}
 							columns={columns}
 							selecting={selecting}
 							selected={selected}
@@ -296,7 +300,12 @@ export function TransactionsPage() {
 				<TransactionDrawer
 					key={drawer}
 					transactionId={drawer === "add" ? null : drawer}
-					onClose={() => setDrawer("closed")}
+					onClose={() => {
+						setDrawer("closed");
+						flash(changedInDrawer.current);
+						changedInDrawer.current = new Set();
+					}}
+					onChanged={(id) => changedInDrawer.current.add(id)}
 					onOpenSimilar={(id) => setDrawer(id)}
 					onDelete={(transaction) => {
 						setDrawer("closed");
@@ -304,7 +313,11 @@ export function TransactionsPage() {
 					}}
 				/>
 			) : null}
-			<SplitDialog transactionId={splitId} onClose={() => setSplitId(null)} />
+			<SplitDialog
+				transactionId={splitId}
+				onClose={() => setSplitId(null)}
+				onSaved={() => splitId && flash([splitId])}
+			/>
 			{categoriesOpen ? <CategoryManagerDrawer onClose={() => setCategoriesOpen(false)} /> : null}
 			{rulesOpen ? <RulesDrawer onClose={() => setRulesOpen(false)} /> : null}
 			{bulkOpen ? (
@@ -313,6 +326,7 @@ export function TransactionsPage() {
 					onClose={() => setBulkOpen(false)}
 					onDone={() => {
 						setBulkOpen(false);
+						flash(selected);
 						stopSelecting();
 					}}
 				/>

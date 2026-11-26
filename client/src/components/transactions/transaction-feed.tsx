@@ -71,6 +71,7 @@ export function TransactionFeed({
 	selected,
 	onToggle,
 	onSplit,
+	flashIds,
 	emptyMessage = "No transactions yet.",
 }: {
 	items: TransactionListItem[];
@@ -84,6 +85,8 @@ export function TransactionFeed({
 	onToggle?: (id: string) => void;
 	/** Shows a Split button on each row; the page opens the split dialog. */
 	onSplit?: (item: TransactionListItem) => void;
+	/** Rows changed elsewhere that should glow once. */
+	flashIds?: ReadonlySet<string>;
 	emptyMessage?: string;
 }) {
 	const rows = useMemo(() => groupByDate(items), [items]);
@@ -165,6 +168,7 @@ export function TransactionFeed({
 									checked={selected?.has(row.item.id) ?? false}
 									onClick={() => (selecting ? onToggle?.(row.item.id) : onOpen(row.item))}
 									onSplit={onSplit}
+									isFlashing={flashIds?.has(row.item.id) ?? false}
 								/>
 							)}
 						</li>
@@ -185,8 +189,10 @@ function FeedRow({
 	checked,
 	onClick,
 	onSplit,
+	isFlashing,
 }: {
 	item: TransactionListItem;
+	isFlashing: boolean;
 	columns: FeedColumns;
 	selecting: boolean;
 	checked: boolean;
@@ -216,6 +222,7 @@ function FeedRow({
 	return (
 		<div
 			data-selected={checked || undefined}
+			data-flash={isFlashing || undefined}
 			data-tinted={(!checked && isTransfer(item)) || undefined}
 			className={cn(
 				"grid w-full items-center gap-3 border-b border-border px-2 py-3 text-left text-sm row-hover",

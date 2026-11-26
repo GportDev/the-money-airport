@@ -20,11 +20,13 @@ export function TransactionDrawer({
 	onClose,
 	onDelete,
 	onOpenSimilar,
+	onChanged,
 }: {
 	transactionId: string | null;
 	onClose: () => void;
 	onDelete?: (transaction: TransactionDetail) => void;
 	onOpenSimilar?: (id: string) => void;
+	onChanged?: (id: string) => void;
 }) {
 	const detail = useTransaction(transactionId);
 	const categories = useCategories();
@@ -40,6 +42,7 @@ export function TransactionDrawer({
 						transaction={detail.data}
 						onDelete={onDelete}
 						onOpenSimilar={onOpenSimilar}
+						onChanged={onChanged}
 					/>
 				) : (
 					<>

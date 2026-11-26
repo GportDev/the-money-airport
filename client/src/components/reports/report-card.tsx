@@ -2,6 +2,7 @@ import { type ReactNode, useId } from "react";
 import { CardInfo } from "@/components/ui/card";
 import { QueryError } from "@/components/ui/query-error";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
+import { useSettleClass } from "@/hooks/use-settle-class";
 import { cn } from "@/lib/cn";
 import type { ReportStatus } from "@/lib/report-status";
 
@@ -29,6 +30,7 @@ export function ReportCard({
 	children,
 }: Props) {
 	const headingId = useId();
+	const settle = useSettleClass(status === "loading");
 	return (
 		<section
 			aria-labelledby={headingId}
@@ -41,14 +43,14 @@ export function ReportCard({
 				{info ? <CardInfo label={`About ${title}`}>{info}</CardInfo> : null}
 			</div>
 			{status === "ready" ? (
-				<>
+				<div className={cn("flex flex-col gap-3", settle)}>
 					{children}
 					{omittedCurrencies.length > 0 ? (
 						<p className="text-xs text-muted-foreground">
 							Left out (no exchange rate): {omittedCurrencies.join(", ")}.
 						</p>
 					) : null}
-				</>
+				</div>
 			) : status === "error" ? (
 				<QueryError message="Could not load this report." onRetry={onRetry} />
 			) : status === "loading" ? (

@@ -6,6 +6,20 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { formatMoney } from "@/lib/format";
 import { type BankAccount, DISPLAY_GROUPS, type GroupSummary } from "@/types";
 
+const ROW_STAGGER_MS = 50;
+const MAX_STAGGER_ROWS = 7;
+
+/** True once the list goes from empty to filled while on screen: the first bank just connected. */
+function useFirstAccounts(count: number) {
+	const [previous, setPrevious] = useState(count);
+	const [isFirstConnect, setFirstConnect] = useState(false);
+	if (count !== previous) {
+		setPrevious(count);
+		if (previous === 0 && count > 0) setFirstConnect(true);
+	}
+	return isFirstConnect;
+}
+
 export function AccountGroups({
 	accounts,
 	groups,
@@ -20,6 +34,7 @@ export function AccountGroups({
 	const [open, setOpen] = useState<Record<string, boolean>>(() =>
 		Object.fromEntries(DISPLAY_GROUPS.map((group) => [group.key, true])),
 	);
+	const isFirstConnect = useFirstAccounts(accounts.length);
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -67,8 +82,19 @@ export function AccountGroups({
 									</p>
 								) : (
 									<ul className="flex flex-col divide-y divide-border border-t border-border px-1 py-1">
-										{rows.map((account) => (
-											<li key={account.id}>
+										{rows.map((account, index) => (
+											<li
+												key={account.id}
+												className={isFirstConnect ? "animate-settle-up" : undefined}
+												// Each row waits for the ones above it, so the delay is per row.
+												style={
+													isFirstConnect
+														? {
+																animationDelay: `${Math.min(index, MAX_STAGGER_ROWS) * ROW_STAGGER_MS}ms`,
+															}
+														: undefined
+												}
+											>
 												<AccountRow account={account} largest={largest} onOpen={onOpen} />
 											</li>
 										))}

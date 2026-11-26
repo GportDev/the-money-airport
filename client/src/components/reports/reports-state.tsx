@@ -5,6 +5,7 @@ import { ReportsSkeleton } from "@/components/reports/reports-skeleton";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QueryError } from "@/components/ui/query-error";
+import { useSettleClass } from "@/hooks/use-settle-class";
 import type { BankAccount } from "@/types";
 
 type Props = {
@@ -20,6 +21,7 @@ type Props = {
 
 /** Reports need at least one account; until then point the User to Accounts. */
 export function ReportsState({ accounts, children }: Props) {
+	const settle = useSettleClass(accounts.isPending);
 	if (accounts.isPending) return <ReportsSkeleton />;
 	if (accounts.isError) {
 		return (
@@ -44,5 +46,5 @@ export function ReportsState({ accounts, children }: Props) {
 			/>
 		);
 	}
-	return children;
+	return <div className={settle}>{children}</div>;
 }

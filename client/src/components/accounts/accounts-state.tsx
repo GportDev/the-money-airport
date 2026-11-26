@@ -4,6 +4,7 @@ import { AccountsSkeleton } from "@/components/accounts/accounts-skeleton";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QueryError } from "@/components/ui/query-error";
+import { useSettleClass } from "@/hooks/use-settle-class";
 import type { BankAccount } from "@/types";
 
 type Props = {
@@ -20,6 +21,7 @@ type Props = {
 
 /** Skeleton, error with retry, or the page; a first-account prompt sits above an empty list. */
 export function AccountsState({ accounts, onAdd, children }: Props) {
+	const settle = useSettleClass(accounts.isPending);
 	if (accounts.isPending) return <AccountsSkeleton />;
 	if (accounts.isError) {
 		return (
@@ -31,7 +33,7 @@ export function AccountsState({ accounts, onAdd, children }: Props) {
 		);
 	}
 	return (
-		<>
+		<div className={settle}>
 			{accounts.data?.length === 0 ? (
 				<EmptyState
 					className="mb-6"
@@ -46,6 +48,6 @@ export function AccountsState({ accounts, onAdd, children }: Props) {
 				/>
 			) : null}
 			{children}
-		</>
+		</div>
 	);
 }

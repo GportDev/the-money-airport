@@ -14,10 +14,11 @@ import { formatLongDate, formatSignedMoney } from "@/lib/format";
 type Props = {
 	transactionId: string | null;
 	onClose: () => void;
+	onSaved?: () => void;
 };
 
 /** The split editor in a centered modal, opened straight from a feed row or the drawer. */
-export function SplitDialog({ transactionId, onClose }: Props) {
+export function SplitDialog({ transactionId, onClose, onSaved }: Props) {
 	const detail = useTransaction(transactionId);
 	const transaction = detail.data;
 	return (
@@ -36,7 +37,12 @@ export function SplitDialog({ transactionId, onClose }: Props) {
 					) : null}
 				</DialogHeader>
 				{transaction ? (
-					<SplitEditor key={transaction.id} transaction={transaction} onDone={onClose} />
+					<SplitEditor
+						key={transaction.id}
+						transaction={transaction}
+						onDone={onClose}
+						onSaved={onSaved}
+					/>
 				) : detail.isError ? (
 					<QueryError
 						message="Could not load this Transaction."

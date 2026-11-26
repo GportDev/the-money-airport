@@ -47,6 +47,9 @@
 	--animate-pop-in: pop-in 160ms var(--ease-out);
 	--animate-pop-out: pop-out 100ms var(--ease-out) forwards;
 	--animate-fade-in: fade-in 160ms var(--ease-out);
+	--animate-settle-up: settle-up 200ms var(--ease-out) backwards;
+	--animate-row-flash: row-flash 1020ms var(--ease-out);
+	--animate-celebrate: celebrate 320ms var(--ease-spring) backwards;
 	--animate-accordion-down: accordion-down 220ms var(--ease-out);
 	--animate-accordion-up: accordion-up 180ms var(--ease-out);
 	--animate-collapsible-down: collapsible-down 220ms var(--ease-out);
@@ -108,6 +111,36 @@
 	}
 }
 
+/* Dashboard widgets and first-connect account rows rise 4px into place once, staggered. */
+@keyframes settle-up {
+	from {
+		opacity: 0;
+		translate: 0 var(--settle-offset);
+	}
+}
+
+/* A changed feed row glows once: in fast, hold, then fade. */
+@keyframes row-flash {
+	0% {
+		background-color: transparent;
+	}
+	12%,
+	50% {
+		background-color: color-mix(in srgb, var(--primary) 8%, transparent);
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+/* A rare success (a goal reached) pops in on a soft spring. */
+@keyframes celebrate {
+	from {
+		opacity: 0;
+		scale: var(--celebrate-scale);
+	}
+}
+
 @keyframes pop-out {
 	to {
 		opacity: 0;
@@ -147,11 +180,15 @@
 	--elevation-float: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.02);
 	--elevation-pop: 0 8px 24px -8px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.04);
 	--pop-scale: 0.96;
+	--settle-offset: 4px;
+	--celebrate-scale: 0.9;
 }
 
 @media (prefers-reduced-motion: reduce) {
 	:root {
 		--pop-scale: 1;
+		--settle-offset: 0;
+		--celebrate-scale: 1;
 	}
 }
 
@@ -240,6 +277,9 @@ body {
 	&[data-selected]::before {
 		background-color: color-mix(in srgb, var(--foreground) 6%, transparent);
 	}
+	&[data-flash]::before {
+		animation: var(--animate-row-flash);
+	}
 	&[data-tinted]::before {
 		background-color: color-mix(in srgb, var(--foreground) 2.5%, transparent);
 	}
@@ -278,5 +318,30 @@ body {
 		&:focus-visible {
 			opacity: 1;
 		}
+	}
+}
+
+/* Reordered list items glide to their new place (View Transitions); the page itself does not
+   cross-fade. */
+::view-transition-group(*) {
+	animation-duration: 200ms;
+	animation-timing-function: var(--ease-out);
+}
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: "root" names the view transition, not an element. */
+::view-transition-old(root) {
+	animation: none;
+}
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: "root" names the view transition, not an element. */
+::view-transition-new(root) {
+	animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none;
 	}
 }

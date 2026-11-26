@@ -38,6 +38,8 @@ export function DashboardPage() {
 	const [pendingDelete, setPendingDelete] = useState<TransactionDetail | null>(null);
 	const data = dashboard.data;
 	const name = data?.greetingName;
+	// Widgets stagger in once, only when this visit had to wait for them.
+	const [isFirstLoad] = useState(!data);
 
 	return (
 		<>
@@ -68,7 +70,12 @@ export function DashboardPage() {
 			) : !data.hasAccounts ? (
 				<NoAccounts />
 			) : (
-				<Widgets data={data} onRangeChange={setRange} onOpenTransaction={setDrawer} />
+				<Widgets
+					data={data}
+					isFirstLoad={isFirstLoad}
+					onRangeChange={setRange}
+					onOpenTransaction={setDrawer}
+				/>
 			)}
 
 			{customizing && data ? (
@@ -101,10 +108,12 @@ export function DashboardPage() {
 
 function Widgets({
 	data,
+	isFirstLoad,
 	onRangeChange,
 	onOpenTransaction,
 }: {
 	data: Dashboard;
+	isFirstLoad: boolean;
 	onRangeChange: (range: NetWorthRange) => void;
 	onOpenTransaction: (id: string) => void;
 }) {
@@ -159,12 +168,30 @@ function Widgets({
 			{columns.map((column, index) => (
 				<div key={String(index)} className="flex min-w-0 flex-col gap-4">
 					{column.map((widget) => (
-						<div key={widget.id}>{render(widget)}</div>
+						<div
+							key={widget.id}
+							className={isFirstLoad ? "animate-settle-up" : undefined}
+							// The delay is each widget's place in the saved order, so it cannot be a class.
+							style={
+								isFirstLoad
+									? { animationDelay: `${staggerDelay(visible.indexOf(widget))}ms` }
+									: undefined
+							}
+						>
+							{render(widget)}
+						</div>
 					))}
 				</div>
 			))}
 		</div>
 	);
+}
+
+const STAGGER_STEP_MS = 40;
+const STAGGER_MAX_STEPS = 5;
+
+function staggerDelay(index: number) {
+	return Math.min(index, STAGGER_MAX_STEPS) * STAGGER_STEP_MS;
 }
 
 function NoAccounts() {

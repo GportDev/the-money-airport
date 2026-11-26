@@ -2,7 +2,9 @@ import { Link } from "react-router";
 import { GoalStatusBadge } from "@/components/goals/goal-status-badge";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { Amount } from "@/components/ui/amount";
+import { Badge, BadgeDot } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useCelebrateOnce } from "@/hooks/use-celebrate-once";
 import { monthName } from "@/lib/debt";
 import { formatMoney } from "@/lib/format";
 import { formatPercent } from "@/lib/goals";
@@ -17,6 +19,8 @@ type Props = {
 
 export function GoalCard({ goal, currency, onOpen }: Props) {
 	const percent = formatPercent(goal.percentComplete);
+	const isReached = goal.percentComplete >= 1;
+	const celebrate = useCelebrateOnce(`goal:${goal.id}`, isReached);
 	return (
 		<li className="card-hover rounded-xl border border-border bg-card">
 			<button
@@ -31,7 +35,14 @@ export function GoalCard({ goal, currency, onOpen }: Props) {
 					<span className="flex min-w-0 flex-1 flex-col">
 						<span className="flex items-center gap-2">
 							<span className="truncate font-medium">{goal.name}</span>
-							<GoalStatusBadge status={goal.status} hasDate={goal.targetDate !== null} />
+							{isReached ? (
+								<Badge tone="positive" className={celebrate ? "animate-celebrate" : undefined}>
+									<BadgeDot />
+									Reached
+								</Badge>
+							) : (
+								<GoalStatusBadge status={goal.status} hasDate={goal.targetDate !== null} />
+							)}
 						</span>
 						<span className="text-xs text-muted-foreground">
 							{goal.targetDate ? monthLabel(...yearMonth(goal.targetDate)) : "No target date"}

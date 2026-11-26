@@ -12,6 +12,7 @@ import {
 	useSheetClose,
 } from "@/components/ui/sheet";
 import { useUpdateSettings } from "@/hooks/use-dashboard";
+import { transitionName, withViewTransition } from "@/lib/view-transition";
 import type { DashboardWidget } from "@/types";
 
 export function CustomizeDrawer({
@@ -26,7 +27,13 @@ export function CustomizeDrawer({
 	const [draft, setDraft] = useState(() => [...widgets].sort((a, b) => a.order - b.order));
 	const [error, setError] = useState<string | null>(null);
 
-	function move(index: number, delta: number) {
+	/** Pointer moves glide to their new place; keyboard moves stay instant. */
+	function move(index: number, delta: number, isKeyboard: boolean) {
+		if (isKeyboard) swap(index, delta);
+		else withViewTransition(() => swap(index, delta));
+	}
+
+	function swap(index: number, delta: number) {
 		setDraft((current) => {
 			const next = [...current];
 			const target = index + delta;
@@ -65,7 +72,9 @@ export function CustomizeDrawer({
 						return (
 							<li
 								key={widget.id}
-								className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
+								// Each row needs its own transition name so it can glide; names are per id.
+								style={{ viewTransitionName: transitionName("widget", widget.id) }}
+								className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2"
 							>
 								<label className="flex items-center gap-2 text-sm">
 									<input
@@ -84,19 +93,19 @@ export function CustomizeDrawer({
 								<span className="flex gap-1">
 									<button
 										type="button"
-										className="rounded p-1 hover:bg-foreground/5 disabled:opacity-30"
+										className="rounded-md p-1 transition-colors hover:bg-foreground/5 disabled:opacity-30"
 										aria-label={`Move ${label} up`}
 										disabled={index === 0}
-										onClick={() => move(index, -1)}
+										onClick={(event) => move(index, -1, event.detail === 0)}
 									>
 										<ArrowUp aria-hidden className="size-4" />
 									</button>
 									<button
 										type="button"
-										className="rounded p-1 hover:bg-foreground/5 disabled:opacity-30"
+										className="rounded-md p-1 transition-colors hover:bg-foreground/5 disabled:opacity-30"
 										aria-label={`Move ${label} down`}
 										disabled={index === draft.length - 1}
-										onClick={() => move(index, 1)}
+										onClick={(event) => move(index, 1, event.detail === 0)}
 									>
 										<ArrowDown aria-hidden className="size-4" />
 									</button>

@@ -14,11 +14,13 @@ export function CategorySelect({
 	category,
 	label,
 	className,
+	onSaved,
 }: {
 	transactionId: string;
 	category: TransactionListItem["category"];
 	label: string;
 	className?: string;
+	onSaved?: () => void;
 }) {
 	const update = useUpdateTransaction();
 	const saved = category?.id ?? null;
@@ -40,7 +42,7 @@ export function CategorySelect({
 				setValue(next);
 				update.mutate(
 					{ id: transactionId, categoryId: next },
-					{ onError: () => setValue(previous) },
+					{ onSuccess: onSaved, onError: () => setValue(previous) },
 				);
 			}}
 			className={cn(

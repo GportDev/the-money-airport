@@ -17,10 +17,16 @@ import {
 } from "@/lib/split";
 import type { TransactionDetail } from "@/types";
 
-type Props = { transaction: TransactionDetail; onDone: () => void; className?: string };
+type Props = {
+	transaction: TransactionDetail;
+	onDone: () => void;
+	/** Called after the split or unsplit saves, before `onDone`. */
+	onSaved?: () => void;
+	className?: string;
+};
 
 /** Edits the parts of a Transaction; Save stays off until they add up to the total. */
-export function SplitEditor({ transaction, onDone, className }: Props) {
+export function SplitEditor({ transaction, onDone, onSaved, className }: Props) {
 	const split = useSplitTransaction();
 	const unsplit = useUnsplitTransaction();
 	const [drafts, setDrafts] = useState<SplitDraft[]>(() => initialSplitDrafts(transaction));
@@ -42,6 +48,7 @@ export function SplitEditor({ transaction, onDone, className }: Props) {
 		try {
 			await split.mutateAsync({ id: transaction.id, parts: toSplitParts(total, drafts) });
 			toast.success(`Split into ${drafts.length} parts`);
+			onSaved?.();
 			onDone();
 		} catch (_error) {
 			toast.error("Could not split. Try again.");
@@ -52,6 +59,7 @@ export function SplitEditor({ transaction, onDone, className }: Props) {
 		try {
 			await unsplit.mutateAsync(transaction.id);
 			toast.success("Split removed");
+			onSaved?.();
 			onDone();
 		} catch (_error) {
 			toast.error("Could not remove the split. Try again.");
