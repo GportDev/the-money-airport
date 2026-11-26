@@ -140,10 +140,13 @@ test("a synced transaction can be renamed and given a merchant, and sync keeps b
 	await openRow(page, /^Amazon/);
 	const drawer = page.getByRole("dialog");
 	await drawer.getByLabel("Name").fill("Prime renewal");
+	await drawer.getByLabel("Name").press("Enter");
+	await expect.poll(async () => (await detail(page, amazon.id)).name).toBe("Prime renewal");
 	await drawer.getByLabel("Merchant").click();
 	await page.getByRole("combobox", { name: "Search merchants" }).fill("Amazon Prime");
 	await page.getByRole("option", { name: "Add “Amazon Prime”" }).click();
-	await drawer.getByRole("button", { name: "Save" }).click();
+	await expect.poll(async () => (await detail(page, amazon.id)).merchantName).toBe("Amazon Prime");
+	await page.keyboard.press("Escape");
 	await expect(page.getByRole("dialog")).toHaveCount(0);
 
 	const sync = await page.request.post(`${API}/plaid/sync/${itemId}`);
@@ -169,7 +172,6 @@ test("the merchant picker lists merchants the User already has", async ({ page }
 	await drawer.getByLabel("Merchant").click();
 	await page.getByRole("combobox", { name: "Search merchants" }).fill("Ube");
 	await page.getByRole("option", { name: "Uber", exact: true }).click();
-	await drawer.getByRole("button", { name: "Save" }).click();
 	await expect.poll(async () => (await detail(page, ach.id)).merchantName).toBe("Uber");
 });
 
@@ -285,4 +287,47 @@ test("refunds, rules, and merchants stay with their own User", async ({ page, br
 	await other.close();
 
 	expect((await page.request.get(`${API}/transaction-rules`)).status()).toBe(200);
+});
+
+test("a feed row gets a merchant and a new name without opening the drawer", async ({ page }) => {
+	const tip = await addManual(page, "Cash tip", -1200);
+	const coffee = await addManual(page, "CARD 4411 JOE", -450);
+
+	await page.goto("/transactions");
+	const feed = page.getByRole("list", { name: "Transactions" });
+
+	const tipRow = feed.getByRole("listitem").filter({ hasText: "Cash tip" });
+	await tipRow.hover();
+	await tipRow.getByRole("button", { name: "Edit name or merchant" }).click();
+	const editor = page.getByRole("combobox", { name: "Merchant or name" });
+	await editor.fill("Valet tip");
+	await editor.press("Enter");
+	await expect.poll(async () => (await detail(page, tip.id)).name).toBe("Valet tip");
+	await expect(page.getByRole("dialog")).toHaveCount(0);
+
+	const coffeeRow = feed.getByRole("listitem").filter({ hasText: "CARD 4411 JOE" });
+	await coffeeRow.hover();
+	await coffeeRow.getByRole("button", { name: "Edit name or merchant" }).click();
+	await page.getByRole("combobox", { name: "Merchant or name" }).fill("Joe Coffee");
+	await page.getByRole("option", { name: "Add “Joe Coffee” as merchant" }).click();
+	await expect.poll(async () => (await detail(page, coffee.id)).merchantName).toBe("Joe Coffee");
+	await expect(feed.getByRole("listitem").filter({ hasText: "Joe Coffee" })).toContainText(
+		"CARD 4411 JOE",
+	);
+});
+
+test("Escape leaves a feed row's title unchanged", async ({ page }) => {
+	const row = await addManual(page, "Bakery", -300);
+	await page.goto("/transactions");
+	const item = page
+		.getByRole("list", { name: "Transactions" })
+		.getByRole("listitem")
+		.filter({ hasText: "Bakery" });
+	await item.hover();
+	await item.getByRole("button", { name: "Edit name or merchant" }).click();
+	const editor = page.getByRole("combobox", { name: "Merchant or name" });
+	await editor.fill("Something else");
+	await editor.press("Escape");
+	await expect(editor).toHaveCount(0);
+	expect((await detail(page, row.id)).name).toBe("Bakery");
 });

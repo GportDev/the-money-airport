@@ -46,11 +46,13 @@ test("splits a Transaction into parts that add up to its amount", async ({ page 
 	const id = await createTransaction(page, "Corner Market", -10000);
 	await page.goto("/transactions");
 	const feed = page.getByRole("list", { name: "Transactions" });
-	await feed.getByRole("button", { name: /Corner Market/ }).click({ position: { x: 60, y: 12 } });
-	const drawer = page.getByRole("dialog");
-	await drawer.getByRole("button", { name: "Split transaction" }).click();
-
-	const editor = drawer.getByRole("form", { name: "Split transaction" });
+	await feed
+		.getByRole("listitem")
+		.filter({ hasText: "Corner Market" })
+		.getByRole("button", { name: "Split transaction" })
+		.click();
+	const dialog = page.getByRole("dialog", { name: "Split transaction" });
+	const editor = dialog.getByRole("form", { name: "Split transaction" });
 	const save = editor.getByRole("button", { name: "Save split" });
 	await expect(editor.getByLabel("Part 1 amount")).toHaveValue("100.00");
 	await expect(save).toBeDisabled();
@@ -71,6 +73,7 @@ test("splits a Transaction into parts that add up to its amount", async ({ page 
 	await expect(editor.getByRole("status")).toContainText("Adds up");
 	await save.click();
 	await expect(page.getByText("Split into 3 parts").first()).toBeVisible();
+	await expect(dialog).toHaveCount(0);
 
 	const detail = await getDetail(page, id);
 	expect(detail.split?.total).toBe(-10000);
@@ -100,13 +103,13 @@ test("Unsplit folds the parts back into one Transaction", async ({ page }) => {
 	const feed = page.getByRole("list", { name: "Transactions" });
 	await expect(feed.getByRole("button", { name: /Hardware Store, Split/ })).toHaveCount(2);
 	await feed
-		.getByRole("button", { name: /Hardware Store, Split/ })
+		.getByRole("listitem")
+		.filter({ hasText: "Hardware Store" })
 		.first()
-		.click({ position: { x: 60, y: 12 } });
-	const drawer = page.getByRole("dialog");
-	await expect(drawer.getByRole("heading", { name: "Split into 2 parts" })).toBeVisible();
-	await drawer.getByRole("button", { name: "Edit split" }).click();
-	await drawer.getByRole("button", { name: "Unsplit" }).click();
+		.getByRole("button", { name: "Edit split" })
+		.click();
+	const dialog = page.getByRole("dialog", { name: "Split transaction" });
+	await dialog.getByRole("button", { name: "Unsplit" }).click();
 	await expect(page.getByText("Split removed").first()).toBeVisible();
 
 	const detail = await getDetail(page, id);

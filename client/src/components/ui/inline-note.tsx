@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { inlineFieldVariants } from "@/components/ui/inline-text";
 import { SavingIndicator } from "@/components/ui/saving-indicator";
 import { useInlineCommit } from "@/hooks/use-inline-commit";
 import { cn } from "@/lib/cn";
@@ -32,10 +33,7 @@ export function InlineNote({ value, onCommit, className, placeholder, ...props }
 						requestAnimationFrame(() => ref.current?.blur());
 					}
 				}}
-				className={cn(
-					"block min-h-8 w-full resize-none rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-sm text-foreground outline-none transition-[border-color,background-color] duration-150 ease-out [field-sizing:content] placeholder:text-muted-foreground hover:border-border hover:bg-foreground/[0.02] focus-visible:border-border focus-visible:bg-card focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring",
-					className,
-				)}
+				className={cn(inlineFieldVariants({ size: "note" }), "block", className)}
 				{...props}
 			/>
 			{field.isSaving ? <SavingIndicator className="absolute top-2 right-2" /> : null}

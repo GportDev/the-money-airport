@@ -5,6 +5,7 @@ import { SplitPartRow } from "@/components/transactions/split/split-part-row";
 import { SplitRemaining } from "@/components/transactions/split/split-remaining";
 import { Button } from "@/components/ui/button";
 import { useSplitTransaction, useUnsplitTransaction } from "@/hooks/use-transactions";
+import { cn } from "@/lib/cn";
 import {
 	initialSplitDrafts,
 	isSplitComplete,
@@ -16,10 +17,10 @@ import {
 } from "@/lib/split";
 import type { TransactionDetail } from "@/types";
 
-type Props = { transaction: TransactionDetail; onDone: () => void };
+type Props = { transaction: TransactionDetail; onDone: () => void; className?: string };
 
 /** Edits the parts of a Transaction; Save stays off until they add up to the total. */
-export function SplitEditor({ transaction, onDone }: Props) {
+export function SplitEditor({ transaction, onDone, className }: Props) {
 	const split = useSplitTransaction();
 	const unsplit = useUnsplitTransaction();
 	const [drafts, setDrafts] = useState<SplitDraft[]>(() => initialSplitDrafts(transaction));
@@ -60,7 +61,7 @@ export function SplitEditor({ transaction, onDone }: Props) {
 	return (
 		<form
 			aria-label="Split transaction"
-			className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 text-sm"
+			className={cn("flex flex-col gap-3 text-sm", className)}
 			onSubmit={onSubmit}
 		>
 			<ul className="flex flex-col gap-2">

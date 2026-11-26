@@ -1,12 +1,14 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ArrowLeftRight, ChevronRight } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, Split as SplitIcon } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useScrollContainer } from "@/components/layout/scroll-container";
 import { BetterCardBadge } from "@/components/transactions/better-card-badge";
 import { CategorySelect } from "@/components/transactions/category-select";
+import { FeedTitleEditor } from "@/components/transactions/feed-title-editor";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { formatLongDate, formatSignedMoney } from "@/lib/format";
 import type { TransactionListItem } from "@/types";
@@ -68,6 +70,7 @@ export function TransactionFeed({
 	selecting = false,
 	selected,
 	onToggle,
+	onSplit,
 	emptyMessage = "No transactions yet.",
 }: {
 	items: TransactionListItem[];
@@ -79,6 +82,8 @@ export function TransactionFeed({
 	selecting?: boolean;
 	selected?: Set<string>;
 	onToggle?: (id: string) => void;
+	/** Shows a Split button on each row; the page opens the split dialog. */
+	onSplit?: (item: TransactionListItem) => void;
 	emptyMessage?: string;
 }) {
 	const rows = useMemo(() => groupByDate(items), [items]);
@@ -159,6 +164,7 @@ export function TransactionFeed({
 									selecting={selecting}
 									checked={selected?.has(row.item.id) ?? false}
 									onClick={() => (selecting ? onToggle?.(row.item.id) : onOpen(row.item))}
+									onSplit={onSplit}
 								/>
 							)}
 						</li>
@@ -178,12 +184,14 @@ function FeedRow({
 	selecting,
 	checked,
 	onClick,
+	onSplit,
 }: {
 	item: TransactionListItem;
 	columns: FeedColumns;
 	selecting: boolean;
 	checked: boolean;
 	onClick: () => void;
+	onSplit?: (item: TransactionListItem) => void;
 }) {
 	const title = item.merchantName ?? item.name;
 	const accountLabel = item.account
@@ -233,8 +241,8 @@ function FeedRow({
 				) : null}
 				<MerchantLogo name={title} url={item.merchantLogoUrl} />
 			</span>
-			<span className="pointer-events-none flex min-w-0 items-center gap-2">
-				<span className="truncate">{title}</span>
+			<span className="pointer-events-none flex min-w-0 items-center gap-2 [&_button]:pointer-events-auto [&_input]:pointer-events-auto">
+				<FeedTitleEditor item={item} isEditable={!selecting} />
 				{item.pending ? <Badge>Pending</Badge> : null}
 				{item.isSplit ? <Badge>Split</Badge> : null}
 				{item.isRefund ? <Badge>Refund</Badge> : null}
@@ -283,9 +291,25 @@ function FeedRow({
 					<span>Manual</span>
 				)}
 			</span>
-			<Amount className={cn("pointer-events-none text-right", item.amount > 0 && "text-positive")}>
-				{amount}
-			</Amount>
+			<span className="pointer-events-none flex items-center justify-end gap-1.5 [&_button]:pointer-events-auto">
+				{onSplit && !selecting ? (
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						type="button"
+						aria-label={item.isSplit ? "Edit split" : "Split transaction"}
+						className="row-action relative size-6 text-muted-foreground hover:text-foreground"
+						onClick={() => onSplit(item)}
+					>
+						<SplitIcon aria-hidden className="size-3.5" />
+					</Button>
+				) : null}
+				<Amount
+					className={cn("pointer-events-none text-right", item.amount > 0 && "text-positive")}
+				>
+					{amount}
+				</Amount>
+			</span>
 			<ChevronRight aria-hidden className="pointer-events-none size-4 text-muted-foreground" />
 		</div>
 	);

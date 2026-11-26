@@ -262,3 +262,21 @@ body {
 		}
 	}
 }
+
+/* Row buttons (rename, split) appear on row hover or keyboard focus on precise pointers; touch
+   screens, with no hover, always show them. */
+@utility row-action {
+	transition:
+		opacity 120ms var(--ease-out),
+		color 150ms var(--ease-out),
+		background-color 150ms var(--ease-out);
+	@media (hover: hover) and (pointer: fine) {
+		opacity: 0;
+		:where(.row-hover:hover, .row-hover:focus-within) & {
+			opacity: 1;
+		}
+		&:focus-visible {
+			opacity: 1;
+		}
+	}
+}

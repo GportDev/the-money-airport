@@ -4,7 +4,8 @@ import { SavingIndicator } from "@/components/ui/saving-indicator";
 import { useInlineCommit } from "@/hooks/use-inline-commit";
 import { cn } from "@/lib/cn";
 
-const inlineTextVariants = cva(
+/** The quiet field look shared by inline editors and the add form: plain at rest, a field on hover. */
+const inlineFieldVariants = cva(
 	"w-full min-w-0 rounded-lg border border-transparent bg-transparent px-2 py-1 outline-none transition-[border-color,background-color] duration-150 ease-out placeholder:text-muted-foreground hover:border-border hover:bg-foreground/[0.02] focus-visible:border-border focus-visible:bg-card focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring disabled:hover:border-transparent",
 	{
 		variants: {
@@ -12,6 +13,7 @@ const inlineTextVariants = cva(
 				title: "text-xl font-semibold tracking-tight",
 				amount: "amount text-[28px] leading-tight",
 				body: "text-sm",
+				note: "min-h-8 resize-none py-1.5 text-sm [field-sizing:content]",
 			},
 		},
 		defaultVariants: { size: "body" },
@@ -19,7 +21,7 @@ const inlineTextVariants = cva(
 );
 
 type Props = Omit<React.ComponentProps<"input">, "value" | "onChange" | "size"> &
-	VariantProps<typeof inlineTextVariants> & {
+	VariantProps<typeof inlineFieldVariants> & {
 		value: string;
 		onCommit: (next: string) => Promise<unknown> | unknown;
 		/** Required fields revert when cleared; set this to save an empty value. */
@@ -55,10 +57,12 @@ export function InlineText({
 						requestAnimationFrame(() => inputRef.current?.blur());
 					}
 				}}
-				className={cn(inlineTextVariants({ size }), field.isSaving && "pr-7", className)}
+				className={cn(inlineFieldVariants({ size }), field.isSaving && "pr-7", className)}
 				{...props}
 			/>
 			{field.isSaving ? <SavingIndicator className="absolute right-2" /> : null}
 		</span>
 	);
 }
+
+export { inlineFieldVariants };

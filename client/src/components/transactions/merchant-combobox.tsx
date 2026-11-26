@@ -9,11 +9,18 @@ type Props = {
 	onValueChange: (merchant: string) => void;
 	/** Lets a `<label htmlFor>` name the trigger. */
 	id?: string;
+	"aria-labelledby"?: string;
 	className?: string;
 };
 
 /** Merchant picker: one of the merchants the User already has, or a new one typed in. */
-export function MerchantCombobox({ value, onValueChange, id, className }: Props) {
+export function MerchantCombobox({
+	value,
+	onValueChange,
+	id,
+	"aria-labelledby": labelledBy,
+	className,
+}: Props) {
 	const merchants = useMerchants();
 	const [query, setQuery] = useState("");
 	const names = (merchants.data ?? []).map((merchant) => merchant.name);
@@ -33,13 +40,14 @@ export function MerchantCombobox({ value, onValueChange, id, className }: Props)
 		>
 			<Combobox.Trigger
 				id={id}
+				aria-labelledby={labelledBy}
 				className={cn(
 					"flex min-w-0 items-center gap-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring",
 					className,
 				)}
 			>
 				<span className={cn("min-w-0 flex-1 truncate", !value && "text-muted-foreground")}>
-					{value ?? "Choose…"}
+					{value ?? "None"}
 				</span>
 				<Combobox.Icon className="shrink-0 text-muted-foreground">
 					<ChevronDown aria-hidden className="size-3.5" />

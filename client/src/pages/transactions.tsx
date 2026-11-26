@@ -18,6 +18,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { FeedState } from "@/components/transactions/feed-state";
 import { NoMatchingTransactions } from "@/components/transactions/no-matching-transactions";
 import { NoTransactions } from "@/components/transactions/no-transactions";
+import { SplitDialog } from "@/components/transactions/split/split-dialog";
 import { type FeedColumns, TransactionFeed } from "@/components/transactions/transaction-feed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ export function TransactionsPage() {
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [bulkOpen, setBulkOpen] = useState(false);
 	const [pendingDelete, setPendingDelete] = useState<TransactionDetail | null>(null);
+	const [splitId, setSplitId] = useState<string | null>(null);
 
 	function patchParams(mutate: (next: URLSearchParams) => void) {
 		setSearchParams(
@@ -219,6 +221,7 @@ export function TransactionsPage() {
 							isFetchingNextPage={feed.isFetchingNextPage}
 							fetchNextPage={() => void feed.fetchNextPage()}
 							onOpen={(item) => setDrawer(item.id)}
+							onSplit={(item) => setSplitId(item.id)}
 							columns={columns}
 							selecting={selecting}
 							selected={selected}
@@ -301,6 +304,7 @@ export function TransactionsPage() {
 					}}
 				/>
 			) : null}
+			<SplitDialog transactionId={splitId} onClose={() => setSplitId(null)} />
 			{categoriesOpen ? <CategoryManagerDrawer onClose={() => setCategoriesOpen(false)} /> : null}
 			{rulesOpen ? <RulesDrawer onClose={() => setRulesOpen(false)} /> : null}
 			{bulkOpen ? (

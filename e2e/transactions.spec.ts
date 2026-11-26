@@ -296,7 +296,10 @@ test("Transactions page: date-grouped feed, drawer edit, filters, and Edit multi
 	await drawer.getByLabel("Category").click();
 	await page.getByRole("option", { name: "Entertainment" }).click();
 	await drawer.getByLabel("Notes").fill("Team coffee");
-	await drawer.getByRole("button", { name: "Save" }).click();
+	// Edits save on their own: blur commits the note, then Escape closes the drawer.
+	await drawer.getByLabel("Notes").blur();
+	await signedExpect(drawer.getByRole("status", { name: "Saving" })).toHaveCount(0);
+	await page.keyboard.press("Escape");
 	await signedExpect(drawer).toHaveCount(0);
 	await signedExpect(feed.getByRole("combobox", { name: "Category for Joe Coffee" })).toHaveText(
 		"Entertainment",

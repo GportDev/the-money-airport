@@ -1,5 +1,3 @@
-import { Undo2 } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { TransactionLink } from "@/components/transactions/transaction-link";
 import { Button } from "@/components/ui/button";
@@ -9,7 +7,7 @@ import type { TransactionDetail } from "@/types";
 
 type Props = { transaction: TransactionDetail; onOpen?: (id: string) => void };
 
-/** Drawer section: links Money coming back to the expense it refunds. */
+/** Drawer section: the refund links a Transaction already has (refund of, refunded by). */
 export function TransactionRefund({ transaction, onOpen }: Props) {
 	const { of, refundedBy } = transaction.refund;
 	if (of) {
@@ -27,10 +25,13 @@ export function TransactionRefund({ transaction, onOpen }: Props) {
 			</section>
 		);
 	}
-	if (transaction.amount <= 0) {
-		return null;
-	}
-	return <RefundPicker transaction={transaction} onOpen={onOpen} />;
+	return null;
+}
+
+/** Money coming in with no refund links yet can be marked as the refund of an expense. */
+export function canMarkAsRefund(transaction: TransactionDetail) {
+	const { of, refundedBy } = transaction.refund;
+	return transaction.amount > 0 && !of && refundedBy.length === 0;
 }
 
 function RefundOf({ transaction, onOpen }: Props) {
@@ -62,9 +63,15 @@ function RefundOf({ transaction, onOpen }: Props) {
 	);
 }
 
-function RefundPicker({ transaction }: Props) {
-	const [isPicking, setIsPicking] = useState(false);
-	const candidates = useRefundCandidates(transaction.id, isPicking);
+/** Drawer panel: pick the expense this money refunds. */
+export function RefundPicker({
+	transaction,
+	onClose,
+}: {
+	transaction: TransactionDetail;
+	onClose: () => void;
+}) {
+	const candidates = useRefundCandidates(transaction.id, true);
 	const link = useLinkRefund();
 
 	function onPick(originalId: string, label: string) {
@@ -73,7 +80,7 @@ function RefundPicker({ transaction }: Props) {
 			{
 				onSuccess: () => {
 					toast.success(`Linked as a refund of ${label}`);
-					setIsPicking(false);
+					onClose();
 				},
 				onError: () => toast.error("Could not link the refund"),
 			},
@@ -81,47 +88,39 @@ function RefundPicker({ transaction }: Props) {
 	}
 
 	return (
-		<section aria-labelledby="refund-heading" className="flex flex-col gap-2 px-4">
+		<section
+			aria-label="Refund"
+			className="flex flex-col gap-2 rounded-xl bg-foreground/[0.03] p-3"
+		>
 			<div className="flex items-center justify-between gap-2">
-				<h3 id="refund-heading" className="text-sm font-medium">
-					Refund
-				</h3>
-				{isPicking ? (
-					<Button variant="outline" size="sm" onClick={() => setIsPicking(false)}>
-						Cancel
-					</Button>
-				) : (
-					<Button variant="outline" size="sm" onClick={() => setIsPicking(true)}>
-						<Undo2 aria-hidden className="size-3.5" />
-						Mark as refund
-					</Button>
-				)}
+				<h3 className="text-sm font-medium">Which expense does this refund?</h3>
+				<Button variant="ghost" size="sm" onClick={onClose}>
+					Cancel
+				</Button>
 			</div>
-			{isPicking ? (
-				candidates.isPending ? (
-					<SkeletonGroup label="Loading expenses" className="flex flex-col gap-2">
-						<Skeleton className="h-9 w-full" />
-						<Skeleton className="h-9 w-full" />
-					</SkeletonGroup>
-				) : candidates.isError ? (
-					<p role="alert" className="text-sm text-negative">
-						Could not load expenses.
-					</p>
-				) : (candidates.data ?? []).length === 0 ? (
-					<p className="text-sm text-muted-foreground">No expenses in the last 120 days fit.</p>
-				) : (
-					<ul aria-label="Expenses this may refund" className="flex flex-col">
-						{(candidates.data ?? []).map((item) => (
-							<li key={item.id}>
-								<TransactionLink
-									item={item}
-									onOpen={() => onPick(item.id, item.merchantName ?? item.name)}
-								/>
-							</li>
-						))}
-					</ul>
-				)
-			) : null}
+			{candidates.isPending ? (
+				<SkeletonGroup label="Loading expenses" className="flex flex-col gap-2">
+					<Skeleton className="h-9 w-full" />
+					<Skeleton className="h-9 w-full" />
+				</SkeletonGroup>
+			) : candidates.isError ? (
+				<p role="alert" className="text-sm text-negative">
+					Could not load expenses.
+				</p>
+			) : (candidates.data ?? []).length === 0 ? (
+				<p className="text-sm text-muted-foreground">No expenses in the last 120 days fit.</p>
+			) : (
+				<ul aria-label="Expenses this may refund" className="flex flex-col">
+					{(candidates.data ?? []).map((item) => (
+						<li key={item.id}>
+							<TransactionLink
+								item={item}
+								onOpen={() => onPick(item.id, item.merchantName ?? item.name)}
+							/>
+						</li>
+					))}
+				</ul>
+			)}
 		</section>
 	);
 }
