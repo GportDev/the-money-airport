@@ -8,7 +8,14 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
-import { formatCompactMoney } from "@/lib/chart";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
+import {
+	CHART_AXIS,
+	CHART_GRID,
+	formatCompactMoney,
+	LINE_CURSOR,
+	TOOLTIP_PROPS,
+} from "@/lib/chart";
 import { shortMonthName } from "@/lib/forecast";
 import { formatMoney } from "@/lib/format";
 import type { ForecastSummary } from "@/types";
@@ -42,18 +49,14 @@ export function ProjectedBalanceChart({ summary, currentMonth }: Props) {
 					data={pointsOf(summary.projectedBalanceSeries)}
 					margin={{ top: 8, right: 16, left: 0 }}
 				>
-					<CartesianGrid vertical={false} stroke="var(--border)" />
+					<CartesianGrid {...CHART_GRID} />
 					<XAxis
 						dataKey="month"
-						tickLine={false}
-						axisLine={false}
-						fontSize={12}
+						{...CHART_AXIS}
 						tickFormatter={(value: number) => shortMonthName(value)}
 					/>
 					<YAxis
-						tickLine={false}
-						axisLine={false}
-						fontSize={12}
+						{...CHART_AXIS}
 						width={56}
 						tickFormatter={(value: number) => formatCompactMoney(value, currency)}
 					/>
@@ -67,8 +70,15 @@ export function ProjectedBalanceChart({ summary, currentMonth }: Props) {
 						<ReferenceLine x={currentMonth} stroke="var(--muted-foreground)" strokeOpacity={0.4} />
 					) : null}
 					<Tooltip
-						formatter={(value) => formatMoney(Number(value), currency)}
-						labelFormatter={(label) => shortMonthName(Number(label))}
+						{...TOOLTIP_PROPS}
+						cursor={LINE_CURSOR}
+						content={(props) => (
+							<ChartTooltip
+								{...props}
+								formatValue={(value) => formatMoney(value, currency)}
+								formatLabel={(label) => shortMonthName(Number(label))}
+							/>
+						)}
 					/>
 					<Line
 						type="monotone"

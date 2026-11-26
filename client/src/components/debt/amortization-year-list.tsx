@@ -24,7 +24,7 @@ export function AmortizationYearList({ schedule, currency }: Props) {
 		<div className="flex flex-col gap-2">
 			{byYear(schedule).map(([year, rows]) => (
 				<Collapsible.Root key={year} className="rounded-lg border border-border">
-					<Collapsible.Trigger className="group flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-foreground/5">
+					<Collapsible.Trigger className="group flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium row-hover">
 						<ChevronDown
 							aria-hidden
 							className="size-4 transition-transform group-data-[state=closed]:-rotate-90"

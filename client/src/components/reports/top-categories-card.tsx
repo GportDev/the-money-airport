@@ -29,7 +29,7 @@ export function TopCategoriesCard({ range, onSelect }: Props) {
 					<li key={row.categoryId}>
 						<button
 							type="button"
-							className="flex w-full flex-col gap-1.5 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-foreground/5"
+							className="flex w-full flex-col gap-1.5 px-2 py-2 text-left text-sm row-hover"
 							onClick={() => onSelect(row)}
 						>
 							<span className="flex w-full items-center gap-2">

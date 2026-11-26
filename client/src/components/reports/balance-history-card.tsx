@@ -9,8 +9,16 @@ import {
 	YAxis,
 } from "recharts";
 import { ReportCard } from "@/components/reports/report-card";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
 import { useBalanceHistory } from "@/hooks/use-reports";
-import { formatCompactMoney, seriesColor } from "@/lib/chart";
+import {
+	CHART_AXIS,
+	CHART_GRID,
+	formatCompactMoney,
+	LINE_CURSOR,
+	seriesColor,
+	TOOLTIP_PROPS,
+} from "@/lib/chart";
 import { formatLongDate, formatMoney } from "@/lib/format";
 import { reportStatus } from "@/lib/report-status";
 import type { BalanceHistoryReport, ReportRange } from "@/types";
@@ -55,28 +63,29 @@ export function BalanceHistoryCard({ range }: { range: ReportRange }) {
 				<div className="h-64">
 					<ResponsiveContainer width="100%" height="100%">
 						<LineChart data={rows} margin={{ top: 8, right: 16, left: 0 }}>
-							<CartesianGrid vertical={false} stroke="var(--border)" />
+							<CartesianGrid {...CHART_GRID} />
 							<XAxis
 								dataKey="date"
-								tickLine={false}
-								axisLine={false}
-								fontSize={12}
+								{...CHART_AXIS}
 								minTickGap={24}
 								tickFormatter={(value: string) => shortDate(value)}
 							/>
 							<YAxis
-								tickLine={false}
-								axisLine={false}
-								fontSize={12}
+								{...CHART_AXIS}
 								width={56}
 								tickFormatter={(value: number) => formatCompactMoney(value, currency)}
 							/>
 							<Tooltip
-								formatter={(value, key) => [
-									formatMoney(Number(value), currency),
-									names.get(String(key)) ?? String(key),
-								]}
-								labelFormatter={(label) => formatLongDate(String(label))}
+								{...TOOLTIP_PROPS}
+								cursor={LINE_CURSOR}
+								content={(props) => (
+									<ChartTooltip
+										{...props}
+										names={Object.fromEntries(names)}
+										formatValue={(value) => formatMoney(value, currency)}
+										formatLabel={formatLongDate}
+									/>
+								)}
 							/>
 							{accounts.map((account, index) => (
 								<Line

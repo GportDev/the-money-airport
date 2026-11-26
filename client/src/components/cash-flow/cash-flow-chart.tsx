@@ -8,6 +8,18 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { ChartGradient } from "@/components/ui/chart-gradient";
+import { ChartLegend } from "@/components/ui/chart-legend";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
+import {
+	ACTIVE_DOT,
+	areaFill,
+	BAR_CURSOR,
+	BAR_RADIUS,
+	CHART_AXIS,
+	CHART_GRID,
+	TOOLTIP_PROPS,
+} from "@/lib/chart";
 import { formatMoney } from "@/lib/format";
 import type { CashFlowDay, RunningBalanceKind } from "@/types";
 
@@ -93,19 +105,12 @@ export function CashFlowChart({
 			<div className="h-64">
 				<ResponsiveContainer width="100%" height="100%">
 					<ComposedChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-						<CartesianGrid vertical={false} stroke="var(--border)" />
-						<XAxis
-							dataKey="label"
-							tickLine={false}
-							axisLine={false}
-							fontSize={12}
-							interval="preserveStartEnd"
-						/>
+						<ChartGradient token="primary" />
+						<CartesianGrid {...CHART_GRID} />
+						<XAxis dataKey="label" {...CHART_AXIS} interval="preserveStartEnd" />
 						<YAxis
 							yAxisId="flow"
-							tickLine={false}
-							axisLine={false}
-							fontSize={12}
+							{...CHART_AXIS}
 							width={56}
 							tickFormatter={(value: number) => compactMoney(value, currency)}
 						/>
@@ -113,21 +118,24 @@ export function CashFlowChart({
 							<YAxis
 								yAxisId="balance"
 								orientation="right"
-								tickLine={false}
-								axisLine={false}
-								fontSize={12}
+								{...CHART_AXIS}
 								width={56}
 								tickFormatter={(value: number) => compactMoney(value, currency)}
 							/>
 						) : null}
 						<Tooltip
-							formatter={(value, name) => [
-								formatMoney(Number(value), currency),
-								names[String(name)] ?? String(name),
-							]}
-							labelFormatter={(label) =>
-								granularity === "daily" ? `Day ${String(label)}` : `Days ${String(label)}`
-							}
+							{...TOOLTIP_PROPS}
+							cursor={BAR_CURSOR}
+							content={(props) => (
+								<ChartTooltip
+									{...props}
+									names={names}
+									formatValue={(value) => formatMoney(value, currency)}
+									formatLabel={(label) =>
+										granularity === "daily" ? `Day ${label}` : `Days ${label}`
+									}
+								/>
+							)}
 						/>
 						{hasBalance ? (
 							<Area
@@ -135,8 +143,9 @@ export function CashFlowChart({
 								type="stepAfter"
 								dataKey="runningBalance"
 								stroke="var(--primary)"
-								fill="var(--primary)"
-								fillOpacity={0.08}
+								strokeWidth={2}
+								fill={areaFill("primary")}
+								activeDot={ACTIVE_DOT}
 								connectNulls={false}
 								isAnimationActive={false}
 							/>
@@ -145,7 +154,7 @@ export function CashFlowChart({
 							yAxisId="flow"
 							dataKey="income"
 							fill="var(--positive)"
-							radius={[3, 3, 0, 0]}
+							radius={BAR_RADIUS}
 							isAnimationActive={false}
 						/>
 						<Bar
@@ -153,27 +162,22 @@ export function CashFlowChart({
 							dataKey="expenses"
 							fill="var(--negative)"
 							fillOpacity={0.75}
-							radius={[3, 3, 0, 0]}
+							radius={BAR_RADIUS}
 							isAnimationActive={false}
 						/>
 					</ComposedChart>
 				</ResponsiveContainer>
 			</div>
-			<figcaption className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
-				<span className="flex items-center gap-1">
-					<span aria-hidden className="size-2 rounded-sm bg-positive" />
-					Income
-				</span>
-				<span className="flex items-center gap-1">
-					<span aria-hidden className="size-2 rounded-sm bg-negative/75" />
-					Expenses
-				</span>
-				{hasBalance ? (
-					<span className="flex items-center gap-1">
-						<span aria-hidden className="h-0.5 w-3 bg-primary" />
-						{balanceLabel}
-					</span>
-				) : null}
+			<figcaption className="mt-3">
+				<ChartLegend
+					items={[
+						{ label: "Income", swatchClassName: "bg-positive" },
+						{ label: "Expenses", swatchClassName: "bg-negative/75" },
+						...(hasBalance
+							? [{ label: balanceLabel, swatchClassName: "bg-primary", shape: "line" as const }]
+							: []),
+					]}
+				/>
 			</figcaption>
 		</figure>
 	);

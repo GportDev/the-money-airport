@@ -16,7 +16,7 @@ export function OneOffItem({ oneOff, currency, onOpen }: Props) {
 			<button
 				type="button"
 				onClick={() => onOpen(oneOff)}
-				className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors hover:bg-foreground/5"
+				className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm row-hover"
 			>
 				<span className="flex-1 truncate font-medium">{oneOff.name}</span>
 				<span className="text-muted-foreground">{shortDate(oneOff.date)}</span>

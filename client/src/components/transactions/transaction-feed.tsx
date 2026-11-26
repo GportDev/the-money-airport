@@ -207,10 +207,11 @@ function FeedRow({
 		.join(", ");
 	return (
 		<div
+			data-selected={checked || undefined}
+			data-tinted={(!checked && isTransfer(item)) || undefined}
 			className={cn(
-				"relative grid w-full items-center gap-3 border-b border-border px-1 py-3 text-left text-sm transition-colors hover:bg-foreground/5",
+				"grid w-full items-center gap-3 border-b border-border px-2 py-3 text-left text-sm row-hover",
 				ROW_GRID,
-				checked ? "bg-muted" : isTransfer(item) && "bg-muted/40",
 			)}
 		>
 			<button
@@ -218,7 +219,7 @@ function FeedRow({
 				onClick={onClick}
 				aria-pressed={selecting ? checked : undefined}
 				aria-label={rowLabel}
-				className="absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+				className="absolute inset-x-1 inset-y-0.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring"
 			/>
 			<span className="pointer-events-none flex items-center gap-2">
 				{selecting ? (

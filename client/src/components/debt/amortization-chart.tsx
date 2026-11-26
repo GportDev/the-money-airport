@@ -7,7 +7,9 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
-import { formatCompactMoney } from "@/lib/chart";
+import { ChartGradient } from "@/components/ui/chart-gradient";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
+import { areaFill, CHART_GRID, formatCompactMoney, LINE_CURSOR, TOOLTIP_PROPS } from "@/lib/chart";
 import { monthName } from "@/lib/debt";
 import { formatMoney } from "@/lib/format";
 import type { AmortizationRow } from "@/types";
@@ -22,7 +24,8 @@ export function AmortizationChart({ schedule, currency }: Props) {
 		<figure aria-label="Loan balance over time" className="h-44">
 			<ResponsiveContainer width="100%" height="100%">
 				<AreaChart data={schedule} margin={{ top: 8, right: 8, left: 0 }}>
-					<CartesianGrid vertical={false} stroke="var(--border)" />
+					<ChartGradient token="primary" />
+					<CartesianGrid {...CHART_GRID} />
 					<XAxis
 						dataKey="date"
 						tickLine={false}
@@ -39,15 +42,22 @@ export function AmortizationChart({ schedule, currency }: Props) {
 						tickFormatter={(value: number) => formatCompactMoney(value, currency)}
 					/>
 					<Tooltip
-						formatter={(value) => [formatMoney(Number(value), currency), "Balance"]}
-						labelFormatter={(label) => monthName(String(label).slice(0, 7))}
+						{...TOOLTIP_PROPS}
+						cursor={LINE_CURSOR}
+						content={(props) => (
+							<ChartTooltip
+								{...props}
+								names={{ endingBalance: "Balance" }}
+								formatValue={(value) => formatMoney(value, currency)}
+								formatLabel={(label) => monthName(label.slice(0, 7))}
+							/>
+						)}
 					/>
 					<Area
 						type="monotone"
 						dataKey="endingBalance"
 						stroke="var(--primary)"
-						fill="var(--primary)"
-						fillOpacity={0.12}
+						fill={areaFill("primary")}
 						isAnimationActive={false}
 					/>
 				</AreaChart>

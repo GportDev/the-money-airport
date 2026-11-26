@@ -1,5 +1,13 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { formatCompactMoney, seriesColor } from "@/lib/chart";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
+import {
+	BAR_CURSOR,
+	CHART_AXIS,
+	CHART_GRID,
+	formatCompactMoney,
+	seriesColor,
+	TOOLTIP_PROPS,
+} from "@/lib/chart";
 import { monthName } from "@/lib/debt";
 import { formatMoney } from "@/lib/format";
 import type { DebtPlan } from "@/types";
@@ -23,28 +31,31 @@ export function DebtChart({ plan }: Props) {
 			<div className="h-56">
 				<ResponsiveContainer width="100%" height="100%">
 					<BarChart data={rows} margin={{ top: 8, right: 16, left: 0 }}>
-						<CartesianGrid vertical={false} stroke="var(--border)" />
+						<CartesianGrid {...CHART_GRID} />
 						<XAxis
 							dataKey="month"
-							tickLine={false}
-							axisLine={false}
-							fontSize={12}
+							{...CHART_AXIS}
 							tickFormatter={(value: string) => monthName(value)}
 						/>
 						<YAxis
-							tickLine={false}
-							axisLine={false}
-							fontSize={12}
+							{...CHART_AXIS}
 							width={56}
 							tickFormatter={(value: number) => formatCompactMoney(value, currency)}
 						/>
 						<Tooltip
-							formatter={(value, key) => [
-								formatMoney(Number(value), currency),
-								plan.liabilities.find((entry) => entry.account.id === key)?.account.name ??
-									"Payback",
-							]}
-							labelFormatter={(label) => monthName(String(label))}
+							{...TOOLTIP_PROPS}
+							cursor={BAR_CURSOR}
+							content={(props) => (
+								<ChartTooltip
+									{...props}
+									names={Object.fromEntries(
+										plan.liabilities.map((entry) => [entry.account.id, entry.account.name]),
+									)}
+									formatValue={(value) => formatMoney(value, currency)}
+									formatLabel={monthName}
+									showTotal
+								/>
+							)}
 						/>
 						{plan.liabilities.map((entry, index) => (
 							<Bar

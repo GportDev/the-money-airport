@@ -1,6 +1,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Amount } from "@/components/ui/amount";
-import { seriesColor } from "@/lib/chart";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
+import { seriesColor, TOOLTIP_PROPS } from "@/lib/chart";
 import { formatMoney } from "@/lib/format";
 import type { Investments } from "@/types";
 
@@ -39,7 +40,12 @@ export function AllocationChart({ allocation, total, currency }: Props) {
 									<Cell key={row.accountId} fill={seriesColor(index)} />
 								))}
 							</Pie>
-							<Tooltip formatter={(value) => formatMoney(Number(value), currency)} />
+							<Tooltip
+								{...TOOLTIP_PROPS}
+								content={(props) => (
+									<ChartTooltip {...props} formatValue={(value) => formatMoney(value, currency)} />
+								)}
+							/>
 						</PieChart>
 					</ResponsiveContainer>
 				</div>

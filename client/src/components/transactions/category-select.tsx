@@ -44,7 +44,7 @@ export function CategorySelect({
 				);
 			}}
 			className={cn(
-				"-mx-1.5 max-w-full rounded-md px-1.5 py-1 hover:bg-foreground/5 data-[popup-open]:bg-foreground/5",
+				"max-w-full rounded-lg px-1.5 py-1 transition-colors hover:bg-foreground/5 data-[popup-open]:bg-foreground/5",
 				className,
 			)}
 		/>

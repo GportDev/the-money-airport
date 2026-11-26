@@ -17,7 +17,7 @@ export function CategoryLegend({ categories, currency, onSelect }: Props) {
 				<li key={row.categoryId}>
 					<button
 						type="button"
-						className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-foreground/5"
+						className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm row-hover"
 						onClick={() => onSelect(row)}
 					>
 						<CategoryIcon icon={row.icon} color={row.color} />

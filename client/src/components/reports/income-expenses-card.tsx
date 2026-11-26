@@ -1,8 +1,16 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MonthTick } from "@/components/reports/month-tick";
 import { ReportCard } from "@/components/reports/report-card";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
 import { useIncomeVsExpenses } from "@/hooks/use-reports";
-import { formatCompactMoney } from "@/lib/chart";
+import {
+	BAR_CURSOR,
+	BAR_RADIUS,
+	CHART_AXIS,
+	CHART_GRID,
+	formatCompactMoney,
+	TOOLTIP_PROPS,
+} from "@/lib/chart";
 import { formatMoney } from "@/lib/format";
 import { reportMonthLabel } from "@/lib/report-range";
 import { reportStatus } from "@/lib/report-status";
@@ -35,7 +43,7 @@ export function IncomeExpensesCard({ range, onSelectMonth }: Props) {
 				<div className="h-56">
 					<ResponsiveContainer width="100%" height="100%">
 						<BarChart data={report.data?.months ?? []} margin={{ top: 8, right: 8, left: 0 }}>
-							<CartesianGrid vertical={false} stroke="var(--border)" />
+							<CartesianGrid {...CHART_GRID} />
 							<XAxis
 								dataKey="month"
 								tickLine={false}
@@ -44,23 +52,26 @@ export function IncomeExpensesCard({ range, onSelectMonth }: Props) {
 								tick={(props) => <MonthTick {...props} onSelect={onSelectMonth} />}
 							/>
 							<YAxis
-								tickLine={false}
-								axisLine={false}
-								fontSize={12}
+								{...CHART_AXIS}
 								width={56}
 								tickFormatter={(value: number) => formatCompactMoney(value, currency)}
 							/>
 							<Tooltip
-								formatter={(value, name) => [
-									formatMoney(Number(value), currency),
-									SERIES_NAMES[String(name)] ?? String(name),
-								]}
-								labelFormatter={(label) => reportMonthLabel(String(label))}
+								{...TOOLTIP_PROPS}
+								cursor={BAR_CURSOR}
+								content={(props) => (
+									<ChartTooltip
+										{...props}
+										names={SERIES_NAMES}
+										formatValue={(value) => formatMoney(value, currency)}
+										formatLabel={reportMonthLabel}
+									/>
+								)}
 							/>
 							<Bar
 								dataKey="income"
 								fill="var(--positive)"
-								radius={[3, 3, 0, 0]}
+								radius={BAR_RADIUS}
 								className="cursor-pointer"
 								isAnimationActive={false}
 								onClick={selectBar}
@@ -69,7 +80,7 @@ export function IncomeExpensesCard({ range, onSelectMonth }: Props) {
 								dataKey="expenses"
 								fill="var(--negative)"
 								fillOpacity={0.75}
-								radius={[3, 3, 0, 0]}
+								radius={BAR_RADIUS}
 								className="cursor-pointer"
 								isAnimationActive={false}
 								onClick={selectBar}

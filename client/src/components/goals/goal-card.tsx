@@ -18,11 +18,11 @@ type Props = {
 export function GoalCard({ goal, currency, onOpen }: Props) {
 	const percent = formatPercent(goal.percentComplete);
 	return (
-		<li className="rounded-xl border border-border bg-card">
+		<li className="card-hover rounded-xl border border-border bg-card">
 			<button
 				type="button"
 				onClick={() => onOpen(goal)}
-				className="flex w-full flex-col gap-2 p-4 text-left transition-colors hover:bg-foreground/5"
+				className="flex w-full flex-col gap-2 rounded-xl p-4 text-left"
 			>
 				<span className="flex items-center gap-3">
 					<span className="flex size-9 items-center justify-center rounded-lg bg-muted">

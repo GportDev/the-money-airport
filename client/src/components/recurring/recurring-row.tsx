@@ -15,7 +15,7 @@ export function RecurringRow({ item, onOpen }: Props) {
 				type="button"
 				onClick={() => onOpen(item)}
 				className={cn(
-					"flex w-full items-center gap-3 px-3 py-3 text-left text-sm transition-colors hover:bg-foreground/5",
+					"flex w-full items-center gap-3 px-3 py-3 text-left text-sm row-hover",
 					!item.isActive && "text-muted-foreground",
 				)}
 			>

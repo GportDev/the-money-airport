@@ -10,7 +10,7 @@ export function TransactionLink({ item, onOpen }: Props) {
 	return (
 		<button
 			type="button"
-			className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-1.5 text-left text-sm transition-colors hover:bg-foreground/5"
+			className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left text-sm row-hover"
 			onClick={() => onOpen?.(item.id)}
 		>
 			<span className="flex min-w-0 flex-col">

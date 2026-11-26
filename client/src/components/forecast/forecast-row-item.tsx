@@ -20,7 +20,7 @@ export function ForecastRowItem({ row, currency, cardName, fundName, onOpen }: P
 			<button
 				type="button"
 				onClick={() => onOpen(row)}
-				className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors hover:bg-foreground/5"
+				className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm row-hover"
 			>
 				<span className="flex min-w-0 flex-1 flex-col">
 					<span className="truncate font-medium">{row.name}</span>

@@ -7,10 +7,13 @@ import { RecurringUpcoming } from "@/components/dashboard/recurring-upcoming";
 import { CategoryIcon } from "@/components/transactions/category-icon";
 import { MerchantLogo } from "@/components/transactions/merchant-logo";
 import { Amount } from "@/components/ui/amount";
+import { ChartGradient } from "@/components/ui/chart-gradient";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
 import { SelectField } from "@/components/ui/select-field";
 import { BUDGET_GROUP_LABELS } from "@/lib/budget";
+import { ACTIVE_DOT, areaFill, LINE_CURSOR, TOOLTIP_PROPS } from "@/lib/chart";
 import { cn } from "@/lib/cn";
-import { formatMoney, formatSignedMoney } from "@/lib/format";
+import { formatChartDate, formatMoney, formatSignedMoney } from "@/lib/format";
 import type { Dashboard, DashboardWidgetId, NetWorthRange, TransactionListItem } from "@/types";
 
 export const WIDGET_LABELS: Record<DashboardWidgetId, string> = {
@@ -168,16 +171,27 @@ export function NetWorthWidget({
 				{netWorth.series.length > 1 ? (
 					<ResponsiveContainer width="100%" height="100%">
 						<AreaChart data={netWorth.series} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+							<ChartGradient token="primary" />
+							<XAxis dataKey="date" hide />
 							<Tooltip
-								formatter={(value) => [formatMoney(Number(value), currency), "Net worth"]}
-								labelFormatter={(label) => String(label)}
+								{...TOOLTIP_PROPS}
+								cursor={LINE_CURSOR}
+								content={(props) => (
+									<ChartTooltip
+										{...props}
+										names={{ value: "Net worth" }}
+										formatValue={(value) => formatMoney(value, currency)}
+										formatLabel={formatChartDate}
+									/>
+								)}
 							/>
 							<Area
-								type="linear"
+								type="monotone"
 								dataKey="value"
 								stroke="var(--primary)"
-								fill="var(--primary)"
-								fillOpacity={0.08}
+								strokeWidth={2}
+								fill={areaFill("primary")}
+								activeDot={ACTIVE_DOT}
 								isAnimationActive={false}
 							/>
 						</AreaChart>
@@ -222,26 +236,36 @@ export function SpendingWidget({
 						<LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
 							<XAxis dataKey="day" hide />
 							<Tooltip
-								formatter={(value, name) => [
-									formatMoney(Number(value), currency),
-									name === "thisMonth" ? "This month" : "Last month",
-								]}
-								labelFormatter={(label) => `Day ${String(label)}`}
+								{...TOOLTIP_PROPS}
+								cursor={LINE_CURSOR}
+								content={(props) => (
+									<ChartTooltip
+										{...props}
+										names={{ thisMonth: "This month", lastMonth: "Last month" }}
+										dashedKeys={["lastMonth"]}
+										formatValue={(value) => formatMoney(value, currency)}
+										formatLabel={(label) => `Day ${label}`}
+									/>
+								)}
 							/>
 							<Line
-								type="linear"
+								type="monotone"
 								dataKey="lastMonth"
 								stroke="var(--muted-foreground)"
+								strokeOpacity={0.6}
+								strokeWidth={1.5}
 								strokeDasharray="4 4"
 								dot={false}
+								activeDot={ACTIVE_DOT}
 								isAnimationActive={false}
 							/>
 							<Line
-								type="linear"
+								type="monotone"
 								dataKey="thisMonth"
 								stroke="var(--primary)"
 								strokeWidth={2}
 								dot={false}
+								activeDot={ACTIVE_DOT}
 								isAnimationActive={false}
 							/>
 						</LineChart>
@@ -285,7 +309,7 @@ export function TransactionsWidget({
 								<button
 									type="button"
 									onClick={() => onOpen(item.id)}
-									className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border py-2 text-left text-sm last:border-b-0 hover:bg-foreground/5"
+									className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-2 py-2 text-left text-sm last:border-b-0 row-hover"
 								>
 									<MerchantLogo name={title} url={item.merchantLogoUrl} />
 									<span className="min-w-0">

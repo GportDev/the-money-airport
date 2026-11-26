@@ -10,8 +10,15 @@ import {
 } from "recharts";
 import { MonthTick } from "@/components/reports/month-tick";
 import { ReportCard } from "@/components/reports/report-card";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
 import { useCashFlowTrend } from "@/hooks/use-reports";
-import { formatCompactMoney } from "@/lib/chart";
+import {
+	CHART_AXIS,
+	CHART_GRID,
+	formatCompactMoney,
+	LINE_CURSOR,
+	TOOLTIP_PROPS,
+} from "@/lib/chart";
 import { formatSignedMoney } from "@/lib/format";
 import { reportMonthLabel } from "@/lib/report-range";
 import { reportStatus } from "@/lib/report-status";
@@ -36,7 +43,7 @@ export function NetCashFlowCard({ range, onSelectMonth }: Props) {
 			<figure aria-label="Net cash flow by month" className="h-56">
 				<ResponsiveContainer width="100%" height="100%">
 					<LineChart data={trend.data?.months ?? []} margin={{ top: 8, right: 16, left: 0 }}>
-						<CartesianGrid vertical={false} stroke="var(--border)" />
+						<CartesianGrid {...CHART_GRID} />
 						<XAxis
 							dataKey="month"
 							tickLine={false}
@@ -46,16 +53,22 @@ export function NetCashFlowCard({ range, onSelectMonth }: Props) {
 							tick={(props) => <MonthTick {...props} onSelect={onSelectMonth} />}
 						/>
 						<YAxis
-							tickLine={false}
-							axisLine={false}
-							fontSize={12}
+							{...CHART_AXIS}
 							width={56}
 							tickFormatter={(value: number) => formatCompactMoney(value, currency)}
 						/>
 						<ReferenceLine y={0} stroke="var(--muted-foreground)" strokeDasharray="3 3" />
 						<Tooltip
-							formatter={(value) => [formatSignedMoney(Number(value), currency), "Net"]}
-							labelFormatter={(label) => reportMonthLabel(String(label))}
+							{...TOOLTIP_PROPS}
+							cursor={LINE_CURSOR}
+							content={(props) => (
+								<ChartTooltip
+									{...props}
+									names={{ net: "Net" }}
+									formatValue={(value) => formatSignedMoney(value, currency)}
+									formatLabel={reportMonthLabel}
+								/>
+							)}
 						/>
 						<Line
 							type="monotone"

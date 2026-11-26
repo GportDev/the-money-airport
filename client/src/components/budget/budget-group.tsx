@@ -17,7 +17,7 @@ export function BudgetGroup({ group, currency, onOpen }: Props) {
 	return (
 		<Collapsible.Root defaultOpen asChild>
 			<section aria-label={label} className="rounded-xl border border-border bg-card">
-				<Collapsible.Trigger className="group flex w-full flex-col gap-2 rounded-xl px-3 py-3 text-left transition-colors hover:bg-foreground/5 sm:flex-row sm:items-center sm:gap-4">
+				<Collapsible.Trigger className="group flex w-full flex-col gap-2 px-3 py-3 text-left row-hover sm:flex-row sm:items-center sm:gap-4">
 					<span className="flex flex-1 items-center gap-2 text-sm font-medium">
 						<ChevronDown
 							aria-hidden

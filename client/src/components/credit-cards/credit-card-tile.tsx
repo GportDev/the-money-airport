@@ -35,8 +35,8 @@ export function CreditCardTile({ card, isSelected, isDragging, handle, onDragOve
 			<li
 				onDragOver={dragOver}
 				className={cn(
-					"rounded-xl border border-border text-sm transition-[background-color,opacity] duration-150",
-					isSelected ? "bg-primary/5" : "bg-card hover:bg-foreground/5",
+					"card-hover rounded-xl border border-border text-sm",
+					isSelected ? "bg-primary/5" : "bg-card",
 					isDragging && "opacity-40",
 				)}
 			>

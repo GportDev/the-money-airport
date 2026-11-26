@@ -198,3 +198,44 @@ body {
 		cursor: not-allowed;
 	}
 }
+
+/* Rows inside a card hover with an inset, rounded wash instead of a full-bleed rectangle, so
+   the wash never runs into card edges, corners, or the hairline dividers between rows. */
+@utility row-hover {
+	position: relative;
+	isolation: isolate;
+	&::before {
+		content: "";
+		position: absolute;
+		inset: 2px 4px;
+		z-index: -1;
+		border-radius: var(--radius);
+		background-color: transparent;
+		transition: background-color 120ms var(--ease-out);
+		pointer-events: none;
+	}
+	&[data-selected]::before {
+		background-color: color-mix(in srgb, var(--foreground) 6%, transparent);
+	}
+	&[data-tinted]::before {
+		background-color: color-mix(in srgb, var(--foreground) 2.5%, transparent);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		&:hover::before {
+			background-color: color-mix(in srgb, var(--foreground) 3.5%, transparent);
+		}
+	}
+}
+
+/* Whole-card clickables lift instead of filling, so rounded corners stay intact. */
+@utility card-hover {
+	transition:
+		border-color 150ms var(--ease-out),
+		box-shadow 150ms var(--ease-out);
+	@media (hover: hover) and (pointer: fine) {
+		&:hover {
+			border-color: var(--border-strong);
+			box-shadow: var(--elevation-float);
+		}
+	}
+}

@@ -8,7 +8,16 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
-import { formatCompactMoney } from "@/lib/chart";
+import { ChartGradient } from "@/components/ui/chart-gradient";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
+import {
+	areaFill,
+	CHART_AXIS,
+	CHART_GRID,
+	formatCompactMoney,
+	LINE_CURSOR,
+	TOOLTIP_PROPS,
+} from "@/lib/chart";
 import { shortDate } from "@/lib/forecast";
 import { formatMoney, todayIso } from "@/lib/format";
 import type { ForecastMonth } from "@/types";
@@ -25,19 +34,16 @@ export function DailyBalanceChart({ month }: Props) {
 		<figure aria-label="Operating cash by day" className="h-56">
 			<ResponsiveContainer width="100%" height="100%">
 				<AreaChart data={month.series} margin={{ top: 8, right: 16, left: 0 }}>
-					<CartesianGrid vertical={false} stroke="var(--border)" />
+					<ChartGradient token="primary" />
+					<CartesianGrid {...CHART_GRID} />
 					<XAxis
 						dataKey="date"
-						tickLine={false}
-						axisLine={false}
-						fontSize={12}
+						{...CHART_AXIS}
 						minTickGap={24}
 						tickFormatter={(value: string) => shortDate(value)}
 					/>
 					<YAxis
-						tickLine={false}
-						axisLine={false}
-						fontSize={12}
+						{...CHART_AXIS}
 						width={56}
 						tickFormatter={(value: number) => formatCompactMoney(value, currency)}
 					/>
@@ -46,16 +52,22 @@ export function DailyBalanceChart({ month }: Props) {
 						<ReferenceLine x={today} stroke="var(--muted-foreground)" strokeOpacity={0.5} />
 					) : null}
 					<Tooltip
-						formatter={(value) => formatMoney(Number(value), currency)}
-						labelFormatter={(label) => shortDate(String(label))}
+						{...TOOLTIP_PROPS}
+						cursor={LINE_CURSOR}
+						content={(props) => (
+							<ChartTooltip
+								{...props}
+								formatValue={(value) => formatMoney(value, currency)}
+								formatLabel={shortDate}
+							/>
+						)}
 					/>
 					<Area
 						type="stepAfter"
 						dataKey="value"
 						name="Operating cash"
 						stroke="var(--primary)"
-						fill="var(--primary)"
-						fillOpacity={0.12}
+						fill={areaFill("primary")}
 						strokeWidth={2}
 						isAnimationActive={false}
 					/>

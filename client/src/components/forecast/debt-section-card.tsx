@@ -52,7 +52,7 @@ export function DebtSectionCard({ year, currency, onOpenDebt }: Props) {
 							<button
 								type="button"
 								onClick={onOpenDebt}
-								className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors hover:bg-foreground/5"
+								className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm row-hover"
 							>
 								<span className="flex-1 truncate font-medium">{row.name} payment</span>
 								<span aria-hidden className="hidden sm:block">

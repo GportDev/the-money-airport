@@ -15,7 +15,7 @@ export function BudgetCategoryRow({ row, currency, onOpen }: Props) {
 		<li>
 			<button
 				type="button"
-				className="flex w-full flex-col gap-2 rounded-md px-3 py-3 text-left transition-colors hover:bg-foreground/5 sm:flex-row sm:items-center sm:gap-4"
+				className="flex w-full flex-col gap-2 px-3 py-3 text-left row-hover sm:flex-row sm:items-center sm:gap-4"
 				onClick={() => onOpen(row)}
 			>
 				<span className="flex min-w-0 flex-1 items-center gap-3">

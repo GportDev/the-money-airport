@@ -50,6 +50,17 @@ export function formatLongDate(isoDate: string) {
 	}).format(new Date(`${isoDate}T00:00:00Z`));
 }
 
+/** "Wed, Nov 12" for a YYYY-MM-DD chart point; other labels pass through unchanged. */
+export function formatChartDate(label: string) {
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(label)) return label;
+	return new Intl.DateTimeFormat("en-US", {
+		weekday: "short",
+		month: "short",
+		day: "numeric",
+		timeZone: "UTC",
+	}).format(new Date(`${label}T00:00:00Z`));
+}
+
 /** Signed money: "+$0.59" for income, "-$4.75" for spend. */
 export function formatSignedMoney(cents: number, currency = "USD") {
 	const formatted = formatMoney(Math.abs(cents), currency);

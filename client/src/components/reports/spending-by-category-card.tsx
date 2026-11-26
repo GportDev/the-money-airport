@@ -1,7 +1,9 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { CategoryLegend } from "@/components/reports/category-legend";
 import { ReportCard } from "@/components/reports/report-card";
+import { ChartTooltip } from "@/components/ui/chart-tooltip";
 import { useSpendingByCategory } from "@/hooks/use-reports";
+import { TOOLTIP_PROPS } from "@/lib/chart";
 import { formatMoney } from "@/lib/format";
 import { reportStatus } from "@/lib/report-status";
 import type { CategoryTotal, ReportRange } from "@/types";
@@ -44,7 +46,12 @@ export function SpendingByCategoryCard({ range, onSelect }: Props) {
 									<Cell key={row.categoryId} fill={row.color} className="cursor-pointer" />
 								))}
 							</Pie>
-							<Tooltip formatter={(value) => formatMoney(Number(value), currency)} />
+							<Tooltip
+								{...TOOLTIP_PROPS}
+								content={(props) => (
+									<ChartTooltip {...props} formatValue={(value) => formatMoney(value, currency)} />
+								)}
+							/>
 						</PieChart>
 					</ResponsiveContainer>
 				</figure>
