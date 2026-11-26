@@ -16,6 +16,7 @@ import {
 	SheetTitle,
 	useSheetClose,
 } from "@/components/ui/sheet";
+import { useOptimisticValue } from "@/hooks/use-optimistic-value";
 import { useDeleteRecurring, useUpdateRecurring } from "@/hooks/use-recurring";
 import { centsToMajorUnits, majorUnitsToCents } from "@/lib/format";
 import { CADENCE_OPTIONS, cadenceLabel } from "@/lib/recurring";
@@ -33,15 +34,22 @@ export function RecurringDrawer({ item, onClose }: Props) {
 	const update = useUpdateRecurring();
 	const remove = useDeleteRecurring();
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
+	const active = useOptimisticValue(item.isActive);
+	const cadence = useOptimisticValue(item.cadence);
 
 	function saveOrThrow(patch: RecurringPatch) {
 		return update.mutateAsync({ id: item.id, ...patch });
 	}
 
-	function save(patch: RecurringPatch) {
+	function save(patch: RecurringPatch, revert: () => void) {
 		update.mutate(
 			{ id: item.id, ...patch },
-			{ onError: () => toast.error(`Could not save ${item.merchantName}`) },
+			{
+				onError: () => {
+					revert();
+					toast.error(`Could not save ${item.merchantName}`);
+				},
+			},
 		);
 	}
 
@@ -81,9 +89,12 @@ export function RecurringDrawer({ item, onClose }: Props) {
 						<Segmented
 							aria-label="Cadence"
 							size="sm"
-							value={item.cadence}
+							value={cadence.value}
 							options={CADENCE_OPTIONS}
-							onValueChange={(cadence) => save({ cadence })}
+							onValueChange={(next) => {
+								cadence.setValue(next);
+								save({ cadence: next }, cadence.revert);
+							}}
 						/>
 					</PropertyRow>
 					<PropertyRow label="Next date">
@@ -98,8 +109,11 @@ export function RecurringDrawer({ item, onClose }: Props) {
 					<PropertyRow label="Active">
 						<Checkbox
 							aria-label="Active"
-							checked={item.isActive}
-							onCheckedChange={(checked) => save({ isActive: checked === true })}
+							checked={active.value}
+							onCheckedChange={(checked) => {
+								active.setValue(checked === true);
+								save({ isActive: checked === true }, active.revert);
+							}}
 						/>
 					</PropertyRow>
 				</PropertyList>

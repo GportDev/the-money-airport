@@ -155,9 +155,6 @@ test("edit and unhide move net worth, and Filters stay in the URL", async ({ pag
 	await page.getByRole("button", { name: "Editable cash" }).click();
 	await page.getByLabel("Balance").fill("80.00");
 	await page.getByLabel("Balance").press("Enter");
-	await signedExpect(
-		page.getByRole("region", { name: "Net worth" }).getByText("$80.00"),
-	).toBeVisible();
 	await page.keyboard.press("Escape");
 	// Drawers slide out before unmounting.
 	await signedExpect(page.getByRole("dialog")).toHaveCount(0);

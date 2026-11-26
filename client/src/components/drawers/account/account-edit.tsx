@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { InlineText } from "@/components/ui/inline-text";
 import { PropertyList, PropertyRow } from "@/components/ui/property-list";
 import { SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useOptimisticValue } from "@/hooks/use-optimistic-value";
 import { bpsToPercent, earnsApy, percentToBps } from "@/lib/apy";
 import { centsToMajorUnits, formatMoney, majorUnitsToCents } from "@/lib/format";
 import type { BankAccount } from "@/types";
@@ -46,10 +47,6 @@ export function AccountEdit({ account, range, onSave, ...handlers }: Props) {
 
 	function saveOrThrow(patch: Partial<AccountSaveInput>) {
 		return onSave({ ...currentInput(account), ...patch });
-	}
-
-	function save(patch: Partial<AccountSaveInput>) {
-		saveOrThrow(patch).catch(() => toast.error(`Could not save ${account.name}`));
 	}
 
 	return (
@@ -123,7 +120,7 @@ export function AccountEdit({ account, range, onSave, ...handlers }: Props) {
 						label="In cash plan"
 						hint="The Forecast pays bills from and receives income into cash plan accounts."
 						checked={account.inCashPlan}
-						onChange={(inCashPlan) => save({ inCashPlan })}
+						onChange={(inCashPlan) => saveOrThrow({ inCashPlan })}
 					/>
 				) : null}
 				{isLiability ? (
@@ -131,14 +128,14 @@ export function AccountEdit({ account, range, onSave, ...handlers }: Props) {
 						label="In debt plan"
 						hint="Payback pays down debt plan cards and loans."
 						checked={account.inDebtPlan}
-						onChange={(inDebtPlan) => save({ inDebtPlan })}
+						onChange={(inDebtPlan) => saveOrThrow({ inDebtPlan })}
 					/>
 				) : null}
 				<CheckboxRow
 					label="Hidden"
 					hint="Left out of net worth, Budget, and Goals."
 					checked={account.isHidden}
-					onChange={(isHidden) => save({ isHidden })}
+					onChange={(isHidden) => saveOrThrow({ isHidden })}
 				/>
 			</PropertyList>
 			<AccountActions account={account} {...handlers} />
@@ -159,15 +156,22 @@ function CheckboxRow({
 	label: string;
 	hint: string;
 	checked: boolean;
-	onChange: (checked: boolean) => void;
+	onChange: (checked: boolean) => Promise<unknown>;
 }) {
+	const toggle = useOptimisticValue(checked);
 	return (
 		<PropertyRow label={label}>
 			<span className="flex min-w-0 items-center gap-2">
 				<Checkbox
 					aria-label={label}
-					checked={checked}
-					onCheckedChange={(next) => onChange(next === true)}
+					checked={toggle.value}
+					onCheckedChange={(next) => {
+						toggle.setValue(next === true);
+						onChange(next === true).catch(() => {
+							toggle.revert();
+							toast.error(`Could not change ${label}`);
+						});
+					}}
 				/>
 				<span className="truncate text-xs text-muted-foreground">{hint}</span>
 			</span>

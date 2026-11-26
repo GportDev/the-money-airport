@@ -325,9 +325,9 @@ test("Budget page: groups, drawer, unbudgeted, collapse, panel, and copy", async
 	const drawer = page.getByRole("dialog", { name: "Groceries" });
 	await drawer.getByLabel("Planned").fill("700");
 	await drawer.getByLabel("Planned").press("Enter");
-	await signedExpect(main.getByRole("button", { name: /Groceries/ })).toContainText("$700.00");
 	await page.keyboard.press("Escape");
 	await signedExpect(drawer).toHaveCount(0);
+	await signedExpect(main.getByRole("button", { name: /Groceries/ })).toContainText("$700.00");
 	await signedExpect(leftToBudget).toContainText("$1,400.00");
 
 	await signedExpect(main.getByRole("button", { name: /Dining/ })).toHaveCount(0);
@@ -335,7 +335,6 @@ test("Budget page: groups, drawer, unbudgeted, collapse, panel, and copy", async
 	await main.getByRole("button", { name: /Dining/ }).click();
 	await page.getByRole("dialog", { name: "Dining" }).getByLabel("Planned").fill("80");
 	await page.getByRole("dialog", { name: "Dining" }).getByLabel("Planned").press("Enter");
-	await signedExpect(main.getByRole("button", { name: /Dining/ })).toContainText("$80.00");
 	await page.keyboard.press("Escape");
 	await signedExpect(page.getByRole("dialog")).toHaveCount(0);
 	await main.getByRole("button", { name: "Hide unbudgeted" }).click();

@@ -264,7 +264,7 @@ test("Reports page: range drives the cards and a category opens its transactions
 	await signedExpect(spending.getByRole("button", { name: /Groceries.*\$100\.00/ })).toBeVisible();
 	await signedExpect(spending.getByRole("button", { name: /Dining.*\$30\.00/ })).toBeVisible();
 	const top = page.getByRole("region", { name: "Top categories" });
-	await signedExpect(top.getByRole("button").first()).toContainText("Groceries");
+	await signedExpect(top.getByRole("listitem").first()).toContainText("Groceries");
 	await signedExpect(
 		page.getByRole("figure", { name: "Income vs expenses by month" }),
 	).toBeVisible();

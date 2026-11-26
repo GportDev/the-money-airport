@@ -641,10 +641,12 @@ test("Transaction drawer assigns a host deposit to a Fund", async ({ page }) => 
 	await page.goto("/transactions");
 	await page.getByRole("button", { name: /Move to savings/ }).click({ position: { x: 60, y: 12 } });
 	const drawer = page.getByRole("dialog");
+	await drawer.getByRole("button", { name: "More actions" }).click();
+	await page.getByRole("menuitem", { name: "Assign to Fund" }).click();
 	await drawer.getByRole("combobox", { name: "Assign to Fund" }).click();
 	await page.getByRole("option", { name: "Vacation" }).click();
 	await drawer.getByRole("button", { name: "Assign" }).click();
 	await signedExpect(page.getByText("Assigned to Vacation")).toBeVisible();
-	await signedExpect(drawer.getByText("In Vacation")).toBeVisible();
+	await signedExpect(drawer.getByLabel("Details", { exact: true })).toContainText("Vacation");
 	signedExpect((await goal(page, fund.id)).currentAmount).toBe(12000);
 });
