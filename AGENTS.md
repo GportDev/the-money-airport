@@ -90,7 +90,7 @@ Make the tests pass with the smallest clean code, then clean up with tests still
 
 Approved libraries only. Adding one requires updating this section and explicit user confirmation.
 
-**Client (`client/`):** React 19, react-router 7 (`createBrowserRouter`), TanStack Query 5, @tanstack/react-virtual, Tailwind v4 (`@tailwindcss/vite`), `radix-ui` (barrel), `@base-ui/react` (Drawer), class-variance-authority, clsx + tailwind-merge, lucide-react, recharts, react-plaid-link, sonner (toasts), better-auth client, Geist fonts via `@fontsource-variable`.
+**Client (`client/`):** React 19, react-router 7 (`createBrowserRouter`), TanStack Query 5, @tanstack/react-virtual, Tailwind v4 (`@tailwindcss/vite`), `radix-ui` (barrel), `@base-ui/react` (Drawer, Dialog, Combobox), class-variance-authority, clsx + tailwind-merge, lucide-react, recharts, react-plaid-link, sonner (toasts), better-auth client, Geist fonts via `@fontsource-variable`.
 
 **Server (`server/`):** NestJS 12 (`@nestjs/common`, `core`, `config`, `platform-express`), Express 5, better-auth, drizzle-orm + `postgres`, zod 4, plaid, stripe, cors, rxjs.
 
@@ -133,7 +133,10 @@ e2e/                    Playwright specs, fixtures, helpers
 - **One component per file.** Use folders so bigger components compose from smaller ones. A `ui/` primitive may keep its sub-parts in one file, as `sheet.tsx` does.
 - **Radix (`radix-ui` barrel) or Base UI is the base for interactive elements.** No new raw `<dialog>`, `<select>`, or `<input type="checkbox">`.
 - Buttons are `<Button>` (`ui/button.tsx`, `asChild` for links) and text fields are `<Input>` (`ui/input.tsx`). No hand-rolled button or input class strings.
-- Create, edit, and detail flows use a right drawer (`ui/sheet.tsx`, in `components/drawers/`). Confirm-only actions use `confirm-dialog.tsx`.
+- Create, edit, and detail flows use a right drawer (`ui/sheet.tsx`, in `components/drawers/`). Confirm-only actions use `confirm-dialog.tsx`. Quick, single-purpose actions launched from a list row (splitting a Transaction) use the centered `ui/dialog.tsx` (Base UI Dialog, so Base UI pickers inside it keep working).
+- Edit drawers edit in place: a value is shown once, where it is edited (`InlineText`, `InlineNote`, `PropertyList` in `components/ui/`), and each field saves on its own (commit on Enter, blur, or pick; Escape reverts; a failed save reverts with an error toast; no success toast). Create flows keep one explicit submit.
+- Dropdowns are the Radix Select: `SelectField` for plain option lists, `SelectTrigger` variants `outline` (forms) and `ghost` (toolbars, card headers). Never a native `<select>`.
+- Page filters live in one `Toolbar` (`ui/toolbar.tsx`) under the page header.
 - **Named exports only.** No default exports.
 - **Props typing:**
   - Simple props: `type Props = { ... }`
@@ -172,7 +175,9 @@ e2e/                    Playwright specs, fixtures, helpers
 
 ## Client — Styling
 
-- Tailwind v4. Tokens live in `client/src/index.css` (`:root` values, mapped by `@theme inline`). Use token classes (`bg-primary`, `text-muted-foreground`, `text-negative`). No hardcoded colors. New tokens go in both blocks.
+- Tailwind v4. Tokens live in `client/src/index.css` (`:root` values, mapped by `@theme inline`). The desktop layout starts at the `desk` breakpoint (1000px); use `desk:` and `DESK_QUERY`, not `xl:`.
+- Rows inside cards use the `row-hover` utility (inset rounded wash), whole-card clickables use `card-hover`, and hover-revealed row buttons use `row-action`. No full-bleed `hover:bg-*` on rows and no negative-margin hover areas.
+- Charts use the presets in `lib/chart.ts` and `ChartTooltip`; never Recharts' default tooltip. Use token classes (`bg-primary`, `text-muted-foreground`, `text-negative`). No hardcoded colors. New tokens go in both blocks.
 - Light theme only. Do not add a dark theme (`DESIGN.md`).
 - Fonts: Geist (`font-sans`) and Geist Mono (`font-mono`), imported only in `index.css`.
 - Class merging: `cn()` from `lib/cn.ts`. No CSS Modules.
