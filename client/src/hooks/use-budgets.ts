@@ -1,13 +1,16 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { copyPreviousBudget, deleteBudget, getBudgetMonth, saveBudget } from "@/api/budgets";
+import { useHideSlowPlaceholder } from "@/hooks/use-hide-slow-placeholder";
 
 export function useBudgetMonth(year: number, month: number) {
-	return useQuery({
-		queryKey: ["budgets", year, month],
-		queryFn: () => getBudgetMonth(year, month),
-		staleTime: 5 * 60 * 1000,
-		placeholderData: keepPreviousData,
-	});
+	return useHideSlowPlaceholder(
+		useQuery({
+			queryKey: ["budgets", year, month],
+			queryFn: () => getBudgetMonth(year, month),
+			staleTime: 5 * 60 * 1000,
+			placeholderData: keepPreviousData,
+		}),
+	);
 }
 
 function useBudgetMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TResult>) {

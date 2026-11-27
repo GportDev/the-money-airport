@@ -1,15 +1,18 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDashboard } from "@/api/dashboard";
 import { type SettingsPatch, updateSettings } from "@/api/settings";
+import { useHideSlowPlaceholder } from "@/hooks/use-hide-slow-placeholder";
 import type { NetWorthRange } from "@/types";
 
 export function useDashboard(netWorthRange: NetWorthRange) {
-	return useQuery({
-		queryKey: ["dashboard", netWorthRange],
-		queryFn: () => getDashboard(netWorthRange),
-		staleTime: 5 * 60 * 1000,
-		placeholderData: keepPreviousData,
-	});
+	return useHideSlowPlaceholder(
+		useQuery({
+			queryKey: ["dashboard", netWorthRange],
+			queryFn: () => getDashboard(netWorthRange),
+			staleTime: 5 * 60 * 1000,
+			placeholderData: keepPreviousData,
+		}),
+	);
 }
 
 export function useUpdateSettings() {

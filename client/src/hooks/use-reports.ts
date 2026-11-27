@@ -6,6 +6,7 @@ import {
 	getSpendingByCategory,
 	getTopCategories,
 } from "@/api/reports";
+import { useHideSlowPlaceholder } from "@/hooks/use-hide-slow-placeholder";
 import type { ReportRange } from "@/types";
 
 const REPORT_STALE_TIME = 5 * 60 * 1000;
@@ -15,12 +16,14 @@ function useReport<T>(
 	range: ReportRange,
 	fetcher: (range: ReportRange) => Promise<T>,
 ) {
-	return useQuery({
-		queryKey: ["reports", name, range.dateFrom, range.dateTo],
-		queryFn: () => fetcher(range),
-		staleTime: REPORT_STALE_TIME,
-		placeholderData: keepPreviousData,
-	});
+	return useHideSlowPlaceholder(
+		useQuery({
+			queryKey: ["reports", name, range.dateFrom, range.dateTo],
+			queryFn: () => fetcher(range),
+			staleTime: REPORT_STALE_TIME,
+			placeholderData: keepPreviousData,
+		}),
+	);
 }
 
 export function useSpendingByCategory(range: ReportRange) {

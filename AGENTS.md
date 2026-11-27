@@ -172,6 +172,7 @@ e2e/                    Playwright specs, fixtures, helpers
 - Failed query: `ui/query-error.tsx` with the page's message and a **Try again** that calls `refetch()`. Queries retry once by default (`App.tsx`).
 - No data: `ui/empty-state.tsx` with one primary CTA.
 - Render crashes: the router `errorElement` (`components/route-error.tsx`) shows inside the app shell.
+- Slow waits: queries with `placeholderData: keepPreviousData` are wrapped in `useHideSlowPlaceholder` (`hooks/`), so a month or range change slower than `SLOW_FETCH_MS` shows the skeleton instead of the old numbers. The session guards render `AppShellSkeleton` / `AuthCardSkeleton`, never `null`.
 
 ## Client — Styling
 

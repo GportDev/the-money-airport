@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { type Page, test as unsigned } from "@playwright/test";
 import { expect, test } from "./fixtures";
 
 const API = "http://localhost:3000/api";
@@ -38,6 +38,52 @@ test("every data page shows a skeleton while it loads", async ({ page }) => {
 		const skeleton = page.getByRole("status", { name: `Loading ${target.name}`, exact: true });
 		await expect(skeleton, target.path).toBeVisible();
 		await expect(page.getByText("Loading…"), target.path).toHaveCount(0);
+		release();
+		await expect(skeleton, target.path).toHaveCount(0);
+		await page.unroute(target.api);
+	}
+});
+
+const SESSION_CHECK = /\/api\/auth\/get-session/;
+
+test("the app shell shows a skeleton while a cold server answers the session check", async ({
+	page,
+}) => {
+	const release = await holdRequests(page, SESSION_CHECK);
+	await page.goto("/");
+	const skeleton = page.getByRole("status", { name: "Loading Money Airport" });
+	await expect(skeleton).toBeVisible();
+	release();
+	await expect(skeleton).toHaveCount(0);
+	await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
+});
+
+unsigned(
+	"the log in page shows a skeleton while a cold server answers the session check",
+	async ({ page }) => {
+		const release = await holdRequests(page, SESSION_CHECK);
+		await page.goto("/login");
+		const skeleton = page.getByRole("status", { name: "Loading Money Airport" });
+		await expect(skeleton).toBeVisible();
+		release();
+		await expect(skeleton).toHaveCount(0);
+		await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
+	},
+);
+
+const MONTH_PAGES = [
+	{ path: "/budget", name: "budget", api: /\/api\/budgets\?/ },
+	{ path: "/cash-flow", name: "cash flow", api: /\/api\/cash-flow\?/ },
+] as const;
+
+test("a slow month change swaps the old month for the skeleton", async ({ page }) => {
+	for (const target of MONTH_PAGES) {
+		await page.goto(target.path);
+		const skeleton = page.getByRole("status", { name: `Loading ${target.name}`, exact: true });
+		await expect(skeleton, target.path).toHaveCount(0);
+		const release = await holdRequests(page, target.api);
+		await page.getByRole("button", { name: "Next month" }).click();
+		await expect(skeleton, target.path).toBeVisible();
 		release();
 		await expect(skeleton, target.path).toHaveCount(0);
 		await page.unroute(target.api);

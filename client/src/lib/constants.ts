@@ -12,6 +12,9 @@ export const NAV_ITEMS = [
 	{ name: "Forecasting", path: "/forecast" },
 ] as const;
 
+/** A fetch slower than this counts as a wait the user should see, as on a cold server. */
+export const SLOW_FETCH_MS = 300;
+
 export const SUMMARY_PANEL_PATHS = new Set(["/accounts", "/budget", "/goals"]);
 
 export const BASE_CURRENCIES = [

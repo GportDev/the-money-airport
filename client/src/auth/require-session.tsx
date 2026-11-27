@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { apiUrl } from "@/api/client";
 import { useSessionGate } from "@/auth/use-session";
+import { AppShellSkeleton } from "@/components/layout/app-shell-skeleton";
 
 export function RequireSession() {
 	const { data, loading } = useSessionGate();
@@ -15,7 +16,7 @@ export function RequireSession() {
 	}, [data]);
 
 	if (loading) {
-		return null;
+		return <AppShellSkeleton />;
 	}
 
 	if (!data) {
