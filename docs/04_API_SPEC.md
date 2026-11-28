@@ -480,6 +480,8 @@ Transaction rows under the chart reuse `GET /transactions` with the same `accoun
 | PATCH | `/categories/:id` | `{ name?, color?, icon?, kind?, budgetGroup? }` | `{ data: Category }` |
 | DELETE | `/categories/:id` | — | `{ success }` |
 
+Category and Goal `icon` is a single emoji (skin tones, ZWJ sequences, and flags allowed); anything else is a 400.
+
 `kind` is `income`, `expense`, or `transfer`; only `expense` Categories have a `budgetGroup`, and `transfer` Categories stay out of the Budget. Every User keeps at least one `transfer` Category (Transfer is re-seeded when none is left). Deleting a category reassigns its transactions to Uncategorized. Uncategorized cannot be deleted.
 
 ---

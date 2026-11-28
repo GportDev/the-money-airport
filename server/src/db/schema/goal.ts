@@ -29,7 +29,7 @@ export const goal = pgTable(
 		hostBankAccountId: uuid("host_bank_account_id").references(() => bankAccount.id, {
 			onDelete: "cascade",
 		}),
-		icon: text("icon").notNull().default("piggy-bank"),
+		icon: text("icon").notNull().default("💰"),
 		color: text("color").notNull().default("#10B981"),
 		thumbnailUrl: text("thumbnail_url"),
 		// Base currency cents.

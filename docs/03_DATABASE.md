@@ -233,7 +233,7 @@ User-defined transaction categories.
 | `user_id` | `text` | FK → user.id, NOT NULL |
 | `name` | `text` | NOT NULL |
 | `color` | `text` | Hex color, default `#6B7280` |
-| `icon` | `text` | Icon identifier, NOT NULL, default `circle` |
+| `icon` | `text` | One emoji, NOT NULL, default `🏷️`. Rows from before the emoji kit may hold a lucide key; the client draws those as the nearest emoji |
 | `kind` | `text` | `income` \| `expense` \| `transfer`, NOT NULL, default `expense`. Only `expense` has a `budget_group` |
 | `budget_group` | `text` | `fixed` \| `flexible` \| `non_monthly` \| null (income categories are null) |
 | `is_default` | `boolean` | default `false` (seeded categories) |
@@ -390,7 +390,7 @@ Save-up and pay-down Goals. Progress is **not** stored.
 | `type` | `text` | `save_up` \| `pay_down`, NOT NULL |
 | `funding` | `text` | `accounts` \| `fund`, NOT NULL, default `accounts`. `fund` only with `save_up` |
 | `host_bank_account_id` | `uuid` | FK → bank_account.id, ON DELETE CASCADE, nullable — required when `funding = fund`; must be a visible asset |
-| `icon` | `text` | NOT NULL, default `piggy-bank` — a Category icon key; shown instead of a thumbnail in V1 |
+| `icon` | `text` | NOT NULL, default `💰` — one emoji, like a Category icon; shown instead of a thumbnail in V1 |
 | `color` | `text` | NOT NULL, default `#10B981` |
 | `thumbnail_url` | `text` | nullable; unused in V1 (no uploads) |
 | `target_amount` | `integer` | Base cents, NOT NULL |

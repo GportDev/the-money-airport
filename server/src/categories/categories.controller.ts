@@ -13,16 +13,16 @@ import { z } from "zod";
 import { CurrentUser } from "../auth/current-user.decorator";
 import { CategoriesService } from "./categories.service";
 import { CATEGORY_KINDS } from "./category-defaults";
+import { emojiIcon } from "./emoji-icon";
 
 const kind = z.enum(CATEGORY_KINDS);
 const budgetGroup = z.enum(["fixed", "flexible", "non_monthly"]).nullable();
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
-const icon = z.string().min(1).max(40);
 
 const createBody = z.object({
 	name: z.string().trim().min(1).max(60),
 	color: color.default("#6B7280"),
-	icon: icon.default("circle"),
+	icon: emojiIcon.default("🏷️"),
 	kind: kind.default("expense"),
 	budgetGroup: budgetGroup.optional(),
 });
@@ -30,7 +30,7 @@ const createBody = z.object({
 const updateBody = z.object({
 	name: z.string().trim().min(1).max(60).optional(),
 	color: color.optional(),
-	icon: icon.optional(),
+	icon: emojiIcon.optional(),
 	kind: kind.optional(),
 	budgetGroup: budgetGroup.optional(),
 });

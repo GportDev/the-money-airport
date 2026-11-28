@@ -210,11 +210,11 @@ test("bulk categorize, category delete reassignment, and Uncategorized protectio
 	);
 
 	const created = await page.request.post(`${API}/categories`, {
-		data: { name: "Pets", color: "#123456", icon: "paw-print", kind: "expense" },
+		data: { name: "Pets", color: "#123456", icon: "🐾", kind: "expense" },
 	});
 	signedExpect(created.status()).toBe(201);
 	const duplicate = await page.request.post(`${API}/categories`, {
-		data: { name: "Pets", color: "#123456", icon: "paw-print", kind: "expense" },
+		data: { name: "Pets", color: "#123456", icon: "🐾", kind: "expense" },
 	});
 	signedExpect(duplicate.status()).toBe(400);
 });

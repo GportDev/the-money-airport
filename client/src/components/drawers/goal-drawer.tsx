@@ -16,6 +16,7 @@ import {
 	useSheetClose,
 } from "@/components/ui/sheet";
 import { useCreateGoal } from "@/hooks/use-goals";
+import { DEFAULT_GOAL_EMOJI } from "@/lib/emoji-icon";
 import { majorUnitsToCents } from "@/lib/format";
 import { GOAL_TABS } from "@/lib/goals";
 import type { Goal, GoalFunding, GoalType } from "@/types";
@@ -33,7 +34,7 @@ export function GoalDrawer({ goal, defaultType, onClose }: Props) {
 	const [name, setName] = useState("");
 	const [target, setTarget] = useState("");
 	const [targetDate, setTargetDate] = useState("");
-	const [icon, setIcon] = useState("piggy-bank");
+	const [icon, setIcon] = useState(DEFAULT_GOAL_EMOJI);
 	const [color, setColor] = useState("#10B981");
 	const [type, setType] = useState<GoalType>(defaultType);
 	const [funding, setFunding] = useState<GoalFunding>("accounts");

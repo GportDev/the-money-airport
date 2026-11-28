@@ -240,10 +240,10 @@ test("validates Goal create, update, and delete", async ({ page }) => {
 		name: "Trip",
 		type: "save_up",
 		targetAmount: 100000,
-		icon: "plane",
+		icon: "✈️",
 		color: "#3B82F6",
 	});
-	signedExpect(created).toMatchObject({ icon: "plane", color: "#3B82F6" });
+	signedExpect(created).toMatchObject({ icon: "✈️", color: "#3B82F6" });
 	const patched = await page.request.patch(`${API}/goals/${created.id}`, {
 		data: { name: "Japan trip", targetAmount: 250000, targetDate: "2027-04-01" },
 	});

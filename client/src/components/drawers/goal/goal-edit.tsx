@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { PropertyList, PropertyRow } from "@/components/ui/property-list";
 import { SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useDeleteGoal, useUpdateGoal } from "@/hooks/use-goals";
+import { toEmoji } from "@/lib/emoji-icon";
 import { centsToMajorUnits, majorUnitsToCents } from "@/lib/format";
 import { formatPercent } from "@/lib/goals";
 import type { Goal } from "@/types";
@@ -31,7 +32,7 @@ export function GoalEdit({ goal, onDeleted }: Props) {
 			name: goal.name,
 			targetAmount: goal.targetAmount,
 			targetDate: goal.targetDate,
-			icon: goal.icon,
+			icon: toEmoji(goal.icon),
 			color: goal.color,
 			...patch,
 		});
@@ -103,7 +104,7 @@ export function GoalEdit({ goal, onDeleted }: Props) {
 			</PropertyList>
 			<div className="px-4">
 				<GoalIconFields
-					icon={goal.icon}
+					icon={toEmoji(goal.icon)}
 					color={color}
 					onIconChange={(icon) => save({ icon })}
 					onColorChange={setColor}

@@ -29,9 +29,7 @@ export function GoalCard({ goal, currency, onOpen }: Props) {
 				className="flex w-full flex-col gap-2 rounded-xl p-4 text-left"
 			>
 				<span className="flex items-center gap-3">
-					<span className="flex size-9 items-center justify-center rounded-lg bg-muted">
-						<CategoryIcon icon={goal.icon} color={goal.color} className="size-5" />
-					</span>
+					<CategoryIcon icon={goal.icon} color={goal.color} className="size-9 rounded-lg text-lg" />
 					<span className="flex min-w-0 flex-1 flex-col">
 						<span className="flex items-center gap-2">
 							<span className="truncate font-medium">{goal.name}</span>

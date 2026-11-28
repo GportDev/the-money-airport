@@ -1,84 +1,26 @@
-import {
-	ArrowLeftRight,
-	Baby,
-	Briefcase,
-	Bus,
-	Car,
-	Circle,
-	CircleQuestionMark,
-	Coffee,
-	CreditCard,
-	Dumbbell,
-	Film,
-	Fuel,
-	Gift,
-	GraduationCap,
-	HeartPulse,
-	House,
-	Landmark,
-	type LucideIcon,
-	Music,
-	PawPrint,
-	PiggyBank,
-	Plane,
-	Receipt,
-	Repeat,
-	Shield,
-	Shirt,
-	ShoppingBag,
-	ShoppingCart,
-	Smartphone,
-	Utensils,
-	Wallet,
-	Wifi,
-	Zap,
-} from "lucide-react";
 import { cn } from "@/lib/cn";
+import { toEmoji } from "@/lib/emoji-icon";
 
-export const CATEGORY_ICONS: Record<string, LucideIcon> = {
-	circle: Circle,
-	"circle-question-mark": CircleQuestionMark,
-	house: House,
-	zap: Zap,
-	shield: Shield,
-	"credit-card": CreditCard,
-	"shopping-cart": ShoppingCart,
-	car: Car,
-	bus: Bus,
-	fuel: Fuel,
-	plane: Plane,
-	utensils: Utensils,
-	coffee: Coffee,
-	film: Film,
-	music: Music,
-	"shopping-bag": ShoppingBag,
-	shirt: Shirt,
-	"heart-pulse": HeartPulse,
-	dumbbell: Dumbbell,
-	repeat: Repeat,
-	wifi: Wifi,
-	smartphone: Smartphone,
-	gift: Gift,
-	"graduation-cap": GraduationCap,
-	baby: Baby,
-	"paw-print": PawPrint,
-	"piggy-bank": PiggyBank,
-	wallet: Wallet,
-	landmark: Landmark,
-	briefcase: Briefcase,
-	receipt: Receipt,
-	"arrow-left-right": ArrowLeftRight,
-};
-
-export function CategoryIcon({
-	icon,
-	color,
-	className,
-}: {
+type Props = {
 	icon: string;
 	color: string;
 	className?: string;
-}) {
-	const Icon = CATEGORY_ICONS[icon] ?? Circle;
-	return <Icon aria-hidden className={cn("size-4 shrink-0", className)} style={{ color }} />;
+};
+
+/** The Category (or Goal) emoji on a soft chip of its color. */
+export function CategoryIcon({ icon, color, className }: Props) {
+	return (
+		// The emoji is drawn from data-emoji in CSS so it stays out of the text around it (row
+		// names, picker values), the way the old SVG icons did.
+		<span
+			aria-hidden
+			data-emoji={toEmoji(icon)}
+			className={cn(
+				"inline-flex size-5 shrink-0 items-center justify-center rounded-md text-xs leading-none before:content-[attr(data-emoji)]",
+				className,
+			)}
+			// Inline style: the chip tint is the user's Category color.
+			style={{ backgroundColor: `color-mix(in srgb, ${color} 18%, transparent)` }}
+		/>
+	);
 }

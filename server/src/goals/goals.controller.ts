@@ -13,6 +13,7 @@ import {
 } from "@nestjs/common";
 import { z } from "zod";
 import { CurrentUser } from "../auth/current-user.decorator";
+import { emojiIcon } from "../categories/emoji-icon";
 import { FundEntriesService } from "./fund-entries.service";
 import { GoalsService } from "./goals.service";
 import { FUND_ENTRY_KINDS, GOAL_FUNDING, GOAL_TYPES } from "./goals.types";
@@ -22,7 +23,6 @@ const MAX_CENTS = 2_000_000_000;
 const isoDate = z.iso.date();
 const name = z.string().trim().min(1).max(100);
 const targetAmount = z.number().int().min(1).max(MAX_CENTS);
-const icon = z.string().min(1).max(40);
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const note = z.string().trim().max(500).nullable().optional();
 
@@ -34,7 +34,7 @@ const createBody = z
 		type: z.enum(GOAL_TYPES),
 		targetAmount,
 		targetDate: isoDate.nullable().optional(),
-		icon: icon.optional(),
+		icon: emojiIcon.optional(),
 		color: color.optional(),
 		funding: z.enum(GOAL_FUNDING).optional(),
 		hostBankAccountId: z.string().uuid().optional(),
@@ -50,7 +50,7 @@ const updateBody = z.object({
 	name: name.optional(),
 	targetAmount: targetAmount.optional(),
 	targetDate: isoDate.nullable().optional(),
-	icon: icon.optional(),
+	icon: emojiIcon.optional(),
 	color: color.optional(),
 	sortOrder: z.number().int().min(0).max(10_000).optional(),
 });

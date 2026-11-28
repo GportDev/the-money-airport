@@ -85,7 +85,8 @@ test("typing in a Category picker narrows the list by name", async ({ page }) =>
 	await expect(page.getByRole("option", { name: "Groceries" })).toHaveCount(0);
 
 	await page.getByRole("combobox", { name: "Search categories" }).fill("zzz");
-	await expect(page.getByText("No categories match.")).toBeVisible();
+	await expect(page.getByRole("option", { name: "Create “zzz”" })).toBeVisible();
+	await expect(page.getByRole("option", { name: "Groceries" })).toHaveCount(0);
 
 	await page.getByRole("combobox", { name: "Search categories" }).fill("din");
 	await page.getByRole("option", { name: "Dining" }).click();
@@ -112,7 +113,9 @@ test("opening a Category picker shows no focus ring around its search field", as
 	await expect(search).toHaveCSS("outline-style", "none");
 });
 
-test("the Category form's icon picker shows each icon beside its name", async ({ page }) => {
+test("the Category form's emoji picker searches every emoji and saves the pick", async ({
+	page,
+}) => {
 	await page.goto("/transactions");
 	await page.getByRole("button", { name: "Filters" }).click();
 	await page.getByRole("button", { name: "Manage categories" }).click();
@@ -120,16 +123,115 @@ test("the Category form's icon picker shows each icon beside its name", async ({
 	await manager.getByRole("button", { name: "New category" }).click();
 	await manager.getByLabel("Name").fill("Pet food");
 
-	await manager.getByRole("combobox", { name: "Icon" }).click();
-	const option = page.getByRole("option", { name: "Paw print" });
-	await expect(option).toBeVisible();
-	await expect(option.locator("svg").first()).toBeVisible();
-	await option.click();
-	await expect(manager.getByRole("combobox", { name: "Icon" })).toHaveText("Paw print");
+	await manager.getByRole("button", { name: "Icon" }).click();
+	await page.getByRole("searchbox", { name: "Search emoji" }).fill("paw");
+	await page.getByRole("gridcell", { name: "paw prints" }).click();
+	await expect(manager.getByRole("button", { name: "Icon" })).toHaveText("🐾");
 
 	await manager.getByRole("button", { name: "Create category" }).click();
 	await expect(manager.getByRole("button", { name: "Pet food", exact: true })).toBeVisible();
 	const res = await page.request.get(`${API}/categories`);
 	const rows = ((await res.json()) as { data: { name: string; icon: string }[] }).data;
-	expect(rows.find((row) => row.name === "Pet food")?.icon).toBe("paw-print");
+	expect(rows.find((row) => row.name === "Pet food")?.icon).toBe("🐾");
+});
+
+test("a Category icon must be one emoji", async ({ page }) => {
+	for (const icon of ["paw-print", "🐾🐶", "a"]) {
+		const res = await page.request.post(`${API}/categories`, {
+			data: { name: `Bad ${icon}`, icon },
+		});
+		expect(res.status(), icon).toBe(400);
+	}
+	for (const icon of ["🐾", "👩🏽‍💻", "🇧🇷", "1️⃣"]) {
+		const res = await page.request.post(`${API}/categories`, {
+			data: { name: `Ok ${icon}`, icon },
+		});
+		expect(res.status(), icon).toBe(201);
+	}
+});
+
+test("typing a new name in a row's Category picker creates that Category and assigns it", async ({
+	page,
+}) => {
+	const created = await page.request.post(`${API}/transactions`, {
+		data: {
+			name: "Vet visit",
+			amount: -8000,
+			date: new Date().toISOString().slice(0, 10),
+			categoryId: await categoryId(page, "Groceries"),
+		},
+	});
+	const transactionId = ((await created.json()) as { data: { id: string } }).data.id;
+
+	await page.goto("/transactions");
+	const picker = page
+		.getByRole("list", { name: "Transactions" })
+		.getByRole("combobox", { name: "Category for Vet visit" });
+	await picker.click();
+	await page.getByRole("combobox", { name: "Search categories" }).fill("Pets");
+	await page.getByRole("option", { name: "Create “Pets”" }).click();
+
+	const drawer = page.getByRole("dialog");
+	await expect(drawer.getByRole("heading", { name: "New category" })).toBeVisible();
+	await expect(drawer.getByLabel("Name")).toHaveValue("Pets");
+	await drawer.getByRole("button", { name: "Create category" }).click();
+
+	await expect(page.getByText("Pets created")).toBeVisible();
+	await expect(page.getByRole("dialog")).toHaveCount(0);
+	await expect(picker).toHaveText(/Pets/);
+	await expect
+		.poll(async () => {
+			const res = await page.request.get(`${API}/transactions/${transactionId}`);
+			return ((await res.json()) as { data: { category: { name: string } | null } }).data.category
+				?.name;
+		})
+		.toBe("Pets");
+});
+
+test("a row's Category picker offers no create option for an existing name", async ({ page }) => {
+	await page.request.post(`${API}/transactions`, {
+		data: {
+			name: "Fresh Mart",
+			amount: -900,
+			date: new Date().toISOString().slice(0, 10),
+			categoryId: await categoryId(page, "Groceries"),
+		},
+	});
+
+	await page.goto("/transactions");
+	await page
+		.getByRole("list", { name: "Transactions" })
+		.getByRole("combobox", { name: "Category for Fresh Mart" })
+		.click();
+	await page.getByRole("combobox", { name: "Search categories" }).fill("dining");
+	await expect(page.getByRole("option", { name: "Dining" })).toBeVisible();
+	await expect(page.getByRole("option", { name: /^Create/ })).toHaveCount(0);
+});
+
+test("cancelling the new Category drawer leaves the transaction's Category alone", async ({
+	page,
+}) => {
+	await page.request.post(`${API}/transactions`, {
+		data: {
+			name: "Book stall",
+			amount: -1500,
+			date: new Date().toISOString().slice(0, 10),
+			categoryId: await categoryId(page, "Groceries"),
+		},
+	});
+
+	await page.goto("/transactions");
+	const picker = page
+		.getByRole("list", { name: "Transactions" })
+		.getByRole("combobox", { name: "Category for Book stall" });
+	await picker.click();
+	await page.getByRole("combobox", { name: "Search categories" }).fill("Books");
+	await page.getByRole("option", { name: "Create “Books”" }).click();
+	await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
+
+	await expect(page.getByRole("dialog")).toHaveCount(0);
+	await expect(picker).toHaveText("Groceries");
+	const res = await page.request.get(`${API}/categories`);
+	const rows = ((await res.json()) as { data: { name: string }[] }).data;
+	expect(rows.some((row) => row.name === "Books")).toBe(false);
 });

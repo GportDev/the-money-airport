@@ -15,7 +15,7 @@ export function useCategories() {
 	});
 }
 
-function useCategoryMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>) {
+function useCategoryMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TResult>) {
 	const client = useQueryClient();
 	return useMutation({
 		mutationFn: fn,

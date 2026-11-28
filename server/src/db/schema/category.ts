@@ -20,7 +20,7 @@ export const category = pgTable(
 			.references(() => user.id, { onDelete: "cascade" }),
 		name: text("name").notNull(),
 		color: text("color").notNull().default("#6B7280"),
-		icon: text("icon").notNull().default("circle"),
+		icon: text("icon").notNull().default("🏷️"),
 		kind: text("kind").notNull().default("expense"),
 		budgetGroup: text("budget_group"),
 		isDefault: boolean("is_default").notNull().default(false),

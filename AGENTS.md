@@ -90,7 +90,7 @@ Make the tests pass with the smallest clean code, then clean up with tests still
 
 Approved libraries only. Adding one requires updating this section and explicit user confirmation.
 
-**Client (`client/`):** React 19, react-router 7 (`createBrowserRouter`), TanStack Query 5, @tanstack/react-virtual, Tailwind v4 (`@tailwindcss/vite`), `radix-ui` (barrel), `@base-ui/react` (Drawer, Dialog, Combobox), class-variance-authority, clsx + tailwind-merge, lucide-react, recharts, react-plaid-link, sonner (toasts), better-auth client, Geist fonts via `@fontsource-variable`.
+**Client (`client/`):** React 19, react-router 7 (`createBrowserRouter`), TanStack Query 5, @tanstack/react-virtual, Tailwind v4 (`@tailwindcss/vite`), `radix-ui` (barrel), `@base-ui/react` (Drawer, Dialog, Combobox), class-variance-authority, clsx + tailwind-merge, lucide-react, recharts, react-plaid-link, sonner (toasts), frimousse (emoji picker, `ui/emoji-select.tsx`), better-auth client, Geist fonts via `@fontsource-variable`.
 
 **Server (`server/`):** NestJS 12 (`@nestjs/common`, `core`, `config`, `platform-express`), Express 5, better-auth, drizzle-orm + `postgres`, zod 4, plaid, stripe, cors, rxjs.
 
