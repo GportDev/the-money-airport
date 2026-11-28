@@ -109,6 +109,8 @@ interface DashboardPayload {
 | DELETE | `/accounts/:id` | — | `{ success }` | Manual accounts only |
 | GET | `/accounts/:id/statements` | `?periodEnd?` (default latest) | `{ data: StatementPeriod }` | Credit only. Transactions grouped by Statement period |
 | POST | `/accounts/:id/statements` | `{ periodStart, periodEnd, statementBalance, minimumPayment?, dueDate? }` | `{ data: CardStatement }` | Manual Statement |
+| POST | `/accounts/:id/statement-import/preview` | `{ file }` (OFX/QFX/QBO text, ≤ 1 MB) | `{ data: StatementImportPreview }` (200) | Manual credit only; writes nothing |
+| POST | `/accounts/:id/statement-import` | `{ file, statement: { periodStart, periodEnd, statementBalance, minimumPayment, dueDate }, unmatchedFitIds }` | `{ data: StatementImportResult }` (201) | Manual credit only; see Statement import |
 | PUT | `/accounts/:id/loan-terms` | `{ principal?, termMonths?, firstPaymentDate?, paymentDay?, scheduledPayment?, extraPayment? }` | `{ data: LoanTerms }` | Loan only |
 | GET | `/accounts/:id/amortization` | `?extra=<cents>` | `{ data: Amortization }` | Loan only; computed |
 | PUT | `/accounts/:id/card-benefits` | `{ presetKey }` or `{ benefits: CardBenefitsInput }` | `{ data: CardBenefits }` | Credit only; see Credit Cards |
@@ -162,7 +164,7 @@ interface CardStatement {
   statementBalance: number;
   minimumPayment: number | null;
   dueDate: string | null;
-  source: "plaid" | "manual";
+  source: "plaid" | "manual" | "import";
 }
 
 interface StatementPeriod {
@@ -222,6 +224,25 @@ interface NetWorthResponse {
 `GET /accounts` is grouped on the client by `displayGroup`. CSV export of the summary uses `/export/accounts`.
 
 ---
+
+### Statement import
+
+A closed Statement's OFX 1.x (SGML: QFX, QBO) or OFX 2.x (XML) file, sent as text. Plaid-linked cards return 403, another User's account 404, a non-credit account 400, and a file that isn't OFX or has no transactions 400 (`"This file isn't an OFX/QFX statement"`, `"This statement has no transactions"`). The preview reads the period from `BANKTRANLIST` `DTSTART`/`DTEND` and the Statement balance from `LEDGERBAL` (its absolute value); OFX has no minimum payment or due date, so those come back `null` for the User to fill in. Line amounts follow `TRNTYPE` (`DEBIT` negative, `CREDIT` positive). Matching, flagging, and the balance update are in `03_DATABASE.md` (`transaction`). The commit re-reads the file and re-matches, leaving the pairs whose line is in `unmatchedFitIds` unpaired: the line is added and the hand-entered row is flagged Not on statement.
+
+```typescript
+interface StatementLine { fitId: string; date: string; amount: number; name: string } // native cents
+
+interface StatementImportPreview {
+  statement: { periodStart: string; periodEnd: string; statementBalance: number | null; minimumPayment: number | null; dueDate: string | null };
+  isMaskMismatch: boolean; // the card has a mask and the file's account number ends differently
+  matched: { line: StatementLine; transaction: TransactionListItem }[];
+  newLines: StatementLine[];
+  notOnStatement: TransactionListItem[];
+  alreadyImported: StatementLine[]; // FITIDs this account already stores; skipped
+}
+
+interface StatementImportResult { added: number; confirmed: number; notOnStatement: number; statement: CardStatement }
+```
 
 ## Credit Cards — `/api/credit-cards`
 
@@ -350,6 +371,7 @@ interface BetterCard {
 | DELETE | `/transactions/:id/split` | — | `{ data: TransactionDetail }` (the parent, whole again) |
 | PATCH | `/transactions/bulk-categorize` | `{ transactionIds: string[], categoryId: string }` | `{ data: { updated: number } }` |
 | DELETE | `/transactions/:id` | — | `{ data: { success } }` |
+| DELETE | `/transactions/:id/not-on-statement` | — | `{ data: { success } }` | Keep: clears the Not on statement badge |
 
 `limit` default 50, max 200. `nextCursor` is an opaque `(date, id)` key; the feed sorts by date (`sortDir` `desc` default). `accountId` and `categoryId` accept repeated params (multi-select). `amountMin` / `amountMax` compare absolute cents. `search` matches name, merchant, and notes.
 
@@ -373,6 +395,8 @@ interface TransactionListItem {
   tags: string[];
   isSplit: boolean; // true for every part of a split
   isRefund: boolean; // linked as the refund of an expense
+  isStatementConfirmed: boolean; // a Statement import matched or added it
+  isNotOnStatement: boolean; // a Statement import found no line for this hand-entered row
   category: { id: string; name: string; icon: string; color: string } | null;
   account: { id: string; name: string; mask: string | null; institutionLogo: string | null } | null;
   betterCard: BetterCard | null; // the User's other card that would have earned more; see Credit Cards

@@ -162,7 +162,7 @@ e2e/                    Playwright specs, fixtures, helpers
 
 - Toasts come from `sonner`. `<Toaster />` (`components/ui/toaster.tsx`) is mounted once in `App.tsx`; never mount another.
 - Call `toast` from `sonner` directly. No wrapper hooks.
-- Mutations: `toast.success` on success, `toast.error` with the API message on failure. Long actions (sync, import) use `toast.promise` for loading, success, and error in one toast.
+- Mutations: `toast.success` on success, `toast.error` with the API message on failure. `api()` throws `ApiError`; its `apiMessage` is the server's message (null when there is none), so fall back to a copy string. Long actions (sync, import) use `toast.promise` for loading, success, and error in one toast.
 - Use a toast for results the user would otherwise miss. Inline state (disabled button, spinner, field error) stays the feedback for in-place changes; don't toast what is already visible on screen.
 - Toast colors come from tokens in `index.css`. Don't style toasts per call.
 

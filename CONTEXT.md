@@ -51,8 +51,16 @@ The repayment facts of a credit BankAccount: credit limit, APR, statement close 
 _Avoid_: card settings, card config
 
 **Statement**:
-One closed billing period of a credit BankAccount: period start/end, statement balance, minimum payment, due date. From Plaid Liabilities or entered by the User. Charges after the last close are the **current period spend** (unbilled).
+One closed billing period of a credit BankAccount: period start/end, statement balance, minimum payment, due date. From Plaid Liabilities, entered by the User, or read by a Statement import. Charges after the last close are the **current period spend** (unbilled).
 _Avoid_: invoice, bill (for a card), month (when you mean the statement period)
+
+**Statement import**:
+Reading a closed Statement's OFX, QFX, or QBO file into a manual credit BankAccount (cards Plaid can't keep synced). It saves the Statement and reconciles the file's lines with the Transactions the User entered by hand: a hand-entered Transaction with the same amount within 3 days of a line is confirmed and takes the bank's amount and date, keeping the User's name, Category, notes, and splits; a line with no match is added. Each line's bank id is kept, so importing the same file again adds nothing.
+_Avoid_: CSV import, sync (for a manual card), upload
+
+**Not on statement**:
+A hand-entered Transaction inside an imported Statement's period (up to 3 days before the close) that no line matched. It stays in the ledger with a badge until the User keeps or deletes it.
+_Avoid_: missing, unmatched (in User-facing copy), orphan
 
 **Card product**:
 The issuer's product a credit BankAccount is, e.g. a named cash-back or travel card. The User picks it from presets kept in the repo; each preset is derived from the issuer's benefits page.
@@ -202,4 +210,4 @@ _Avoid_: overwriting the Plan amount with Actuals
 
 These are not domain objects in V1. Do not put them on screens or in the schema as live features.
 
-**Advice**, **AI Assistant**, **Weekly Recap**, **Shared** (household), **rollover**, **remittance and tax calculators** (Remessa Online / Wise fees, IOF, pro-labore, INSS, IRRF), **spreadsheet or CSV import** of history or opening balances, **payroll audit** (checking paychecks against hours, rate, and withholding).
+**Advice**, **AI Assistant**, **Weekly Recap**, **Shared** (household), **rollover**, **remittance and tax calculators** (Remessa Online / Wise fees, IOF, pro-labore, INSS, IRRF), **spreadsheet or CSV import** of history or opening balances (a Statement import of an OFX/QFX/QBO file into a manual card is in), **payroll audit** (checking paychecks against hours, rate, and withholding).

@@ -125,7 +125,7 @@ Individual accounts — Plaid-linked or manual (vehicles, property, cash on hand
 
 ### `card_statement`
 
-One closed Statement of a credit BankAccount. From Plaid Liabilities (`last_statement_balance`, `minimum_payment_amount`, `next_payment_due_date`, `last_statement_issue_date`) or entered by the User.
+One closed Statement of a credit BankAccount. From Plaid Liabilities (`last_statement_balance`, `minimum_payment_amount`, `next_payment_due_date`, `last_statement_issue_date`), entered by the User, or read by a Statement import.
 
 | Column | Type | Constraints |
 |--------|------|------------|
@@ -137,7 +137,7 @@ One closed Statement of a credit BankAccount. From Plaid Liabilities (`last_stat
 | `statement_balance` | `integer` | Native cents, NOT NULL |
 | `minimum_payment` | `integer` | Native cents, nullable |
 | `due_date` | `date` | nullable |
-| `source` | `text` | `plaid` \| `manual`, NOT NULL |
+| `source` | `text` | `plaid` \| `manual` \| `import`, NOT NULL |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
 
@@ -288,6 +288,9 @@ All transactions from all accounts + manual entries.
 | `name_locked` | `boolean` | default `false`; set when the User renames it. Sync keeps the User's name |
 | `merchant_locked` | `boolean` | default `false`; set when the User picks its merchant. Sync keeps merchant and logo |
 | `refund_of_id` | `uuid` | FK → transaction.id, ON DELETE SET NULL. On a refund: the expense it pays back |
+| `external_id` | `text` | nullable; the OFX `FITID` of a Statement import line. Unique per `(user_id, bank_account_id, external_id)` |
+| `statement_confirmed` | `boolean` | default `false`; set when a Statement import matched or added the row |
+| `not_on_statement` | `boolean` | nullable. Hand-entered rows only: `null` not checked, `true` Not on statement, `false` the User chose Keep |
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | default `now()` |
 
@@ -302,6 +305,7 @@ All transactions from all accounts + manual entries.
 - `(user_id, category_id)` — budget/report queries
 - `(bank_account_id, date)` — account-specific queries
 - `(user_id, plaid_transaction_id)` unique — upsert on sync
+- `(user_id, bank_account_id, external_id)` unique — Statement import skips lines it already stored
 - Search uses `ILIKE` on `name` / `merchant_name` / `notes`; add `pg_trgm` GIN indexes if feeds get large
 
 **Amount convention:** Plaid returns positive = debit (money leaving), negative = credit (money coming in). **Normalize on ingest:** flip the sign so that positive = income, negative = expense.
@@ -309,6 +313,8 @@ All transactions from all accounts + manual entries.
 **Category on ingest:** assign Uncategorized, then if still Uncategorized, best-effort map `plaid_pfc_primary` (or Plaid primary name) onto a seeded Category name. Never overwrite a User-set Category on later syncs.
 
 **Transfer pairing:** after sync, pair two Transactions (same User, different `bank_account_id`, opposite signs, equal `|amount|`, same `iso_currency_code`, dates within 3 days, `plaid_pfc_primary` in `TRANSFER` / `LOAN_PAYMENTS`). Tag both `transfer` (or `savings_transfer` if Category is Savings Transfer). No cross-currency pairs. Totals that exclude Transfers also exclude `savings_transfer`.
+
+**Statement import:** for manual credit BankAccounts only, in one DB transaction. A line matches a hand-entered row (`is_manual`, no `external_id`, not a split part) on the same account with the same amount (a split parent counts its parts) and a date within 3 days; ties go to the closest date, then the most similar name. A match takes the line's date, amount, and `external_id` and sets `statement_confirmed`; a split parent keeps the first part. Unmatched lines are inserted with the User's Rules (else Uncategorized) and `statement_confirmed`. Unmatched hand-entered rows dated from `period_start` to `period_end − 3` get `not_on_statement = true`, unless the User kept them earlier. The Statement is upserted by `(bank_account_id, period_end)` with source `import`; when it is the newest, the card's `current_balance` becomes its balance plus the net of Transactions dated after the close, and today's snapshot is written.
 
 **Disconnect:** do not cascade-delete Transactions or BankAccounts. Set `plaid_item.status = disconnected`.
 
