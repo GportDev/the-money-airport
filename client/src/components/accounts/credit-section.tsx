@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CardTermsForm } from "@/components/accounts/card-terms-form";
+import { ImportStatementButton } from "@/components/accounts/import-statement-button";
 import { LastStatement } from "@/components/accounts/last-statement";
 import { ManualStatementForm } from "@/components/accounts/manual-statement-form";
 import { StatementPeriods } from "@/components/accounts/statement-periods";
@@ -61,7 +62,15 @@ export function CreditSection({ account, card }: Props) {
 					<ManualStatementForm accountId={account.id} onDone={() => setStatementFormOpen(false)} />
 				</CollapsibleContent>
 			</Collapsible>
-			<StatementPeriods accountId={account.id} currency={currency} />
+			<StatementPeriods
+				accountId={account.id}
+				currency={currency}
+				action={
+					account.source === "manual" ? (
+						<ImportStatementButton accountId={account.id} currency={currency} />
+					) : null
+				}
+			/>
 		</section>
 	);
 }

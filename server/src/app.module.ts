@@ -21,6 +21,7 @@ import { PlaidModule } from "./plaid/plaid.module";
 import { RecurringModule } from "./recurring/recurring.module";
 import { ReportsModule } from "./reports/reports.module";
 import { SettingsModule } from "./settings/settings.module";
+import { StatementImportModule } from "./statement-import/statement-import.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 
 @Module({
@@ -50,6 +51,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
 		LiabilitiesModule,
 		CardBenefitsModule,
 		ExportModule,
+		StatementImportModule,
 	],
 })
 export class AppModule {}

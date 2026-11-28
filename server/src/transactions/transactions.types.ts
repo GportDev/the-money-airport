@@ -29,6 +29,10 @@ export type TransactionListItem = {
 	betterCard: BetterCard | null;
 	/** True when this Transaction is linked as a refund of an expense. */
 	isRefund: boolean;
+	/** True once a Statement import matched or added it. */
+	isStatementConfirmed: boolean;
+	/** True when a Statement import found no line for this hand-entered row. */
+	isNotOnStatement: boolean;
 };
 
 export type TransactionDetail = TransactionListItem & {

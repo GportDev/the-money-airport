@@ -29,7 +29,7 @@ export const cardStatement = pgTable(
 		statementBalance: integer("statement_balance").notNull(),
 		minimumPayment: integer("minimum_payment"),
 		dueDate: date("due_date"),
-		// plaid | manual
+		// plaid | manual | import
 		source: text("source").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -103,6 +103,10 @@ export type TransactionListItem = {
 	betterCard: BetterCard | null;
 	/** True when this Transaction is linked as a refund of an expense. */
 	isRefund: boolean;
+	/** True once a Statement import matched or added it. */
+	isStatementConfirmed: boolean;
+	/** True when a Statement import found no line for this hand-entered row. */
+	isNotOnStatement: boolean;
 };
 
 export type TransactionDetail = TransactionListItem & {
@@ -459,7 +463,33 @@ export type CardStatement = {
 	statementBalance: number;
 	minimumPayment: number | null;
 	dueDate: string | null;
-	source: "plaid" | "manual";
+	source: "plaid" | "manual" | "import";
+};
+
+export type StatementLine = { fitId: string; date: string; amount: number; name: string };
+
+export type StatementFields = {
+	periodStart: string;
+	periodEnd: string;
+	statementBalance: number | null;
+	minimumPayment: number | null;
+	dueDate: string | null;
+};
+
+export type StatementImportPreview = {
+	statement: StatementFields;
+	isMaskMismatch: boolean;
+	matched: { line: StatementLine; transaction: TransactionListItem }[];
+	newLines: StatementLine[];
+	notOnStatement: TransactionListItem[];
+	alreadyImported: StatementLine[];
+};
+
+export type StatementImportResult = {
+	added: number;
+	confirmed: number;
+	notOnStatement: number;
+	statement: CardStatement;
 };
 
 export type CardSummary = {

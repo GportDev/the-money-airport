@@ -12,8 +12,10 @@ type Props = {
 
 function periodLabel(period: StatementPeriod) {
 	const range = `${shortDate(period.periodStart)} – ${shortDate(period.periodEnd)}`;
-	if (!period.statement) return `${range} · open`;
-	return period.statement.dueDate ? `${range} · due ${shortDate(period.statement.dueDate)}` : range;
+	const { statement } = period;
+	if (!statement) return `${range} · open`;
+	const due = statement.dueDate ? ` · due ${shortDate(statement.dueDate)}` : "";
+	return `${range}${due}${statement.source === "import" ? " · imported" : ""}`;
 }
 
 /** Steps between a card's Statement periods and shows the period's dates and total. */

@@ -21,6 +21,6 @@ import { TransactionsService } from "./transactions.service";
 		TransactionRulesService,
 		TransactionMerchantsService,
 	],
-	exports: [TransactionIngestService, TransactionsService],
+	exports: [TransactionIngestService, TransactionsService, TransactionRulesService],
 })
 export class TransactionsModule {}

@@ -8,7 +8,7 @@ export type CardStatementDto = {
 	statementBalance: number;
 	minimumPayment: number | null;
 	dueDate: string | null;
-	source: "plaid" | "manual";
+	source: "plaid" | "manual" | "import";
 };
 
 export type CardSummary = {

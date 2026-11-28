@@ -1,17 +1,18 @@
+import type * as React from "react";
 import { useState } from "react";
 import { StatementPeriodHeader } from "@/components/accounts/statement-period-header";
-import { Amount } from "@/components/ui/amount";
+import { StatementPeriodRow } from "@/components/accounts/statement-period-row";
 import { useStatementPeriod } from "@/hooks/use-liabilities";
-import { shortDate } from "@/lib/forecast";
-import { formatMoney } from "@/lib/format";
 
 type Props = {
 	accountId: string;
 	currency: string;
+	/** Shown beside the heading, such as Import statement on a manual card. */
+	action?: React.ReactNode;
 };
 
 /** The card's Transactions grouped by Statement period, one period at a time. */
-export function StatementPeriods({ accountId, currency }: Props) {
+export function StatementPeriods({ accountId, currency, action }: Props) {
 	const [periodEnd, setPeriodEnd] = useState<string | undefined>(undefined);
 	const period = useStatementPeriod(accountId, periodEnd);
 	const data = period.data;
@@ -25,18 +26,14 @@ export function StatementPeriods({ accountId, currency }: Props) {
 	if (!data) return null;
 	return (
 		<section aria-label="Statement periods" className="flex flex-col gap-2 text-sm">
+			{action ? <div className="flex justify-end">{action}</div> : null}
 			<StatementPeriodHeader period={data} currency={currency} onSelect={setPeriodEnd} />
 			{data.transactions.length === 0 ? (
 				<p className="text-muted-foreground">No charges in this period.</p>
 			) : (
 				<ul className="divide-y divide-border rounded-lg border border-border">
 					{data.transactions.map((row) => (
-						<li key={row.id} className="flex justify-between gap-2 px-3 py-1.5">
-							<span className="truncate">
-								<span className="text-muted-foreground">{shortDate(row.date)}</span> {row.name}
-							</span>
-							<Amount>{formatMoney(row.amount, row.isoCurrencyCode)}</Amount>
-						</li>
+						<StatementPeriodRow key={row.id} item={row} />
 					))}
 				</ul>
 			)}
