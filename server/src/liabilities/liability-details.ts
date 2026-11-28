@@ -124,7 +124,7 @@ export function statementDto(row: typeof cardStatement.$inferSelect): CardStatem
 		statementBalance: row.statementBalance,
 		minimumPayment: row.minimumPayment,
 		dueDate: row.dueDate,
-		// Narrowed on write: only "plaid" and "manual" are stored.
+		// Narrowed on write: only "plaid", "manual", and "import" are stored.
 		source: row.source as CardStatementDto["source"],
 	};
 }

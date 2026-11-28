@@ -59,6 +59,13 @@ export const transaction = pgTable(
 			onDelete: "set null",
 		}),
 		isManual: boolean("is_manual").notNull().default(false),
+		// A Statement import line's OFX FITID; a line already stored is skipped on re-import.
+		externalId: text("external_id"),
+		// True once a Statement import confirmed this row (matched or added from the file).
+		statementConfirmed: boolean("statement_confirmed").notNull().default(false),
+		// Statement import check on a hand-entered row: null = not checked, true = no line
+		// matched it, false = the User chose Keep.
+		notOnStatement: boolean("not_on_statement"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
@@ -69,5 +76,10 @@ export const transaction = pgTable(
 		index("transaction_split_parent_idx").on(table.splitParentId),
 		index("transaction_refund_of_idx").on(table.refundOfId),
 		unique("transaction_user_plaid_id").on(table.userId, table.plaidTransactionId),
+		unique("transaction_user_account_external_id").on(
+			table.userId,
+			table.bankAccountId,
+			table.externalId,
+		),
 	],
 );

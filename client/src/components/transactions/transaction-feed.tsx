@@ -211,6 +211,7 @@ function FeedRow({
 		item.pending ? "Pending" : null,
 		item.isSplit ? "Split" : null,
 		item.isRefund ? "Refund" : null,
+		item.isNotOnStatement ? "Not on statement" : null,
 		isTransfer(item) ? "Transfer" : null,
 		item.betterCard ? `Better with ${item.betterCard.name}` : null,
 		item.category?.name,
@@ -253,6 +254,7 @@ function FeedRow({
 				{item.pending ? <Badge>Pending</Badge> : null}
 				{item.isSplit ? <Badge>Split</Badge> : null}
 				{item.isRefund ? <Badge>Refund</Badge> : null}
+				{item.isNotOnStatement ? <Badge tone="warning">Not on statement</Badge> : null}
 				{isTransfer(item) ? (
 					<ArrowLeftRight
 						aria-label="Transfer"

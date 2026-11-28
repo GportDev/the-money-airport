@@ -8,6 +8,8 @@ import type { Auth } from "./auth/auth";
 import { AUTH, DEFAULT_CLIENT_URL } from "./auth/auth.constants";
 
 const DEFAULT_PORT = 3000;
+const STATEMENT_IMPORT_ROUTE = "/api/accounts/:id/statement-import";
+const STATEMENT_IMPORT_BODY_LIMIT = "3mb";
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule, { bodyParser: false });
@@ -23,6 +25,8 @@ async function bootstrap() {
 	http.use("/api/billing/webhook", raw({ type: "application/json" }));
 	// Plaid signs a SHA-256 of the exact body bytes, so keep them raw.
 	http.use("/api/plaid/webhook", raw({ type: () => true, limit: "1mb" }));
+	// A Statement file can be up to 1 MB, over the default JSON limit.
+	http.use(STATEMENT_IMPORT_ROUTE, json({ limit: STATEMENT_IMPORT_BODY_LIMIT }));
 	app.use(json());
 	app.setGlobalPrefix("api");
 	app.enableCors(corsOptions);

@@ -381,6 +381,8 @@ function toListItem(row: ItemRow, betterCard: BetterCardFinder): TransactionList
 		account: row.account ? { ...row.account, institutionLogo: row.institutionLogo } : null,
 		betterCard: betterCard(row.tx),
 		isRefund: row.tx.refundOfId !== null,
+		isStatementConfirmed: row.tx.statementConfirmed,
+		isNotOnStatement: row.tx.notOnStatement === true,
 	};
 }
 
